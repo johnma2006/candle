@@ -1,19 +1,43 @@
 import numpy as np
-from typing import List
+from typing import List, Callable
 import candle
 from candle import functions as F
 from candle.optimizer import AdamW
 
 
-def get_random_batch(*tensors, batch_size: int):
+def get_random_batch(*tensors, batch_size: int, transforms: List[Callable] = None):
+    """Get random batch of data.
+
+    Parameters
+    ----------
+    tensors
+        List of Tensors.
+    batch_size
+        Size of batches to return.
+    transforms
+        List with same size as tensors.
+        Each element is a list of Callable functions.
+
+    """
     assert len(set([len(t) for t in tensors])) == 1
 
     if batch_size is None:
         return tensors
 
     indices = np.random.choice(range(len(tensors[0])), min(batch_size, len(tensors[0])), replace=False)
+    
+    items = []
+    for (i, tensor) in enumerate(tensors):
+        item = tensor[indices]
 
-    return [t[indices] for t in tensors]
+        if transforms is not None and transforms[i] is not None:
+            for transform in transforms[i]:
+                item = transform(item)
+
+        items.append(item)
+    items = tuple(items)
+
+    return items
 
 
 def get_loss_and_accuracy(model, X, y, logits: np.array = None):

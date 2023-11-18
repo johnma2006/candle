@@ -5,6 +5,7 @@ Features:
 * Layers: linear, attention, batch/layer norm, dropout, convolutional, pooling
 * Optimizers: SGD, AdamW
 * LR schedulers: StepLR, CosineAnnealingLR, Warmup
+* Image data augmentation: RandomCrop, RandomHorizontalFlip, RandomVerticalFlip, Normalize
 * Lightweight Tensorboard-like dashboarding
 * Models: ResNet, GPT, MLP
 * Forward hooks
