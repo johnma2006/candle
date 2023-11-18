@@ -12,6 +12,7 @@ from candle.operations import (
     TensorContraction,
     TensorSlice,
     TensorTranspose,
+    BatchMatrixMultiply,
     Conv2dOperation,
     MaxPool2dOperation,
     AvgPool2dOperation,
