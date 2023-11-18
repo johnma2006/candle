@@ -1,6 +1,5 @@
 """Convenience wrappers over operations for commonly used functions."""
 
-
 import numpy as np
 from typing import Union, Tuple
 

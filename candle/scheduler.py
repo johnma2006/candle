@@ -31,7 +31,6 @@ class Scheduler(ABC):
         """Increment internel step count."""
         self.T += 1
 
-    
 
 class StepLR(Scheduler):
     
@@ -48,7 +47,6 @@ class StepLR(Scheduler):
     
     def get_learning_rate_at_T(self, T: int):
         return self.max_learning_rate * self.gamma ** (T // self.step_size)
-
 
 
 class CosineAnnealingLR(Scheduler):

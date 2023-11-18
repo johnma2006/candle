@@ -10,14 +10,13 @@ from .parameter import Parameter, ParameterList
 from .dataloader import DataLoader
 from .tensorboard import Dashboard
 
-from .layers.module import Module
-from .layers.linear import Linear
-from .layers.conv import (
+from .layers import (
+    Module,
+    Linear,
+    BatchNorm,
+    LayerNorm,
+    Dropout,
     Conv2d,
     MaxPool2d,
     AvgPool2d,
-)
-from .layers.normalization import (
-    BatchNorm,
-    LayerNorm,
 )

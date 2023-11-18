@@ -1,10 +1,10 @@
-Deep learning library, implemented in pure numpy.
+Deep learning library, implemented from scratch in pure numpy.
 
 ## Experiments
 
 #### Vision
-* [Training an MLP on MNIST (notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 * [Training a ResNet14 on MNIST (notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
+* [Training an MLP on MNIST (notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 
 
 #### Initialization
