@@ -261,3 +261,15 @@ class Tensor:
     def T(self):
         from . import functions
         return functions.transpose(self)
+    
+    
+    def reshape(self,
+                new_shape: Tuple[int]):
+        from . import functions
+        return functions.reshape(self, new_shape=new_shape)
+    
+    
+    def flatten(self):
+        from . import functions
+        return functions.reshape(self, new_shape=(-1,))
+        

@@ -15,6 +15,7 @@ from .tensorops import (
     TensorMax,
     TensorMin,
     TensorSlice,
+    TensorReshape,
     TensorSwapaxes,
     TensorTranspose,
     BatchMatrixMultiply,

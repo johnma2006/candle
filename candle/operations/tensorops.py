@@ -157,6 +157,27 @@ class TensorSlice(Operation):
         return (input_grad,)
     
     
+class TensorReshape(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 new_shape: Tuple[int]):
+        super().__init__(inputs)
+        self.new_shape = new_shape
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return Tensor(self.inputs[0].data.reshape(self.new_shape))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        input_grad = output_grad.reshape(self.inputs[0].shape)
+        
+        return (input_grad,)
+    
+    
 class TensorSwapaxes(Operation):
     
     def __init__(self,

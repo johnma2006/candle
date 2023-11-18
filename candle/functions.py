@@ -46,6 +46,10 @@ def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 
 
+def reshape(a, new_shape: Tuple[int]):
+    return operations.TensorReshape([a], new_shape=new_shape).forward()
+
+
 def swapaxes(a, dim0: int, dim1: int):
     return operations.TensorSwapaxes([a], dim0=dim0, dim1=dim1).forward()
 

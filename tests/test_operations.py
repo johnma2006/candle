@@ -14,6 +14,7 @@ from candle.operations import (
     TensorMin,
     TensorContraction,
     TensorSlice,
+    TensorReshape,
     TensorSwapaxes,
     TensorTranspose,
     BatchMatrixMultiply,
@@ -190,10 +191,22 @@ class TestOperations(unittest.TestCase):
                              kwargs={'axis': None, 'keepdims': False})
 
         
-    def test_tensor_slice(self):
+    def test_tensor_slice_and_reshape(self):
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Tensor(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': (slice(None, 3, None), 1, 2, slice(None, None, None))})
+        
+        numerical_grad_check(operation_class=TensorReshape,
+                             test_inputs=[Tensor(np.random.normal(size=(3, 4, 5, 7, 11)))],
+                             kwargs={'new_shape': (-1,)})
+
+        numerical_grad_check(operation_class=TensorReshape,
+                             test_inputs=[Tensor(np.random.normal(size=(3, 4, 5, 7, 11)))],
+                             kwargs={'new_shape': (12, -1,)})
+
+        numerical_grad_check(operation_class=TensorReshape,
+                             test_inputs=[Tensor(np.random.normal(size=(3, 4, 5, 7, 11)))],
+                             kwargs={'new_shape': (3, 4, -1, 7)})
         
         
     def test_tensor_transpose(self):
