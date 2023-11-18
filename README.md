@@ -1,13 +1,13 @@
-Deep learning library, implemented from scratch in pure numpy.
+Deep learning library, implemented from scratch in pure numpy for educational purposes.
 
-Features:
+#### Features:
 * Tensor-based automatic differentiation
-* Layers: linear, attention, batch/layer norm, dropout, convolutional, pooling
+* Object-oriented PyTorch-like API
+* Layers: linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
 * Optimizers: SGD, AdamW
 * LR schedulers: StepLR, CosineAnnealingLR, Warmup
 * Lightweight Tensorboard-like dashboarding
 * Models: ResNet, GPT, MLP
-* Forward hooks
 
 
 ## Experiments
