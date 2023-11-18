@@ -94,6 +94,7 @@ class Power(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
+        assert isinstance(self.power, (int, float, complex))
         return Tensor(self.inputs[0].data ** self.power)
     
     
@@ -102,3 +103,27 @@ class Power(Operation):
         
         input_grad = output_grad * self.power * self.inputs[0].data ** (self.power - 1)
         return (input_grad,)
+    
+    
+class Exponentiation(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 base: float):
+        super().__init__(inputs)
+        self.base = base
+        
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        assert isinstance(self.base, (int, float, complex))
+        return Tensor(self.base ** self.inputs[0].data)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        
+        input_grad = output_grad * np.log(self.base) * self.output.data
+        
+        return (input_grad,)
+    

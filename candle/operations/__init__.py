@@ -7,6 +7,7 @@ from .arithmetic import (
     Multiplication,
     Division,
     Power,
+    Exponentiation,
 )
 from .tensorops import (
     TensorContraction,

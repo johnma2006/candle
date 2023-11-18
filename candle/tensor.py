@@ -195,6 +195,11 @@ class Tensor:
         return functions.pow(self, power)
     
     
+    def __rpow__(self, base):
+        from . import functions
+        return functions.exp(self, base)
+    
+    
     def __matmul__(self, other):
         from . import functions
         return functions.tensordot(self, other, axes=1)

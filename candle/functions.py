@@ -27,6 +27,10 @@ def pow(a, power: float):
     return operations.Power([a], power=power).forward()
 
 
+def exp(a, base: float):
+    return operations.Exponentiation([a], base=base).forward()
+
+
 def tensordot(a, b, axes: int):
     return operations.TensorContraction([a, b], axes=axes).forward()
 
