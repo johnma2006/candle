@@ -236,8 +236,28 @@ class Tensor:
         return functions.std(self, axis=axis, keepdims=keepdims)
     
     
+    def max(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.max(self, axis=axis, keepdims=keepdims)
+    
+    
+    def min(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.min(self, axis=axis, keepdims=keepdims)
+    
+    
     def transpose(self,
                   dim0: int,
                   dim1: int):
         from . import functions
-        return functions.transpose(self, dim0=dim0, dim1=dim1)
+        return functions.swapaxes(self, dim0=dim0, dim1=dim1)
+    
+    
+    @property
+    def T(self):
+        from . import functions
+        return functions.transpose(self)

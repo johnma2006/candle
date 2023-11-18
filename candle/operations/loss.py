@@ -26,3 +26,4 @@ class CrossEntropyLossOperation(Operation):
         softmax[range(len(target)), target.data] -= 1
         
         return (output_grad * softmax / len(logits), np.zeros(len(target)))  # target has no gradient
+    

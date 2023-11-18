@@ -12,7 +12,10 @@ from .arithmetic import (
 from .tensorops import (
     TensorContraction,
     TensorSum,
+    TensorMax,
+    TensorMin,
     TensorSlice,
+    TensorSwapaxes,
     TensorTranspose,
     BatchMatrixMultiply,
 )

@@ -63,6 +63,78 @@ class TensorSum(Operation):
         return (input_grad,)
     
     
+class TensorMax(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 axis: Union[int, Tuple[int, int]] = None,
+                 keepdims: bool = False):
+        super().__init__(inputs)
+        if type(axis) is int:
+            axis = (axis,)
+        if axis is None:
+            axis = tuple(range(len(self.inputs[0].shape)))
+        
+        self.axis = axis
+        self.keepdims = keepdims
+    
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return Tensor(self.inputs[0].data.max(axis=self.axis, keepdims=self.keepdims))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        output = self.output.data
+
+        if not self.keepdims:
+            output_grad = np.expand_dims(output_grad, axis=self.axis)
+            output = np.expand_dims(output, axis=self.axis)
+
+        mask = self.inputs[0].data == np.broadcast_to(output, self.inputs[0].shape)
+
+        input_grad = mask * np.broadcast_to(output_grad, shape=self.inputs[0].shape)
+                         
+        return (input_grad,)
+    
+    
+class TensorMin(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 axis: Union[int, Tuple[int, int]] = None,
+                 keepdims: bool = False):
+        super().__init__(inputs)
+        if type(axis) is int:
+            axis = (axis,)
+        if axis is None:
+            axis = tuple(range(len(self.inputs[0].shape)))
+        
+        self.axis = axis
+        self.keepdims = keepdims
+    
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return Tensor(self.inputs[0].data.min(axis=self.axis, keepdims=self.keepdims))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        output = self.output.data
+
+        if not self.keepdims:
+            output_grad = np.expand_dims(output_grad, axis=self.axis)
+            output = np.expand_dims(output, axis=self.axis)
+
+        mask = self.inputs[0].data == np.broadcast_to(output, self.inputs[0].shape)
+
+        input_grad = mask * np.broadcast_to(output_grad, shape=self.inputs[0].shape)
+                         
+        return (input_grad,)
+    
+    
 class TensorSlice(Operation):
     
     def __init__(self,
@@ -85,7 +157,7 @@ class TensorSlice(Operation):
         return (input_grad,)
     
     
-class TensorTranspose(Operation):
+class TensorSwapaxes(Operation):
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -133,4 +205,21 @@ class BatchMatrixMultiply(Operation):
         input_grad_b = np.einsum('...ij, ...ik -> ...kj', output_grad, a.data)
         
         return (input_grad_a, input_grad_b)
+    
+    
+class TensorTranspose(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor]):
+        super().__init__(inputs)
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return Tensor(self.inputs[0].data.T)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        return (output_grad.T,)
     

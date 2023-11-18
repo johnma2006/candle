@@ -46,8 +46,12 @@ def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 
 
-def transpose(a, dim0: int, dim1: int):
-    return operations.TensorTranspose([a], dim0=dim0, dim1=dim1).forward()
+def swapaxes(a, dim0: int, dim1: int):
+    return operations.TensorSwapaxes([a], dim0=dim0, dim1=dim1).forward()
+
+
+def transpose(a):
+    return operations.TensorTranspose([a]).forward()
 
 
 def sum(a,
@@ -76,6 +80,18 @@ def var(a,
     return var
 
 
+def max(a,
+        axis: Union[int, Tuple[int]] = None,
+        keepdims: bool = False):
+    return operations.TensorMax([a], axis=axis, keepdims=keepdims).forward()
+
+
+def min(a,
+        axis: Union[int, Tuple[int]] = None,
+        keepdims: bool = False):
+    return operations.TensorMin([a], axis=axis, keepdims=keepdims).forward()
+
+
 def std(a,
         axis: Union[int, Tuple[int]] = None,
         keepdims: bool = False):
@@ -86,6 +102,16 @@ def std(a,
 def relu(a):
     return operations.ReLUActivation([a]).forward()
 
+
+def softmax(a):
+    """Applies softmax along the last axis of a Tensor."""
+    softmax = a.T
+    softmax = softmax - softmax.max(axis=0)  # For numerical stabiility
+    softmax = exp(softmax, base=np.e)
+    softmax = (softmax / softmax.sum(axis=0)).T
+
+    return softmax
+    
 
 def cross_entropy_loss(logits: np.array,
                        target: np.array):

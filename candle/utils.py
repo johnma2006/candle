@@ -34,7 +34,7 @@ def kaiming_init(in_shape, out_shape):
 
 
 def softmax(array: np.array):
-    """Applies softmax along the last axis of an array."""
+    """Applies softmax along the last axis of a numpy array."""
     softmax = array.T
     softmax = softmax - softmax.max(axis=0)  # For numerical stabiility
     softmax = np.power(np.e, softmax)
@@ -44,7 +44,7 @@ def softmax(array: np.array):
 
 
 def log_softmax(array: np.array):
-    """Applies log softmax along the last axis of an array."""
+    """Applies log softmax along the last axis of a numpy array."""
     array = array.T
     array = array - array.max(axis=0)  # For numerical stabiility
     e_array = np.power(np.e, array)
