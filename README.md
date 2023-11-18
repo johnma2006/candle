@@ -1,5 +1,15 @@
 Deep learning library, implemented from scratch in pure numpy.
 
+Features:
+* Tensor-based automatic differentiation
+* Layers: linear, attention, batch/layer norm, dropout, convolutional, pooling
+* Optimizers: SGD, AdamW
+* LR schedulers: StepLR, CosineAnnealingLR, Warmup
+* Lightweight Tensorboard-like dashboarding
+* Models: ResNet, GPT, MLP
+* Forward hooks
+
+
 ## Experiments
 
 #### Vision
