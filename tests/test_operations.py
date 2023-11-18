@@ -201,6 +201,14 @@ class TestOperations(unittest.TestCase):
                              ],
                              kwargs={'dim0': 2, 'dim1': 5})
         
+        
+    def test_batch_matrix_multiply(self):
+        numerical_grad_check(operation_class=BatchMatrixMultiply,
+                             test_inputs=[
+                                 Tensor(np.random.normal(size=(3, 4, 5, 7, 11))),
+                                 Tensor(np.random.normal(size=(3, 4, 5, 11, 13))),
+                             ])
+        
     
     def test_conv(self):
         numerical_grad_check(operation_class=Conv2dOperation,

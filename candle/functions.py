@@ -31,6 +31,13 @@ def tensordot(a, b, axes: int):
     return operations.TensorContraction([a, b], axes=axes).forward()
 
 
+def bmm(a, b):
+    """Multiplies two tensors of shape (A, B, C, ..., M, N) and (A, B, C, ..., N, P).
+    
+    Returns a tensor of shape (A, B, C, ..., M, P)."""
+    return operations.BatchMatrixMultiply([a, b]).forward()
+
+
 def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 

@@ -285,6 +285,33 @@ class TensorTranspose(Operation):
         
         return (input_grad,)
     
+    
+class BatchMatrixMultiply(Operation):
+    """Multiplies two tensors of shape (A, B, C, ..., M, N) and (A, B, C, ..., N, P).
+    
+    Returns a tensor of shape (A, B, C, ..., M, P)."""
+    
+    def __init__(self,
+                 inputs: List[Tensor]):
+        super().__init__(inputs)
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 2
+        (a, b) = self.inputs
+        assert a.shape[:-2] == b.shape[:-2]  # Assert first N-2 dimensions match
+
+        return Tensor(np.einsum('...ij, ...jk -> ...ik', a.data, b.data))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        (a, b) = self.inputs
+        input_grad_a = np.einsum('...ij, ...kj -> ...ik', output_grad, b.data)
+        input_grad_b = np.einsum('...ij, ...ik -> ...kj', output_grad, a.data)
+        
+        return (input_grad_a, input_grad_b)
+    
 
 class ReLUActivation(Operation):
     
