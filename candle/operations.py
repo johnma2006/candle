@@ -262,6 +262,29 @@ class TensorSlice(Operation):
         
         return (input_grad,)
     
+    
+class TensorTranspose(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 dim0: int,
+                 dim1: int):
+        super().__init__(inputs)
+        self.dim0 = dim0
+        self.dim1 = dim1
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return Tensor(self.inputs[0].data.swapaxes(self.dim0, self.dim1))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        input_grad = output_grad.swapaxes(self.dim0, self.dim1)
+        
+        return (input_grad,)
+    
 
 class ReLUActivation(Operation):
     

@@ -35,6 +35,10 @@ def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 
 
+def transpose(a, dim0: int, dim1: int):
+    return operations.TensorTranspose([a], dim0=dim0, dim1=dim1).forward()
+
+
 def sum(a,
         axis: Union[int, Tuple[int]] = None,
         keepdims: bool = False):

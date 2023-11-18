@@ -11,6 +11,7 @@ from candle.operations import (
     TensorSum,
     TensorContraction,
     TensorSlice,
+    TensorTranspose,
     Conv2dOperation,
     MaxPool2dOperation,
     AvgPool2dOperation,
@@ -191,7 +192,15 @@ class TestOperations(unittest.TestCase):
                                  Tensor(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
                              ],
                              kwargs={'key': (slice(None, 3, None), 1, 2, slice(None, None, None))})
-    
+        
+        
+    def test_tensor_transpose(self):
+        numerical_grad_check(operation_class=TensorTranspose,
+                             test_inputs=[
+                                 Tensor(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                             ],
+                             kwargs={'dim0': 2, 'dim1': 5})
+        
     
     def test_conv(self):
         numerical_grad_check(operation_class=Conv2dOperation,

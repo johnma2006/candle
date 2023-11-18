@@ -231,3 +231,8 @@ class Tensor:
         return functions.std(self, axis=axis, keepdims=keepdims)
     
     
+    def transpose(self,
+                  dim0: int,
+                  dim1: int):
+        from . import functions
+        return functions.transpose(self, dim0=dim0, dim1=dim1)
