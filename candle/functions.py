@@ -67,6 +67,8 @@ def sum(a,
 def mean(a,
          axis: Union[int, Tuple[int]] = None,
          keepdims: bool = False):
+    if type(axis) is int:
+        axis = (axis,)
     if axis is None:
         N = np.prod(a.shape)
     else:
@@ -101,10 +103,14 @@ def std(a,
         keepdims: bool = False):
 
     return var(a, axis, keepdims) ** 0.5
-    
+
 
 def relu(a):
     return operations.ReLUActivation([a]).forward()
+
+
+def gelu(a):
+    return operations.GeLUActivation([a]).forward()
 
 
 def softmax(a):
@@ -130,3 +136,23 @@ def cross_entropy_loss(logits: np.array,
         
     """
     return operations.CrossEntropyLossOperation([logits, target]).forward()
+
+
+def masked_fill(a,
+                mask: Tensor,
+                fill_value: float):
+        """Returns Tensor with masked values replaced with fill_value.
+        
+        Parameters
+        ----------
+        a
+            Tensor to fill.
+        mask
+            Tensor of 1s and 0s, must be broadcastable with `a`.
+            1 to fill with fill_value, 0 to leave as-is.
+        fill_value
+            Value to fill.
+            
+        """
+        return operations.TensorMaskedFill([a], mask=mask, fill_value=fill_value).forward()
+            

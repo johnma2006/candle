@@ -244,3 +244,40 @@ class TensorTranspose(Operation):
                   output_grad: np.array):
         return (output_grad.T,)
     
+    
+class TensorMaskedFill(Operation):
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 mask: Tensor,
+                 fill_value: float):
+        """Returns Tensor with masked values replaced with fill_value.
+        
+        Parameters
+        ----------
+        mask
+            Tensor of 1s and 0s, must be broadcastable with inputs[0].
+            1 to fill with fill_value, 0 to leave as-is.
+        fill_value
+            Value to fill.
+            
+        """
+        super().__init__(inputs)
+        if not np.alltrue(np.isclose(mask.data, 0) | np.isclose(mask.data, 1)):
+            raise ValueError('mask must be a Tensor with only 0s and 1s.')
+        self.broadcasted_mask = np.broadcast_to(mask.data, self.inputs[0].shape)
+        self.fill_value = fill_value
+
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        
+        return Tensor((1 - self.broadcasted_mask) * self.inputs[0].data + self.broadcasted_mask * self.fill_value)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        input_grad = output_grad * (1 - self.broadcasted_mask)
+        
+        return (input_grad,)
+    

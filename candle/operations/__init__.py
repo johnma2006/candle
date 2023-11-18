@@ -19,6 +19,7 @@ from .tensorops import (
     TensorSwapaxes,
     TensorTranspose,
     BatchMatrixMultiply,
+    TensorMaskedFill,
 )
 from .activations import ReLUActivation
 from .loss import CrossEntropyLossOperation

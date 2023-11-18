@@ -17,11 +17,13 @@ from candle.operations import (
     TensorReshape,
     TensorSwapaxes,
     TensorTranspose,
+    TensorMaskedFill,
     BatchMatrixMultiply,
     Conv2dOperation,
     MaxPool2dOperation,
     AvgPool2dOperation,
     ReLUActivation,
+    GeLUActivation,
 )
 from .utils import numerical_grad_check
 
@@ -101,6 +103,9 @@ class TestOperations(unittest.TestCase):
         
     def test_activations(self):
         numerical_grad_check(operation_class=ReLUActivation,
+                             test_inputs=[Tensor(np.random.normal(size=(2, 3, 5, 7, 11)))])
+        
+        numerical_grad_check(operation_class=GeLUActivation,
                              test_inputs=[Tensor(np.random.normal(size=(2, 3, 5, 7, 11)))])
         
         
@@ -217,6 +222,14 @@ class TestOperations(unittest.TestCase):
         
         numerical_grad_check(operation_class=TensorTranspose,
                              test_inputs=[Tensor(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))])
+        
+        
+    def test_tensor_masked_fill(self):
+        mask = Tensor((np.random.random(size=(1, 5, 7, 1)) > 0.5).astype(float))
+
+        numerical_grad_check(operation_class=TensorMaskedFill,
+                             test_inputs=[Tensor(np.random.normal(size=(3, 4, 5, 7, 11)))],
+                             kwargs={'mask': mask, 'fill_value': 123})
         
         
     def test_batch_matrix_multiply(self):

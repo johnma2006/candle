@@ -19,3 +19,32 @@ class ReLUActivation(Operation):
         
         return (input_grad,)
     
+    
+class GeLUActivation(Operation):
+    """Gaussian Error Linear Unit activation function.
+
+    References:
+    [1] Dan Hendrycks, Kevin Gimpel.
+        Gaussian Error Linear Units (GELUS). arXiv:1606.08415, 2016
+        
+    """
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        x = self.inputs[0].data
+
+        return Tensor(0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3))))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        
+        x = self.inputs[0].data
+        
+        tanh = np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3))
+        partial_grad = 0.5 * (1 + tanh + x * (1 - tanh ** 2) * np.sqrt(2 / np.pi) * (1 + 3 * 0.044715 * x ** 2))
+        
+        input_grad = output_grad * partial_grad
+        
+        return (input_grad,)
+    

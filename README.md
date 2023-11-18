@@ -3,7 +3,7 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 #### Features:
 * Tensor-based automatic differentiation
 * Object-oriented PyTorch-like API
-* Tensor operations: slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matrix multiplication
+* Tensor operations: slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
 * Layers: linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
 * Optimizers: SGD, AdamW
 * LR schedulers: step decay, cosine annealing, warmup
