@@ -10,3 +10,8 @@ from .normalization import (
     BatchNorm,
     LayerNorm,
 )
+from .attention import (
+    MultiheadAttention,
+    DotProductAttention,
+    PositionalEncoding,
+)

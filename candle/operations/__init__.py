@@ -21,11 +21,13 @@ from .tensorops import (
     BatchMatrixMultiply,
     TensorMaskedFill,
 )
-from .activations import ReLUActivation
+from .activations import (
+    ReLUActivation,
+    GeLUActivation,
+)
 from .loss import CrossEntropyLossOperation
 from .conv import (
     Conv2dOperation,
     MaxPool2dOperation,
     AvgPool2dOperation,
 )
-
