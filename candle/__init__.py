@@ -14,6 +14,7 @@ from .tensorboard import Dashboard
 from .layers import (
     Module,
     Linear,
+    Embedding,
     MultiheadAttention,
     DotProductAttention,
     PositionalEncoding,

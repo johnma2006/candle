@@ -141,6 +141,21 @@ class TensorSlice(Operation):
                  inputs: List[Tensor],
                  key):
         super().__init__(inputs)
+        if type(key) is not tuple:
+            key = (key,)
+            
+        # Numpy slicing is quite involved and it's hard to cover every edge case
+        # For now, we can guarantee backprop supports slicing with ints, slices, and a single leading 2D list,
+        # e.g. x[[[0, 1, 2], [5, 2, 3]], 2, :, 2:5:-1]. This covers most practical cases.
+        for key_i in key[1:]:
+            assert type(key_i) in [int, slice]
+        
+        if type(key[0]) is list:
+            self.list_ndim = np.array(key[0]).ndim  # Check that leading list is at most 2D
+        else:
+            self.list_ndim = 0
+        assert self.list_ndim <= 2
+        
         self.key = key
         
         
@@ -152,8 +167,14 @@ class TensorSlice(Operation):
     def _backward(self,
                   output_grad: np.array):
         input_grad = np.zeros(self.inputs[0].shape)
-        input_grad[self.key] = output_grad
-        
+
+        if self.list_ndim <= 1:
+            input_grad[self.key] = output_grad
+
+        else:  # list_ndim == 2
+            for (i, subarray) in enumerate(self.key[0]):
+                input_grad[(self.key[0][i],) + self.key[1:]] += output_grad[i]
+
         return (input_grad,)
     
     
