@@ -28,8 +28,8 @@ class BatchNorm(Module):
         
         # Defer initialization to the first forward pass once we know the shape
         self.features_shape = None
-        self.gamma = Parameter(Tensor(np.ones(0)))
-        self.beta = Parameter(Tensor(np.zeros(0)))
+        self.W = Parameter(Tensor(np.ones(0)))
+        self.b = Parameter(Tensor(np.zeros(0)))
         
         
     def forward(self, x):
@@ -39,8 +39,8 @@ class BatchNorm(Module):
             features_shape = np.array(x.shape)
             features_shape[list(self.axis)] = 1
             self.features_shape = tuple(features_shape)
-            self.gamma.data = np.ones(self.features_shape)
-            self.beta.data = np.zeros(self.features_shape)
+            self.W.data = np.ones(self.features_shape)
+            self.b.data = np.zeros(self.features_shape)
 
         batch_mean = x.mean(axis=self.axis, keepdims=True)
         batch_var = x.var(axis=self.axis, keepdims=True)
@@ -59,7 +59,7 @@ class BatchNorm(Module):
             var = Tensor(self.ema_var)
 
         x_normalized = (x - mean) / (var + self.eps) ** 0.5
-        x_normalized = x_normalized * self.gamma + self.beta
+        x_normalized = x_normalized * self.W + self.b
 
         return x_normalized
     
@@ -85,8 +85,8 @@ class LayerNorm(Module):
         
         # Defer initialization to the first forward pass once we know the shape
         self.features_shape = None
-        self.gamma = Parameter(Tensor(np.ones(0)))
-        self.beta = Parameter(Tensor(np.zeros(0)))
+        self.W = Parameter(Tensor(np.ones(0)))
+        self.b = Parameter(Tensor(np.zeros(0)))
         
         
     def forward(self, x):
@@ -96,14 +96,14 @@ class LayerNorm(Module):
             features_shape = np.array(x.shape)
             features_shape[[i for i in range(len(x.shape)) if i not in self.axis]] = 1
             self.features_shape = tuple(features_shape)
-            self.gamma.data = np.ones(self.features_shape)
-            self.beta.data = np.zeros(self.features_shape)
+            self.W.data = np.ones(self.features_shape)
+            self.b.data = np.zeros(self.features_shape)
 
         mean = x.mean(axis=self.axis, keepdims=True)
         var = x.var(axis=self.axis, keepdims=True)
 
         x_normalized = (x - mean) / (var + self.eps) ** 0.5
-        x_normalized = x_normalized * self.gamma + self.beta
+        x_normalized = x_normalized * self.W + self.b
 
         return x_normalized
     

@@ -125,6 +125,7 @@ class DotProductAttention(Module):
     
       
 class PositionalEncoding(Module):
+    
     def __init__(self,
                  embed_dim: int,
                  dropout_p: float,

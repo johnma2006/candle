@@ -9,6 +9,7 @@ from ..parameter import Parameter, HasParameters, HasChildModules
 class Module(HasParameters, HasChildModules, ABC):
     
     def __init__(self):
+        """If the subclass overrides __init__(), it must make sure to invoke super().__init__()."""
         self.training = True
         self._hooks = []
         
@@ -69,11 +70,15 @@ class Module(HasParameters, HasChildModules, ABC):
         
         # Apply hooks
         
-        for hook_fn in self._hooks:
-            _output = hook_fn(self, tuple(args), output)
-            if _output is not None:
-                output = _output
+        try:
+            for hook_fn in self._hooks:
+                _output = hook_fn(self, tuple(args), output)
+                if _output is not None:
+                    output = _output
                 
+        except AttributeError:
+            raise Exception(f'Module {type(self).__name__} must call super().__init__() if overriding the constructor.')
+        
         # For model.summary()
         
         if isinstance(output, Tensor):

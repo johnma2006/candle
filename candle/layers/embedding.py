@@ -10,6 +10,7 @@ class Embedding(Module):
     def __init__(self,
                  num_embed: int,
                  embed_dim: int):
+        super().__init__()
         self.embeddings = Parameter(Tensor(np.random.normal(size=(num_embed, embed_dim))))
         
         
@@ -19,8 +20,8 @@ class Embedding(Module):
         Parameters
         ----------
         indices
-            Integer tensor.
+            Shape (batch, seqlen) integer tensor of embedding indices.
             
         """
-        return self.embeddings[list(x.data.astype(int))]
+        return self.embeddings[list(indices.data.astype(int))]
     

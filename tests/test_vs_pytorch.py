@@ -121,10 +121,10 @@ class TestEquivalencyVsPytorch(unittest.TestCase):
         params_candle = model_candle.parameters()
 
         for (key, value) in {
-            'batch_norm1.beta': 'batch_norm1.bias',
-            'batch_norm1.gamma': 'batch_norm1.weight',
-            'batch_norm2.beta': 'batch_norm2.bias',
-            'batch_norm2.gamma': 'batch_norm2.weight',
+            'batch_norm1.W': 'batch_norm1.weight',
+            'batch_norm1.b': 'batch_norm1.bias',
+            'batch_norm2.W': 'batch_norm2.weight',
+            'batch_norm2.b': 'batch_norm2.bias',
             'conv1.bias': 'conv1.bias',
             'conv2.bias': 'conv2.bias',
             'res_conv.bias': 'res_conv.bias',
@@ -180,10 +180,10 @@ class TestEquivalencyVsPytorch(unittest.TestCase):
         # Test gradient equivalency
 
         candle_name_to_pytorch_name= {
-            'batch_norm1.beta': 'batch_norm1.bias',
-            'batch_norm1.gamma': 'batch_norm1.weight',
-            'batch_norm2.beta': 'batch_norm2.bias',
-            'batch_norm2.gamma': 'batch_norm2.weight',
+            'batch_norm1.W': 'batch_norm1.weight',
+            'batch_norm1.b': 'batch_norm1.bias',
+            'batch_norm2.W': 'batch_norm2.weight',
+            'batch_norm2.b': 'batch_norm2.bias',
             'conv1.bias': 'conv1.bias',
             'conv1.kernel': 'conv1.weight',
             'conv2.bias': 'conv2.bias',
