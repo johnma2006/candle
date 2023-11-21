@@ -4,7 +4,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 from . import optimizer
 from . import scheduler
-from . import imagetransforms
+from . import vision
 from . import models
 
 from .tensor import Tensor

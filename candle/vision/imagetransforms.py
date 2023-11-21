@@ -4,7 +4,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Union, Tuple
 
-from .tensor import Tensor
+from ..tensor import Tensor
 
 
 class ImageTransform(ABC):
