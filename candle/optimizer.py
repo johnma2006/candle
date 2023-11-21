@@ -51,6 +51,13 @@ class SGD(Optimizer):
             
             
 class AdamW(Optimizer):
+    """Adam with decoupled weight decay.
+    
+    References:
+    [1] Ilya Loshchilov, Frank Hutter.
+        Decoupled Weight Decay Regularization. arXiv:1711.05101, 2017.
+
+    """
     
     def __init__(self,
                  parameter_dict: dict,

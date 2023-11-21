@@ -7,9 +7,10 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 * Layers: linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
 * Optimizers: SGD, AdamW
 * LR schedulers: step decay, cosine annealing, warmup
-* Image data augmentation: random crop, random horizontal/vertical flips, normalize
+* Image data augmentation: random crop, random horizontal/vertical flips
+* NLP: beam search, speculative sampling, byte-pair encoding
 * Lightweight Tensorboard-like dashboarding
-* Models: ResNet, GPT, MLP
+* Models: [GPT](...), [ResNet](...)
 
 
 ## Experiments

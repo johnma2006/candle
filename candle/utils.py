@@ -1,6 +1,8 @@
-"""Various math utils."""
+"""Various utils."""
 
 import numpy as np
+import os
+import requests
 
 
 def get_broadcasted_axes(old_shape: tuple,
@@ -98,4 +100,22 @@ def conv2d(image: np.array,
     convolved_image = convolved_image[:, :, ::stride[0], ::stride[1]]
     
     return convolved_image
-        
+    
+    
+def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None):
+    """Downloads a file from `url` and caches it in {home_dir}/.cache/candle/{cache_file_name}"""
+    cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'candle')
+    cache_file_path = os.path.join(cache_dir, cache_file_name)
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if os.path.isfile(cache_file_path):
+        with open(cache_file_path, 'r', encoding=encoding) as f:
+            return f.read()
+
+    else:
+        print(f'Downloading from {url} and caching to {cache_file_name}')
+        contents = requests.get(url).content
+        with open(cache_file_path, 'wb') as f:
+            f.write(contents)
+        return contents
+    
