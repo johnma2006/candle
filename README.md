@@ -3,14 +3,14 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 #### Features:
 * Tensor-based automatic differentiation
 * Object-oriented PyTorch-like API
-* Tensor operations: slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
-* Layers: linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
+* [Tensor operations](https://github.com/johnma2006/candle/tree/main/candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
+* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
+* [NLP](https://github.com/johnma2006/candle/tree/main/candle/nlp): beam search, speculative sampling, byte-pair encoding
+* Models: [GPT](https://github.com/johnma2006/candle/blob/main/candle/models/gpt/model.py), [ResNet](https://github.com/johnma2006/candle/blob/main/candle/models/resnet/model.py)
 * Optimizers: SGD, AdamW
 * LR schedulers: step decay, cosine annealing, warmup
 * Image data augmentation: random crop, random horizontal/vertical flips
-* NLP: beam search, speculative sampling, byte-pair encoding
 * Lightweight Tensorboard-like dashboarding
-* Models: [GPT](...), [ResNet](...)
 
 
 ## Experiments
@@ -18,7 +18,6 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 #### Vision
 * [Training a ResNet14 on MNIST (notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
 * [Training an MLP on MNIST (notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
-
 
 #### Initialization
 * Gradient Norm vs. Model {Depth, Norm} under {Xavier, Kaiming} init

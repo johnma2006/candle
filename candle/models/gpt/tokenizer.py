@@ -11,6 +11,7 @@ from typing import List
 
 import candle
 from candle.nlp.tokenizer import Tokenizer
+from candle.nlp import bpe
 
 
 class GPT2BPETokenizer(Tokenizer):
@@ -52,7 +53,7 @@ class GPT2BPETokenizer(Tokenizer):
             # Example, word = ' 😊.'
             word_bytes = word.encode('utf-8') # word_bytes = b' \xf0\x9f\x98\x8a.'
             word_unicode = ''.join([self.byte_to_unicode_char[byte] for byte in word_bytes])  # word_unicode = 'ĠðŁĺĬ.'
-            word_tokenized = candle.nlp.bpe.tokenize(word_unicode, self.merges)  # word_tokenized = ['ĠðŁĺ', 'Ĭ', '.']
+            word_tokenized = bpe.tokenize(word_unicode, self.merges)  # word_tokenized = ['ĠðŁĺ', 'Ĭ', '.']
             word_indices = [self.token_to_index[token] for token in word_tokenized]  # word_indices = [30325, 232, 13]
             indices += word_indices
 

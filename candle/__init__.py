@@ -21,6 +21,7 @@ from .layers import (
     BatchNorm,
     LayerNorm,
     MultiheadAttention,
+    DotProductAttention,
     PositionalEncoding,
     Conv2d,
     MaxPool2d,

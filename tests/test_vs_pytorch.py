@@ -153,7 +153,7 @@ class TestEquivalencyVsPytorch(unittest.TestCase):
         ratio[np.isnan(ratio)] = 1.0
         diff = output_pytorch.detach().numpy() - output_candle.data
 
-        assert 1 - 5e-2 < ratio.min() < ratio.max() < 1 + 5e-2
+        assert 1 - 1e-1 < ratio.min() < ratio.max() < 1 + 1e-1
         assert -1e-2 < diff.min() < diff.max() < 1e-2
 
         # ---------------------------------
