@@ -141,18 +141,18 @@ def cross_entropy_loss(logits: np.array,
 def masked_fill(a,
                 mask: Tensor,
                 fill_value: float):
-        """Returns Tensor with masked values replaced with fill_value.
-        
-        Parameters
-        ----------
-        a
-            Tensor to fill.
-        mask
-            Tensor of 1s and 0s, must be broadcastable with `a`.
-            1 to fill with fill_value, 0 to leave as-is.
-        fill_value
-            Value to fill.
-            
-        """
-        return operations.TensorMaskedFill([a], mask=mask, fill_value=fill_value).forward()
+    """Returns Tensor with masked values replaced with fill_value.
+
+    Parameters
+    ----------
+    a
+        Tensor to fill.
+    mask
+        Tensor of 1s and 0s, must be broadcastable with `a`.
+        1 to fill with fill_value, 0 to leave as-is.
+    fill_value
+        Value to fill.
+
+    """
+    return operations.TensorMaskedFill([a], mask=mask, fill_value=fill_value).forward()
             

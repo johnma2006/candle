@@ -16,6 +16,7 @@ class ChartType(Enum):
     
 
 class Dashboard:
+    """Lightweight, simplified Tensorboard."""
     
     def __init__(self):
         # Dictionary mapping `chart_label` str to (chart_type, chart_data)

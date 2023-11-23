@@ -9,12 +9,13 @@ from . import nlp
 from . import models
 
 from .tensor import Tensor
-from .parameter import Parameter, ParameterList
+from .parameter import Parameter
 from .dataloader import DataLoader
 from .tensorboard import Dashboard
 
 from .layers import (
     Module,
+    ParameterList,
     Linear,
     Embedding,
     Dropout,

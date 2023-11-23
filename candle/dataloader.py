@@ -27,12 +27,13 @@ class DataLoader:
         drop_last
             True to drop the last batch if len(tensors) isn't evenly divisible by batch size.
         transforms
-            List with same size as tensors.
-            Each element is a list of Callable functions.
+            List with same size as tensors. transforms[i] will apply on tensors[i].
+            Each transforms[i] is a list of Callable functions.
         
         """
         if not len(set([len(x) for x in tensors])) == 1:
             raise ValueError('Tensors must all have the same length.')
+            
         self.tensors = tensors
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -51,14 +52,15 @@ class DataLoader:
                                   drop_last=self.drop_last,
                                   transforms=self.transforms)
 
+    
 class DataLoaderIterator:
     
     def __init__(self,
                  *tensors: List[Tensor],
                  batch_size: int,
-                 shuffle: bool = True,
-                 drop_last: bool = False,
-                 transforms: List[Callable] = None):
+                 shuffle: bool,
+                 drop_last: bool,
+                 transforms: List[Callable]):
         self.tensors = tensors
         self.batch_size = batch_size
         self.shuffle = shuffle

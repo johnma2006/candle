@@ -45,7 +45,7 @@ class ResNet(Module):
             x = residual_block(x)
             x = F.relu(x)
             
-        x = x.mean(axis=(2, 3))
+        x = x.mean(axis=(2, 3))  # Equivalent to global avgpool
         x = self.linear(x)
         
         return x

@@ -3,6 +3,7 @@ from typing import Union, Tuple
 
 
 class Tensor:
+    """Tensor node in the computation graph."""
     
     def __init__(self,
                  data: np.array):
@@ -12,13 +13,15 @@ class Tensor:
             data = np.array(data)
         self.data = data
         
-        self.requires_grad = False
         self.grad = 0.0
         self.operation = None  # Operation edge that points into this tensor node. None if is leaf
-        self._outdegree = 0    # Outdegree in the computation graph. Uninitialized until .backward()
-        self._requires_backprop_grad = None  # If we need to compute grad during backprop. True iff any child node is True
-                                             # Uninitialized until _initialize_requires_backprop_grad()
+        self.requires_grad = False
         
+        self._batch_grad = 0.0  # Grads for the batch during loss.backward() accumulate here.
+        self._outdegree = 0     # Outdegree in the computation graph. Uninitialized until .backward()
+        self._requires_grad_computation = None  # If we need to compute grad during backprop.
+                                                # True iff any child node is True.
+                                                # Uninitialized until _initialize_requires_grad_computation()
         
     def clone(self):
         """Returns copy of tensor."""
@@ -46,28 +49,34 @@ class Tensor:
     # Backpropagation
     # ---------------
     
+    def zero_grad(self):
+        """Resets grad to 0."""
+        self.grad = 0.0
+        
+    
     def backward(self):
-        """Populates self.grad for this node and upstream nodes, the derivative w.r.t. this tensor."""
+        """Accumulates self.grad for this node and upstream nodes, the derivative w.r.t. this tensor."""
         if self.shape != ():
             raise Exception('.backward() can only be called from a scalar Tensor.')
         
         self._reset_graph()
         self._initialize_outdegree()
-        self._initialize_requires_backprop_grad()
+        self._initialize_requires_grad_computation()
         
-        self.grad = np.array(1.0)
+        self._batch_grad = np.array(1.0)
         self._backward()
 
     
     def _backward(self):
-        """Populates self.grad, the derivative w.r.t. the loss tensor, for upstream nodes."""
+        """Accumulates self.grad, the derivative w.r.t. the loss tensor, for upstream nodes."""
         if self.operation is None:  # Is leaf
             return
         
         nodes_to_backprop = []
-        input_grads = self.operation.backward(self.grad)
+        input_grads = self.operation.backward(self._batch_grad)
         for (node, input_grad) in zip(self.operation.inputs, input_grads):
-            if node._requires_backprop_grad:
+            if node._requires_grad_computation:
+                node._batch_grad += input_grad
                 node.grad += input_grad
                 node._outdegree -= 1
                 assert node._outdegree >= 0
@@ -80,15 +89,18 @@ class Tensor:
         
         
     def _reset_graph(self):
-        """Resets all self._outdegree and grads to 0 for this node and upstream nodes."""
+        """Resets the graph in preparation for backprop.
+        Resets self._outdegree, self._requires_grad_computation, and self.batch_grad.
+        
+        """
         children = [self]
         seen = set()
 
         while children:
             node = children.pop(0)
+            node._batch_grad = 0.0
             node._outdegree = 0
-            node._requires_backprop_grad = None
-            node.grad = 0.0
+            node._requires_grad_computation = None
 
             if node.operation is not None:
                 for child_node in set(node.operation.inputs):
@@ -117,19 +129,19 @@ class Tensor:
             seen.add(id(node))
             
             
-    def _initialize_requires_backprop_grad(self):
-        """Initializes self._requires_backprop_grad for this node and upstream nodes."""
-        if self._requires_backprop_grad is not None:
-            return self._requires_backprop_grad
+    def _initialize_requires_grad_computation(self):
+        """Initializes self._requires_grad_computation for this node and upstream nodes."""
+        if self._requires_grad_computation is not None:
+            return self._requires_grad_computation
         
         if self.operation is None:  # Is leaf
-            self._requires_backprop_grad = self.requires_grad
+            self._requires_grad_computation = self.requires_grad
         else:
-            self._requires_backprop_grad = False
+            self._requires_grad_computation = False
             for child_node in set(self.operation.inputs):
-                self._requires_backprop_grad |= child_node._initialize_requires_backprop_grad()
+                self._requires_grad_computation |= child_node._initialize_requires_grad_computation()
 
-        return self._requires_backprop_grad
+        return self._requires_grad_computation
     
     
     # -------------------
