@@ -109,9 +109,10 @@ class TestBackpropVsPytorch(unittest.TestCase):
                 return x_conv
 
         model_candle = ResNetBlock_candle(8, 16, 2)
-
+        model_candle.eval()
         x_candle = candle.Tensor(x)
-        _ = model_candle(x_candle)
+        _ = model_candle(x_candle)  # Initialize batchnorm params
+        model_candle.train()
 
         # ---------------------------------------------------
         # Transfer PyTorch model parameters to candle model

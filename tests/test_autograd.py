@@ -4,8 +4,7 @@ import unittest
 
 import candle
 import candle.functions as F
-from candle.tensor import Tensor
-from candle.parameter import Parameter
+from candle import Tensor, Parameter
 from .utils import model_numerical_grad_check
 
 
@@ -180,7 +179,7 @@ class TestAutograd(unittest.TestCase):
         assert x5._outdegree == 0
         
         
-    def test_requires_backprop_grad(self):
+    def test_requires_grad_computation(self):
         a = Tensor(np.array([0, 1, 2, 3]))
         b = Parameter(Tensor(np.array([0, 1, 2, 3])))
         c = Tensor(np.array([0, 1, 2, 3]))
@@ -192,9 +191,30 @@ class TestAutograd(unittest.TestCase):
         d = a + b
         e = c + d
 
-        e._initialize_requires_backprop_grad()
-        assert a._requires_backprop_grad == False
-        assert b._requires_backprop_grad == True
-        assert c._requires_backprop_grad == False
-        assert d._requires_backprop_grad == True
-        assert e._requires_backprop_grad == True
+        e._initialize_requires_grad_computation()
+        assert a._requires_grad_computation == False
+        assert b._requires_grad_computation == True
+        assert c._requires_grad_computation == False
+        assert d._requires_grad_computation == True
+        assert e._requires_grad_computation == True
+        
+        
+    def test_zero_grad(self):
+        x = Tensor(np.random.random(size=(12, 128)))
+        y = Tensor(np.random.random(size=(256)))
+
+        layer = candle.Linear(128, 256)
+
+        for i in range(1, 10):
+            loss = (layer(x) - y).mean()
+            loss.backward()
+            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).min())
+            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).max())
+
+        layer.zero_grad()
+
+        for i in range(1, 10):
+            loss = (layer(x) - y).mean()
+            loss.backward()
+            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).min())
+            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).max())
