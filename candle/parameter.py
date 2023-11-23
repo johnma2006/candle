@@ -125,9 +125,13 @@ class HasChildModules(ABC):
         if input_shape is not None:
             compute_output_shape = True
             
+            
         if compute_output_shape and input_shape is not None:
             # Feed in fake input to initialize module._output_shape
+            training_mode = self.training
+            self.eval()  # Set to eval mode to prevent model from changing from e.g. batch norm ema_mean update
             _ = self(Tensor(np.zeros(input_shape)))
+            self.train(mode=training_mode)
         
         model_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
 
