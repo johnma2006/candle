@@ -1,6 +1,6 @@
 from typing import List
 from .module import Module
-from ..parameter import Parameter, HasParameters
+from ..parameter import Parameter
 
 
 class ParameterList(Module):
@@ -17,8 +17,8 @@ class ParameterList(Module):
         """
         super().__init__()
         for param in parameter_list:
-            if not (isinstance(param, Parameter) or isinstance(param, HasParameters)):
-                raise ValueError(f'Parameter {param} must be either class Parameter or HasParameter.')
+            if not isinstance(param, Parameter) and not isinstance(param, Module):
+                raise ValueError(f'{param} must be either class Parameter or Module.')
             
         self.parameter_list = parameter_list
         self._extra_levels_to_expand = 1
@@ -43,7 +43,7 @@ class ParameterList(Module):
             if isinstance(param, Parameter):
                 parameter_dict[str(i)] = param
                 
-            elif isinstance(param, HasParameters):
+            elif isinstance(param, Module):
                 attr_parameter_dict = param.parameters()
                 for subattr_name in attr_parameter_dict:
                     parameter_dict[f'{str(i)}.{subattr_name}'] = attr_parameter_dict[subattr_name]

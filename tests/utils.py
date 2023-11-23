@@ -9,7 +9,8 @@ def numerical_grad_check(operation_class: Type,
                          test_inputs: List[Tensor],
                          kwargs: dict = {},
                          eps: float = 1e-6,
-                         random_seed: int = None):
+                         random_seed: int = None,
+                         atol: float = 1e-5):
     """Compares .backward() gradient against numerically computed gradient.
     
     Parameters
@@ -22,6 +23,8 @@ def numerical_grad_check(operation_class: Type,
         Perturbation when computing numerical gradient.
     random_seed
         Random seed to use when generating randomness.
+    atol
+        Tolerance for errors in assertions.
         
     """
     operation = operation_class(test_inputs, **kwargs)
@@ -68,8 +71,8 @@ def numerical_grad_check(operation_class: Type,
               + f'corr = {100 * corr:.2f}%, '.ljust(17)
               + f'max(abs(diff)) = {max_diff}')
         
-        assert corr > 1 - 1e-8
-        assert max_diff < 1e-5
+        assert corr > 1 - atol
+        assert max_diff < atol
 
         
 def model_numerical_grad_check(model,

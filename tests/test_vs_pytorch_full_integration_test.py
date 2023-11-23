@@ -104,7 +104,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
                 super().__init__()
                 self.num_classes = num_classes
 
-                self.conv = nn.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=7, padding=1, stride=1)
+                self.conv = nn.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=3, padding=1, stride=1)
                 self.batch_norm = nn.BatchNorm2d(resnet_blocks[0][0])
                 self.max_pool = nn.MaxPool2d(kernel_size=2)  # Remove MaxPool since MNIST is only 8x8
 

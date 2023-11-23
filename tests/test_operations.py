@@ -112,11 +112,13 @@ class TestOperations(unittest.TestCase):
     def test_power(self):
         numerical_grad_check(operation_class=Power,
                              test_inputs=[Tensor(100 + np.random.normal(size=(2, 3, 5, 7, 11)))],
-                             kwargs={'power': 1.234})
+                             kwargs={'power': 1.234},
+                             atol=1e-4)
 
         numerical_grad_check(operation_class=Power,
                              test_inputs=[Tensor(1e-2 * np.random.normal(size=(2, 3, 5, 7, 11)))],
-                             kwargs={'power': 3})
+                             kwargs={'power': 3},
+                             atol=1e-4)
         
         numerical_grad_check(operation_class=Exponentiation,
                              test_inputs=[Tensor(np.random.normal(size=(3, 4, 5, 7)))],

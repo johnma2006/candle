@@ -33,6 +33,7 @@ class Scheduler(ABC):
 
 
 class StepLR(Scheduler):
+    """Decay the learning rate by `gamma` every `step_size` iterations."""
     
     def __init__(self,
                  optimizer,
@@ -50,6 +51,7 @@ class StepLR(Scheduler):
 
 
 class CosineAnnealingLR(Scheduler):
+    """Decay the learning rate according to a cosine curve."""
     
     def __init__(self,
                  optimizer,
@@ -69,11 +71,11 @@ class CosineAnnealingLR(Scheduler):
 
     
 class WarmupWrapper(Scheduler):
+    """Wrapper around another scheduler. Linear warmup for the first `warmup_steps`, then uses the wrapped scheduler."""
     
     def __init__(self,
                  scheduler,
                  warmup_steps: int):
-        """Linear warmup for the first `warmup_steps`, then uses the provided scheduler if passed in."""
         super().__init__()
         scheduler.optimizer.scheduler = self  # Override optimizer's scheduler
 

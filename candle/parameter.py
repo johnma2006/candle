@@ -85,12 +85,3 @@ class Parameter:
     def __matmul__(self, other):
         return self.weight.__matmul__(other)
     
-    
-class HasParameters(ABC):
-    """All classes that have Parameters as attributes should subclass this."""
-
-    @abstractmethod
-    def parameters():
-        """Returns dictionary mapping parameter name to Parameter."""
-        pass
-    

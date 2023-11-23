@@ -19,10 +19,38 @@ class ResNet(Module):
                  num_classes: int,
                  in_channels: int,
                  resnet_blocks: List[Tuple[int, int, int]]):
+        """
+        Parameters
+        ----------
+        num_classes
+            Num output classes
+        in_channel
+            Num channels in the input image.
+        resnet_blocks
+            List of (in_channels, out_channels, stride) tuples.
+            
+            e.g. for ResNet20m
+                resnet_blocks = [
+                    (16, 16, 1),
+                    (16, 16, 1),
+                    (16, 16, 1),
+
+                    (16, 32, 2),
+                    (32, 32, 1),
+                    (32, 32, 1),
+
+                    (32, 64, 2),
+                    (64, 64, 1),
+                    (64, 64, 1),
+                ]
+        
+        """
         super().__init__()
         self.num_classes = num_classes
         
-        self.conv = candle.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=7, padding=1, stride=1)
+        self.conv = candle.Conv2d(in_channels,
+                                  resnet_blocks[0][0],  # in-channels of the first block
+                                  kernel_size=3, padding=1, stride=1)
         self.batch_norm = candle.BatchNorm(axis=(0, 2, 3))
         self.max_pool = candle.MaxPool2d(kernel_size=2)
         

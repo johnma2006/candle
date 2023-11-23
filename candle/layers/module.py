@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 from typing import Callable, Tuple
 
 from ..tensor import Tensor
-from ..parameter import Parameter, HasParameters
+from ..parameter import Parameter
 
 
-class Module(HasParameters, ABC):
+class Module(ABC):
     
     def __init__(self):
         """If the subclass overrides __init__(), it must make sure to invoke super().__init__()."""
@@ -36,7 +36,7 @@ class Module(HasParameters, ABC):
             if isinstance(attr, Parameter):
                 parameter_dict[attr_name] = attr
                 
-            elif isinstance(attr, HasParameters):
+            elif isinstance(attr, Module):
                 attr_parameter_dict = attr.parameters()
                 for subattr_name in attr_parameter_dict:
                     parameter_dict[f'{attr_name}.{subattr_name}'] = attr_parameter_dict[subattr_name]
@@ -45,7 +45,7 @@ class Module(HasParameters, ABC):
     
     
     def child_modules(self):
-        """Returns dictionary mapping name to child modules."""
+        """Returns dictionary mapping name to direct child modules."""
         children = {}
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
@@ -89,14 +89,13 @@ class Module(HasParameters, ABC):
         
         # Apply hooks
         
-        try:
-            for hook_fn in self._hooks:
-                _output = hook_fn(self, tuple(args), output)
-                if _output is not None:
-                    output = _output
-                
-        except AttributeError:
+        if not hasattr(self, '_hooks'):
             raise Exception(f'Module {type(self).__name__} must call super().__init__() if overriding the constructor.')
+        
+        for hook_fn in self._hooks:
+            _output = hook_fn(self, tuple(args), output)
+            if _output is not None:
+                output = _output
         
         # For model.summary()
         
@@ -111,12 +110,13 @@ class Module(HasParameters, ABC):
     def summary(self,
                 input_shape: Tuple[int] = None,
                 expand_submodules_to_level: int = 0,
-                _compute_output_shape: bool = False,
                 _level: int = 0):
         """Returns DataFrame summarizing the model.
         
         Parameters
         ----------
+        input_shape
+            If provided, then the output shape of each module will be computed.
         expand_submodules_to_level
             How far recursively into each module to expand. None to expand everything.
             
@@ -124,10 +124,7 @@ class Module(HasParameters, ABC):
         if expand_submodules_to_level is None:
             expand_submodules_to_level = np.inf
             
-        if input_shape is not None:
-            _compute_output_shape = True
-
-        if _compute_output_shape and input_shape is not None:
+        if input_shape is not None and _level == 0:
             # Feed in fake input to initialize module._output_shape
             training_mode = self.training
             self.eval()  # Set to eval mode to prevent model from changing from e.g. batch norm ema_mean update
@@ -144,7 +141,7 @@ class Module(HasParameters, ABC):
                 num_parameters = np.prod(attr.shape)
                 model_summary_df.loc[f'{attr_name}', 'Layer Type'] = 'Parameter'
                 model_summary_df.loc[f'{attr_name}', '# Parameters'] = num_parameters
-                if _compute_output_shape:
+                if input_shape is not None:
                     model_summary_df.loc[attr_name, 'Output Shape'] = None
 
         # Add child modules to summary
@@ -153,9 +150,8 @@ class Module(HasParameters, ABC):
         for attr_name in child_modules:
             module = child_modules[attr_name]
 
-            submodule_summary_df = module.summary(input_shape=None,
+            submodule_summary_df = module.summary(input_shape=input_shape,
                                                   expand_submodules_to_level=expand_submodules_to_level,
-                                                  _compute_output_shape=_compute_output_shape,
                                                   _level=_level + 1)
 
             if _level < expand_submodules_to_level + module._extra_levels_to_expand and not submodule_summary_df.empty:
@@ -166,7 +162,7 @@ class Module(HasParameters, ABC):
                 submodule_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
                 submodule_summary_df.loc[attr_name, 'Layer Type'] = type(module).__name__
                 submodule_summary_df.loc[attr_name,  '# Parameters'] = num_parameters
-                if _compute_output_shape:
+                if input_shape is not None:
                     submodule_summary_df.loc[attr_name, 'Output Shape'] = str(module._output_shape)
 
             model_summary_df = pd.concat([model_summary_df, submodule_summary_df])
@@ -183,10 +179,10 @@ class Module(HasParameters, ABC):
             model_summary_df = model_summary_df.sort_values(list(multi_index.columns)).set_index(list(multi_index.columns))
             model_summary_df.index.names = [''] * len(model_summary_df.index.names)
             
-            if _compute_output_shape:
+            if input_shape is not None:
                 model_summary_df.loc['Total', 'Output Shape'] = ''
             model_summary_df.loc['Total', 'Layer Type'] = ''
             model_summary_df.loc['Total', '# Parameters'] = model_summary_df['# Parameters'].sum()
 
-        return model_summary_df.copy()
+        return model_summary_df
     
