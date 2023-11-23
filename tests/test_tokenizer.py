@@ -1,13 +1,10 @@
 import numpy as np
-from typing import List
 import unittest
 
 import torch
 import torch.nn as nn
 
-import candle as candle
-import candle.functions as F
-import candle.optimizer
+import candle
 
 
 class TestTokenizer(unittest.TestCase):

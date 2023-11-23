@@ -42,14 +42,16 @@ class BatchNorm(Module):
             self.W.data = np.ones(self.features_shape)
             self.b.data = np.zeros(self.features_shape)
 
-        batch_mean = x.mean(axis=self.axis, keepdims=True)
-        batch_var = x.var(axis=self.axis, keepdims=True)
-
         if self.training:
-            # Update running mean/var
+            batch_mean = x.mean(axis=self.axis, keepdims=True)
+            batch_var = x.var(axis=self.axis, keepdims=True)  # The computes biased var
+            
+            # Update running mean/var, making sure to update ema_var with unbiased var
+            N = np.prod(np.array(x.shape)[list(self.axis)])
+            bessel_correction = N / (N - 1)
             self.ema_mean = self.ema_mean * (1 - self.momentum) + batch_mean.data * self.momentum
-            self.ema_var = self.ema_var * (1 - self.momentum) + batch_var.data * self.momentum
-
+            self.ema_var = self.ema_var * (1 - self.momentum) + batch_var.data * self.momentum * bessel_correction
+            
             # In training mode, use batch mean/var for normalization 
             mean = batch_mean
             var = batch_var
@@ -57,7 +59,7 @@ class BatchNorm(Module):
             # In eval mode, use running mean/var for normalization 
             mean = Tensor(self.ema_mean)
             var = Tensor(self.ema_var)
-
+        
         x_normalized = (x - mean) / (var + self.eps) ** 0.5
         x_normalized = x_normalized * self.W + self.b
 

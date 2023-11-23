@@ -1,11 +1,10 @@
 import numpy as np
-from typing import List
 import unittest
 
 import torch
 from transformers import GPT2LMHeadModel
 
-import candle as candle
+import candle
 
 
 class TestGPT(unittest.TestCase):
