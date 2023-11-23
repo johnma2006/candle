@@ -1,25 +1,31 @@
-import time
+import numpy as np
+import pandas as pd
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Tuple
 
 from ..tensor import Tensor
-from ..parameter import Parameter, HasParameters, HasChildModules
+from ..parameter import Parameter, HasParameters
 
 
-class Module(HasParameters, HasChildModules, ABC):
+class Module(HasParameters, ABC):
     
     def __init__(self):
         """If the subclass overrides __init__(), it must make sure to invoke super().__init__()."""
         self.training = True
         self._hooks = []
-        
         self._output_shape = None
-        self._output_time = None
+        self._extra_levels_to_expand = 0  # How many extra levels to expand in model.summary
     
     
     @abstractmethod
     def forward(self):
         pass
+    
+    
+    def zero_grad(self):
+        """Resets grad to 0."""
+        for param in self.parameters().values():
+            param.grad = 0.0
     
 
     def parameters(self):
@@ -43,7 +49,7 @@ class Module(HasParameters, HasChildModules, ABC):
         children = {}
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
-            if isinstance(attr, Module) or isinstance(attr, HasChildModules):
+            if isinstance(attr, Module):
                 children[attr_name] = attr
                     
         return children
@@ -63,6 +69,19 @@ class Module(HasParameters, HasChildModules, ABC):
             raise ValueError('hook_fn must be Callable function with signature `def hook_fn(module, input, output)`.')
             
         self._hooks.append(hook_fn)
+    
+    
+    def train(self,
+              mode: bool = True):
+        """Sets module and all child modules into training model."""
+        self.training = mode
+        for module in self.child_modules().values():
+            module.train(mode)
+            
+            
+    def eval(self):
+        """Sets module and all child modules into eval model."""
+        self.train(mode=False)
     
     
     def __call__(self, *args, **kwargs):
@@ -85,6 +104,89 @@ class Module(HasParameters, HasChildModules, ABC):
             self._output_shape = output.shape
         else:
             self._output_shape = None
-        self._output_time = time.time_ns()
         
         return output
+        
+        
+    def summary(self,
+                input_shape: Tuple[int] = None,
+                expand_submodules_to_level: int = 0,
+                _compute_output_shape: bool = False,
+                _level: int = 0):
+        """Returns DataFrame summarizing the model.
+        
+        Parameters
+        ----------
+        expand_submodules_to_level
+            How far recursively into each module to expand. None to expand everything.
+            
+        """
+        if expand_submodules_to_level is None:
+            expand_submodules_to_level = np.inf
+            
+        if input_shape is not None:
+            _compute_output_shape = True
+
+        if _compute_output_shape and input_shape is not None:
+            # Feed in fake input to initialize module._output_shape
+            training_mode = self.training
+            self.eval()  # Set to eval mode to prevent model from changing from e.g. batch norm ema_mean update
+            _ = self(Tensor(np.zeros(input_shape)))
+            self.train(mode=training_mode)
+
+        model_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
+
+        # Add child parameters to summary
+
+        for attr_name in dir(self):
+            attr = getattr(self, attr_name)
+            if isinstance(attr, Parameter):
+                num_parameters = np.prod(attr.shape)
+                model_summary_df.loc[f'{attr_name}', 'Layer Type'] = 'Parameter'
+                model_summary_df.loc[f'{attr_name}', '# Parameters'] = num_parameters
+                if _compute_output_shape:
+                    model_summary_df.loc[attr_name, 'Output Shape'] = None
+
+        # Add child modules to summary
+
+        child_modules = self.child_modules()
+        for attr_name in child_modules:
+            module = child_modules[attr_name]
+
+            submodule_summary_df = module.summary(input_shape=None,
+                                                  expand_submodules_to_level=expand_submodules_to_level,
+                                                  _compute_output_shape=_compute_output_shape,
+                                                  _level=_level + 1)
+
+            if _level < expand_submodules_to_level + module._extra_levels_to_expand and not submodule_summary_df.empty:
+                submodule_summary_df.index = submodule_summary_df.index.map(lambda x: f'{attr_name}.{x}')
+            else:
+                # Condense submodule_summary_df into one line
+                num_parameters = submodule_summary_df['# Parameters'].sum()
+                submodule_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
+                submodule_summary_df.loc[attr_name, 'Layer Type'] = type(module).__name__
+                submodule_summary_df.loc[attr_name,  '# Parameters'] = num_parameters
+                if _compute_output_shape:
+                    submodule_summary_df.loc[attr_name, 'Output Shape'] = str(module._output_shape)
+
+            model_summary_df = pd.concat([model_summary_df, submodule_summary_df])
+
+        # If at top level, split index into multiple columns and add a "Total" summary row
+            
+        if _level == 0 and len(model_summary_df) > 0:
+            multi_index = [i.split('.') for i in model_summary_df.index]
+            max_level = max([len(i) for i in multi_index])
+            multi_index = [i + [''] * (max_level - len(i)) for i in multi_index]
+            multi_index = pd.DataFrame(multi_index, index=model_summary_df.index)
+
+            model_summary_df = pd.concat([multi_index, model_summary_df], axis=1)
+            model_summary_df = model_summary_df.sort_values(list(multi_index.columns)).set_index(list(multi_index.columns))
+            model_summary_df.index.names = [''] * len(model_summary_df.index.names)
+            
+            if _compute_output_shape:
+                model_summary_df.loc['Total', 'Output Shape'] = ''
+            model_summary_df.loc['Total', 'Layer Type'] = ''
+            model_summary_df.loc['Total', '# Parameters'] = model_summary_df['# Parameters'].sum()
+
+        return model_summary_df.copy()
+    

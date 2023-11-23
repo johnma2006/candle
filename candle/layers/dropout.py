@@ -4,6 +4,7 @@ from ..tensor import Tensor
 
 
 class Dropout(Module):
+    
     def __init__(self,
                  p: float):
         super().__init__()

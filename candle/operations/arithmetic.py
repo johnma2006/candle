@@ -9,6 +9,7 @@ from ..tensor import Tensor
 
 
 class Addition(Operation):
+    """f(inputs) = inputs[0] + inputs[1], with broadcasting"""
     
     def _forward(self):
         (a, b) = self.inputs
@@ -26,6 +27,7 @@ class Addition(Operation):
     
     
 class Subtraction(Operation):
+    """f(inputs) = inputs[0] - inputs[1], with broadcasting"""
     
     def _forward(self):
         (a, b) = self.inputs
@@ -43,6 +45,7 @@ class Subtraction(Operation):
         
 
 class Multiplication(Operation):
+    """f(inputs) = inputs[0] * inputs[1], with broadcasting"""
     
     def _forward(self):
         (a, b) = self.inputs
@@ -63,6 +66,7 @@ class Multiplication(Operation):
         
     
 class Division(Operation):
+    """f(inputs) = inputs[0] / inputs[1], with broadcasting"""
     
     def _forward(self):
         (a, b) = self.inputs
@@ -84,6 +88,7 @@ class Division(Operation):
     
     
 class Power(Operation):
+    """f(inputs) = inputs[0] ** power"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -106,6 +111,7 @@ class Power(Operation):
     
     
 class Exponentiation(Operation):
+    """f(inputs) = power ** inputs[0]"""
     
     def __init__(self,
                  inputs: List[Tensor],

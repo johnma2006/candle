@@ -12,6 +12,19 @@ class BatchNorm(Module):
                  axis: Union[int, Tuple[int]] = (0,),
                  momentum: float = 0.1,
                  eps: float = 1e-5):
+        """Batch normalization.
+        
+        Parameters
+        ----------
+        axis
+            Axis to compute mean/std over. Must include the 0, batch axis.
+            For example, axis=(0,) for BatchNorm1d. axis=(0, 2, 3) for BatchNorm2d.
+        momentum
+            How fast to decay the running_mean and running_var estimations.
+        eps
+            Value added to the denominator for numerical stability.
+            
+        """
         super().__init__()
         
         if type(axis) is int:
@@ -75,6 +88,16 @@ class LayerNorm(Module):
     def __init__(self,
                  axis: Union[int, Tuple[int]],
                  eps: float = 1e-5):
+        """Layer normalization.
+        
+        Parameters
+        ----------
+        axis
+            Axes to compute mean/std over. Must not include the 0, batch axis.
+        eps
+            Value added to the denominator for numerical stability.
+            
+        """
         super().__init__()
         
         if type(axis) is int:

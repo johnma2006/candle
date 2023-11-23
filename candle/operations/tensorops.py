@@ -6,6 +6,7 @@ from ..tensor import Tensor
 
 
 class TensorContraction(Operation):
+    """f(inputs) = tensordot(inputs[0], inputs[1], axes)"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -33,6 +34,7 @@ class TensorContraction(Operation):
     
     
 class TensorSum(Operation):
+    """f(inputs) = inputs[0].sum(axis, keepdims)"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -64,6 +66,7 @@ class TensorSum(Operation):
     
     
 class TensorMax(Operation):
+    """f(inputs) = inputs[0].max(axis, keepdims)"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -100,6 +103,7 @@ class TensorMax(Operation):
     
     
 class TensorMin(Operation):
+    """f(inputs) = inputs[0].min(axis, keepdims)"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -136,6 +140,7 @@ class TensorMin(Operation):
     
     
 class TensorSlice(Operation):
+    """f(inputs) = inputs[0][key]"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -179,7 +184,8 @@ class TensorSlice(Operation):
     
     
 class TensorReshape(Operation):
-    
+    """f(inputs) = inputs[0].reshape(new_shape)"""
+
     def __init__(self,
                  inputs: List[Tensor],
                  new_shape: Tuple[int]):
@@ -200,6 +206,7 @@ class TensorReshape(Operation):
     
     
 class TensorSwapaxes(Operation):
+    """f(inputs) = inputs[0].swapaxes(dim0, dim1)"""
     
     def __init__(self,
                  inputs: List[Tensor],
@@ -224,7 +231,7 @@ class TensorSwapaxes(Operation):
     
 class BatchMatrixMultiply(Operation):
     """Multiplies two tensors of shape (A, B, C, ..., M, N) and (A, B, C, ..., N, P).
-    
+
     Returns a tensor of shape (A, B, C, ..., M, P)."""
     
     def __init__(self,
@@ -250,6 +257,7 @@ class BatchMatrixMultiply(Operation):
     
     
 class TensorTranspose(Operation):
+    """f(inputs) = inputs[0].T"""
     
     def __init__(self,
                  inputs: List[Tensor]):
@@ -276,6 +284,8 @@ class TensorMaskedFill(Operation):
         
         Parameters
         ----------
+        inputs
+            Single Tensor.
         mask
             Tensor of 1s and 0s, must be broadcastable with inputs[0].
             1 to fill with fill_value, 0 to leave as-is.
