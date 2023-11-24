@@ -28,7 +28,7 @@ class DataLoader:
             True to drop the last batch if len(tensors) isn't evenly divisible by batch size.
         transforms
             List with same size as tensors. transforms[i] will apply on tensors[i].
-            Each transforms[i] is a list of Callable functions.
+            Each transforms[i] is a Callable functions.
         
         """
         if not len(set([len(x) for x in tensors])) == 1:
@@ -91,8 +91,7 @@ class DataLoaderIterator:
                 item = tensor[indices]
                 
                 if self.transforms is not None and self.transforms[i] is not None:
-                    for transform in self.transforms[i]:
-                        item = transform(item)
+                    item = self.transforms[i](item)
                         
                 items.append(item)
             items = tuple(items)

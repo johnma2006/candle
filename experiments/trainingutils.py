@@ -15,8 +15,7 @@ def get_random_batch(*tensors, batch_size: int, transforms: List[Callable] = Non
     batch_size
         Size of batches to return.
     transforms
-        List with same size as tensors.
-        Each element is a list of Callable functions.
+        List with same size as tensors. Each element is a Callable functions.
 
     """
     assert len(set([len(t) for t in tensors])) == 1
@@ -31,8 +30,7 @@ def get_random_batch(*tensors, batch_size: int, transforms: List[Callable] = Non
         item = tensor[indices]
 
         if transforms is not None and transforms[i] is not None:
-            for transform in transforms[i]:
-                item = transform(item)
+            item = transforms[i](item)
 
         items.append(item)
     items = tuple(items)
