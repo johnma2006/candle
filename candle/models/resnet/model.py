@@ -18,7 +18,8 @@ class ResNet(Module):
     def __init__(self,
                  num_classes: int,
                  in_channels: int,
-                 resnet_blocks: List[Tuple[int, int, int]]):
+                 resnet_blocks: List[Tuple[int, int, int]],
+                 use_maxpool: bool = False):
         """
         Parameters
         ----------
@@ -43,13 +44,18 @@ class ResNet(Module):
                     (64, 64, 1),
                     (64, 64, 1),
                 ]
+        use_maxpool
+            If False, turns the MaxPool layer off.
         
         """
         super().__init__()
         self.num_classes = num_classes
+        self.in_channels = in_channels
+        self.resnet_blocks = resnet_blocks
+        self.use_maxpool = use_maxpool
         
         self.conv = candle.Conv2d(in_channels,
-                                  resnet_blocks[0][0],  # in-channels of the first block
+                                  resnet_blocks[0][0],  # in-channels of the first resnet_block
                                   kernel_size=3, padding=1, stride=1)
         self.batch_norm = candle.BatchNorm(axis=(0, 2, 3))
         self.max_pool = candle.MaxPool2d(kernel_size=2)
@@ -67,13 +73,14 @@ class ResNet(Module):
         x = self.batch_norm(x)
         x = F.relu(x)
         
-        x = self.max_pool(x)
+        if self.use_maxpool:
+            x = self.max_pool(x)
         
         for residual_block in self.residual_blocks:
             x = residual_block(x)
             x = F.relu(x)
             
-        x = x.mean(axis=(2, 3))  # Equivalent to global avgpool
+        x = x.mean(axis=(2, 3))  # Equivalent to global channel-wise avgpool
         x = self.linear(x)
         
         return x
@@ -97,24 +104,25 @@ class ResNetBlock(Module):
         self.batch_norm1 = candle.BatchNorm(axis=(0, 2, 3))
         self.batch_norm2 = candle.BatchNorm(axis=(0, 2, 3))
         
+        # If channels are different or stride > 1, then we need to reshape the input using a 1x1 conv
         if in_channels != out_channels or stride > 1:
-            self.res_conv = candle.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
+            self.conv_1by1 = candle.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
         else:
-            self.res_conv = None
+            self.conv_1by1 = None
             
             
     def forward(self, x):
-        x_conv = self.conv1(x)
-        x_conv = self.batch_norm1(x_conv)
-        x_conv = F.relu(x_conv)
+        x_resid = self.conv1(x)
+        x_resid = self.batch_norm1(x_resid)
+        x_resid = F.relu(x_resid)
         
-        x_conv = self.conv2(x_conv)
-        x_conv = self.batch_norm2(x_conv)
+        x_resid = self.conv2(x_resid)
+        x_resid = self.batch_norm2(x_resid)
         
-        if self.res_conv is not None:
-            x = self.res_conv(x)
+        if self.conv_1by1 is not None:
+            x = self.conv_1by1(x)
             
-        x_conv = x + x_conv
+        x_resid = x + x_resid
         
-        return x_conv
+        return x_resid
     
