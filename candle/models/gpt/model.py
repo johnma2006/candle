@@ -42,7 +42,7 @@ class GPT(Module):
         self.layer_norm = candle.LayerNorm(axis=2)
         
         # Tie output projection weights to word embeddings. See "Weight Tying" paper.
-        self.output_projection = self.word_embeddings.embeddings.T
+        self.output_projection = self.word_embeddings.embeddings
         
         # TODO: initialize weights properly
     
@@ -71,7 +71,7 @@ class GPT(Module):
 
         x = self.layer_norm(x)
         
-        return x @ self.output_projection
+        return x @ self.output_projection.T
     
     
     def from_pretrained(model_name: str):
