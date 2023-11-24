@@ -5,13 +5,21 @@ from typing import Tuple
 
 class Optimizer(ABC):
     
-    def __init__(self):
+    def __init__(self,
+                 parameter_dict: dict):
+        self.parameter_dict = parameter_dict
         self.scheduler = None
     
     
     @abstractmethod
     def step(self):
         pass
+    
+    
+    def zero_grad(self):
+        """Resets grad to 0."""
+        for param in self.parameter_dict.values():
+            param.grad = 0.0
     
     
     def get_learning_rate(self):
@@ -33,21 +41,33 @@ class Optimizer(ABC):
     
     
 class SGD(Optimizer):
+    """SGD with momentum."""
     
     def __init__(self,
                  parameter_dict: dict,
                  learning_rate: float,
+                 momentum: float = 0.0,
                  weight_decay: float = 0.0):
-        super().__init__()
-        self.parameter_dict = parameter_dict
+        super().__init__(parameter_dict)
         self.learning_rate = learning_rate
+        self.mom = momentum
         self.weight_decay = weight_decay
+        
+        self.momentum = {key: None for key in self.parameter_dict}
     
     
     def step(self):
         for parameter_name in self.parameter_dict:
             param = self.parameter_dict[parameter_name]
-            param.data -= self.get_learning_rate() * param.grad + self.get_learning_rate() * self.weight_decay * param.data
+
+            if self.momentum[parameter_name] is None:
+                self.momentum[parameter_name] = param.grad
+            else:
+                self.momentum[parameter_name] = (self.mom * self.momentum[parameter_name]
+                                                 + (1 - self.mom) * param.grad)
+
+            param.data -= (self.get_learning_rate() * self.momentum[parameter_name]
+                           + self.get_learning_rate() * self.weight_decay * param.data)
             
             
 class AdamW(Optimizer):
@@ -65,8 +85,7 @@ class AdamW(Optimizer):
                  weight_decay: float = 0.0,
                  betas: Tuple[float, float] = (0.9, 0.999),
                  eps: float = 1e-8):
-        super().__init__()
-        self.parameter_dict = parameter_dict
+        super().__init__(parameter_dict)
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         
