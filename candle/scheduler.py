@@ -2,7 +2,7 @@
 
 import numpy as np
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, List
 
 
 class Scheduler(ABC):
@@ -48,6 +48,25 @@ class StepLR(Scheduler):
     
     def get_learning_rate_at_T(self, T: int):
         return self.max_learning_rate * self.gamma ** (T // self.step_size)
+    
+    
+class MultiStepLR(Scheduler):
+    """Decay the learning rate by `gamma` every time a milestone is passed."""
+    
+    def __init__(self,
+                 optimizer,
+                 milestones: List[int],
+                 gamma: float):
+        super().__init__(optimizer)
+        self.milestones = np.array(milestones)
+        self.gamma = gamma
+        
+        self.max_learning_rate = optimizer.get_initial_learning_rate()
+    
+    
+    def get_learning_rate_at_T(self, T: int):
+        milestones_passed = (T >= self.milestones).sum()
+        return self.max_learning_rate * self.gamma ** milestones_passed
 
 
 class CosineAnnealingLR(Scheduler):
