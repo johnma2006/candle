@@ -59,7 +59,8 @@ def log_softmax(array: np.array):
 def conv2d(image: np.array,
            kernel: np.array,
            padding: int = 0,
-           stride: int = 1):
+           stride: int = 1,
+           dtype = None):
     """Computes 2D convolution.
 
     Parameters
@@ -89,7 +90,8 @@ def conv2d(image: np.array,
     convolved_image = np.zeros((image.shape[0],                         # N
                                 kernel.shape[1],                        # out_channels
                                 image.shape[2] - kernel.shape[2] + 1,   # height
-                                image.shape[3] - kernel.shape[3] + 1))  # width
+                                image.shape[3] - kernel.shape[3] + 1),  # width
+                               dtype=dtype)
 
     for i in range(kernel.shape[2]):
         for j in range(kernel.shape[3]):

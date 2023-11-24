@@ -13,7 +13,6 @@ class TestGPT(unittest.TestCase):
         model = candle.models.gpt.GPT.from_pretrained('gpt2')
         model_hf = GPT2LMHeadModel.from_pretrained('gpt2')
 
-
         x = (100 * np.random.random(size=(16, 32))).astype(int)
 
         model.eval()

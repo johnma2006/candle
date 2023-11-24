@@ -5,7 +5,7 @@ from .operation import Operation
 from .. import utils
 from ..tensor import Tensor
 
-    
+
 class Conv2dOperation(Operation):
     
     def __init__(self,
@@ -58,7 +58,8 @@ class Conv2dOperation(Operation):
         unstrided_output_grad = np.zeros((output_grad.shape[0],
                                           output_grad.shape[1],
                                           image.shape[2] + 2 * self.padding[0] - kernel.shape[2] + 1,
-                                          image.shape[3] + 2 * self.padding[1] - kernel.shape[3] + 1))
+                                          image.shape[3] + 2 * self.padding[1] - kernel.shape[3] + 1),
+                                         dtype=Tensor.DEFAULT_DTYPE)
 
         unstrided_output_grad[:, :, ::self.stride[0], ::self.stride[1]] = output_grad
 
@@ -77,7 +78,7 @@ class Conv2dOperation(Operation):
                        (kernel.shape[3] - 1, kernel.shape[3] - 1))   # width
         )
 
-        image_grad = utils.conv2d(padded_output_grad, reversed_kernel)
+        image_grad = utils.conv2d(padded_output_grad, reversed_kernel, dtype=Tensor.DEFAULT_DTYPE)
 
         # Undo padding
         image_grad = image_grad[:, :,
@@ -88,7 +89,7 @@ class Conv2dOperation(Operation):
         # Compute kernel_grad
         # -------------------
 
-        kernel_grad = np.empty(kernel.shape)
+        kernel_grad = np.empty(kernel.shape, dtype=Tensor.DEFAULT_DTYPE)
 
         padded_image = np.pad(image.data,
                               pad_width=((0, 0),
@@ -105,7 +106,6 @@ class Conv2dOperation(Operation):
                 kernel_grad[:, :, i, j] = np.einsum('imkl,inkl', image_window, unstrided_output_grad, optimize=True)
 
         return (image_grad, kernel_grad)
-    
     
     
 class MaxPool2dOperation(Operation):
@@ -161,7 +161,7 @@ class MaxPool2dOperation(Operation):
 
     def _backward(self,
                   output_grad: np.array):
-        input_grad = np.zeros((np.prod(self.output.shape), np.prod(self.kernel_size)))
+        input_grad = np.zeros((np.prod(self.output.shape), np.prod(self.kernel_size)), dtype=Tensor.DEFAULT_DTYPE)
         input_grad[np.arange(len(self._argmax)), self._argmax] = output_grad.flatten()
 
         # Reshape input_grad from 2D back to 4D
@@ -236,7 +236,7 @@ class AvgPool2dOperation(Operation):
 
     def _backward(self,
                   output_grad: np.array):
-        input_grad = np.zeros((np.prod(self.output.shape), np.prod(self.kernel_size))).T
+        input_grad = np.zeros((np.prod(self.output.shape), np.prod(self.kernel_size)), dtype=Tensor.DEFAULT_DTYPE).T
         input_grad[:] = output_grad.flatten() / np.prod(self.kernel_size)
         input_grad = input_grad.T
         

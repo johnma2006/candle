@@ -106,7 +106,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
 
                 self.conv = nn.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=3, padding=1, stride=1)
                 self.batch_norm = nn.BatchNorm2d(resnet_blocks[0][0])
-                self.max_pool = nn.MaxPool2d(kernel_size=2)  # Remove MaxPool since MNIST is only 8x8
+#                 self.max_pool = nn.MaxPool2d(kernel_size=2)  # Remove MaxPool since MNIST is only 8x8
 
                 self.residual_blocks = nn.ParameterList([
                     ResNetBlockTorch(in_channels, out_channels, stride)
@@ -121,7 +121,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
                 x = self.batch_norm(x)
                 x = torch.relu(x)
 
-                x = self.max_pool(x)
+#                 x = self.max_pool(x)
 
                 for residual_block in self.residual_blocks:
                     x = residual_block(x)
@@ -152,25 +152,25 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
                 self.batch_norm2 = nn.BatchNorm2d(out_channels)
 
                 if in_channels != out_channels:
-                    self.res_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
+                    self.conv_1by1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
                 else:
-                    self.res_conv = None
+                    self.conv_1by1 = None
 
 
             def forward(self, x):
-                x_conv = self.conv1(x)
-                x_conv = self.batch_norm1(x_conv)
-                x_conv = torch.relu(x_conv)
+                x_resid = self.conv1(x)
+                x_resid = self.batch_norm1(x_resid)
+                x_resid = torch.relu(x_resid)
 
-                x_conv = self.conv2(x_conv)
-                x_conv = self.batch_norm2(x_conv)
+                x_resid = self.conv2(x_resid)
+                x_resid = self.batch_norm2(x_resid)
 
-                if self.res_conv is not None:
-                    x = self.res_conv(x)
+                if self.conv_1by1 is not None:
+                    x = self.conv_1by1(x)
 
-                x_conv = x + x_conv
+                x_resid = x + x_resid
 
-                return x_conv
+                return x_resid
 
         # Copy torch weights over
 
@@ -347,7 +347,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
 
         # Create data loaders and data augmentation transforms
 
-        train_transforms = [candle.vision.RandomCrop(8, padding=2)]
+        train_transforms = candle.vision.Compose([candle.vision.RandomCrop(8, padding=2)])
         test_transforms = None
 
         data_loader = candle.DataLoader(X_train, y_train, batch_size=config.BATCH_SIZE,

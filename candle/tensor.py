@@ -5,6 +5,9 @@ from typing import Union, Tuple
 
 class Tensor:
     """Tensor node in the computation graph."""
+
+    DEFAULT_DTYPE = np.float32
+
     
     def __init__(self,
                  data: np.array,
@@ -20,7 +23,7 @@ class Tensor:
             
         """
         if dtype is None:
-            dtype = np.float32  # Default dtype
+            dtype = self.DEFAULT_DTYPE
 
         if isinstance(data, Tensor):
             data = data.data
@@ -56,7 +59,7 @@ class Tensor:
         return self.data.dtype
     
     
-    def astype(dtype):
+    def astype(self, dtype):
         """Casts Tensor to dtype.
         
         Parameters
@@ -65,7 +68,7 @@ class Tensor:
             Numpy dtype.
             
         """
-        self.data = self.data.astype(dtype)
+        return Tensor(self.data.copy(), dtype=dtype)
     
         
     def __repr__(self):
@@ -97,7 +100,7 @@ class Tensor:
         self._initialize_outdegree()
         self._initialize_requires_grad_computation()
         
-        self._batch_grad = np.array(1.0)
+        self._batch_grad = np.array(1.0, dtype=Tensor.DEFAULT_DTYPE)
         self._backward()
 
     

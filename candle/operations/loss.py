@@ -15,7 +15,7 @@ class CrossEntropyLossOperation(Operation):
         
         log_softmax = utils.log_softmax(logits.data)
 
-        return Tensor(-np.mean(log_softmax[range(len(target)), target.data]))
+        return Tensor(-np.mean(log_softmax[range(len(target)), target.data.astype(int)]))
     
     
     def _backward(self,
@@ -23,7 +23,7 @@ class CrossEntropyLossOperation(Operation):
         (logits, target) = self.inputs
         
         softmax = utils.softmax(logits.data)
-        softmax[range(len(target)), target.data] -= 1
+        softmax[range(len(target)), target.data.astype(int)] -= 1
         
         return (output_grad * softmax / len(logits), np.zeros(len(target)))  # target has no gradient
     

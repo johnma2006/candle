@@ -44,11 +44,16 @@ class TestAutograd(unittest.TestCase):
 
             return loss
 
+        # Switch to double precision for grad checks
+        default_dtype = Tensor.DEFAULT_DTYPE
+        Tensor.DEFAULT_DTYPE = np.float64
 
         model = MLP(input_size=64,
                     hidden_sizes=[128, 128, 128, 10])
 
         model_numerical_grad_check(model, loss_fn)
+        
+        Tensor.DEFAULT_DTYPE = default_dtype
         
         
     def test_resnet(self):
@@ -142,6 +147,9 @@ class TestAutograd(unittest.TestCase):
 
             return loss
 
+        # Switch to double precision for grad checks
+        default_dtype = Tensor.DEFAULT_DTYPE
+        Tensor.DEFAULT_DTYPE = np.float64
 
         model = ResNet(num_classes=10,
                        in_channels=3,
@@ -152,6 +160,8 @@ class TestAutograd(unittest.TestCase):
                        ])
 
         model_numerical_grad_check(model, loss_fn)
+        
+        Tensor.DEFAULT_DTYPE = default_dtype
         
         
     def test_outdegree(self):

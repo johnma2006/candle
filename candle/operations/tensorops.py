@@ -171,7 +171,7 @@ class TensorSlice(Operation):
     
     def _backward(self,
                   output_grad: np.array):
-        input_grad = np.zeros(self.inputs[0].shape)
+        input_grad = np.zeros(self.inputs[0].shape, dtype=Tensor.DEFAULT_DTYPE)
 
         if self.list_ndim <= 1:
             input_grad[self.key] = output_grad
