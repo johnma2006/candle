@@ -123,16 +123,15 @@ def softmax(a):
     return softmax
     
 
-def cross_entropy_loss(logits: np.array,
-                       target: np.array):
+def cross_entropy_loss(logits: Tensor, target: Tensor):
     """Cross-entropy loss between logits and labels.
     
     Parameters
     ----------
     logits
-        np.array of shape (N, num_unique_labels)
+        Tensor of shape (N, num_unique_labels)
     targets
-        Labels. Integer np.array of shape (N,)
+        Labels. Integer Tensor of shape (N,)
         
     """
     return operations.CrossEntropyLossOperation([logits, target]).forward()

@@ -1,4 +1,5 @@
 import numpy as np
+from enum import Enum
 from typing import Union, Tuple
 
 
@@ -6,12 +7,27 @@ class Tensor:
     """Tensor node in the computation graph."""
     
     def __init__(self,
-                 data: np.array):
+                 data: np.array,
+                 dtype: type = None):
+        """Initialize Tensor.
+        
+        Parameters
+        ----------
+        data
+            Numpy array.
+        dtype
+            Dtype of tensor. If None, autocasts to float32.
+            
+        """
+        if dtype is None:
+            dtype = np.float32  # Default dtype
+
         if isinstance(data, Tensor):
             data = data.data
         if not isinstance(data, np.ndarray):
-            data = np.array(data)
-        self.data = data
+            data = np.array(data, dtype=dtype)
+            
+        self.data = data.astype(dtype)
         
         self.grad = 0.0
         self.operation = None  # Operation edge that points into this tensor node. None if is leaf
@@ -25,13 +41,31 @@ class Tensor:
         
     def clone(self):
         """Returns copy of tensor."""
-        return Tensor(self.data.copy())
+        return Tensor(self.data.copy(), dtype=self.data.dtype)
     
         
     @property
     def shape(self):
         """Tuple of array dimensions."""
         return self.data.shape
+    
+    
+    @property
+    def dtype(self):
+        """Returns dtype of Tensor."""
+        return self.data.dtype
+    
+    
+    def astype(dtype):
+        """Casts Tensor to dtype.
+        
+        Parameters
+        ----------
+        dtype
+            Numpy dtype.
+            
+        """
+        self.data = self.data.astype(dtype)
     
         
     def __repr__(self):
@@ -143,6 +177,74 @@ class Tensor:
 
         return self._requires_grad_computation
     
+    # ----------
+    # Operations
+    # ----------
+    
+    def sum(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.sum(self, axis=axis, keepdims=keepdims)
+    
+    
+    def mean(self,
+             axis: Union[int, Tuple[int]] = None,
+             keepdims: bool = False):
+        from . import functions
+        return functions.mean(self, axis=axis, keepdims=keepdims)
+    
+    
+    def var(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.var(self, axis=axis, keepdims=keepdims)
+    
+    
+    def std(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.std(self, axis=axis, keepdims=keepdims)
+    
+    
+    def max(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.max(self, axis=axis, keepdims=keepdims)
+    
+    
+    def min(self,
+            axis: Union[int, Tuple[int]] = None,
+            keepdims: bool = False):
+        from . import functions
+        return functions.min(self, axis=axis, keepdims=keepdims)
+    
+    
+    def transpose(self,
+                  dim0: int,
+                  dim1: int):
+        from . import functions
+        return functions.swapaxes(self, dim0=dim0, dim1=dim1)
+    
+    
+    @property
+    def T(self):
+        from . import functions
+        return functions.transpose(self)
+    
+    
+    def reshape(self,
+                new_shape: Tuple[int]):
+        from . import functions
+        return functions.reshape(self, new_shape=new_shape)
+    
+    
+    def flatten(self):
+        from . import functions
+        return functions.reshape(self, new_shape=(-1,))
     
     # -------------------
     # Operation overloads
@@ -216,72 +318,3 @@ class Tensor:
         from . import functions
         return functions.tensordot(self, other, axes=1)
     
-    # ----------
-    # Operations
-    # ----------
-    
-    def sum(self,
-            axis: Union[int, Tuple[int]] = None,
-            keepdims: bool = False):
-        from . import functions
-        return functions.sum(self, axis=axis, keepdims=keepdims)
-    
-    
-    def mean(self,
-             axis: Union[int, Tuple[int]] = None,
-             keepdims: bool = False):
-        from . import functions
-        return functions.mean(self, axis=axis, keepdims=keepdims)
-    
-    
-    def var(self,
-            axis: Union[int, Tuple[int]] = None,
-            keepdims: bool = False):
-        from . import functions
-        return functions.var(self, axis=axis, keepdims=keepdims)
-    
-    
-    def std(self,
-            axis: Union[int, Tuple[int]] = None,
-            keepdims: bool = False):
-        from . import functions
-        return functions.std(self, axis=axis, keepdims=keepdims)
-    
-    
-    def max(self,
-            axis: Union[int, Tuple[int]] = None,
-            keepdims: bool = False):
-        from . import functions
-        return functions.max(self, axis=axis, keepdims=keepdims)
-    
-    
-    def min(self,
-            axis: Union[int, Tuple[int]] = None,
-            keepdims: bool = False):
-        from . import functions
-        return functions.min(self, axis=axis, keepdims=keepdims)
-    
-    
-    def transpose(self,
-                  dim0: int,
-                  dim1: int):
-        from . import functions
-        return functions.swapaxes(self, dim0=dim0, dim1=dim1)
-    
-    
-    @property
-    def T(self):
-        from . import functions
-        return functions.transpose(self)
-    
-    
-    def reshape(self,
-                new_shape: Tuple[int]):
-        from . import functions
-        return functions.reshape(self, new_shape=new_shape)
-    
-    
-    def flatten(self):
-        from . import functions
-        return functions.reshape(self, new_shape=(-1,))
-        

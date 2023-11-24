@@ -52,8 +52,8 @@ class BatchNorm(Module):
             features_shape = np.array(x.shape)
             features_shape[list(self.axis)] = 1
             self.features_shape = tuple(features_shape)
-            self.W.data = np.ones(self.features_shape)
-            self.b.data = np.zeros(self.features_shape)
+            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
+            self.b.data = np.zeros(self.features_shape, dtype=self.b.dtype)
 
         if self.training:
             batch_mean = x.mean(axis=self.axis, keepdims=True)
@@ -121,8 +121,8 @@ class LayerNorm(Module):
             features_shape = np.array(x.shape)
             features_shape[[i for i in range(len(x.shape)) if i not in self.axis]] = 1
             self.features_shape = tuple(features_shape)
-            self.W.data = np.ones(self.features_shape)
-            self.b.data = np.zeros(self.features_shape)
+            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
+            self.b.data = np.zeros(self.features_shape, dtype=self.b.dtype)
 
         mean = x.mean(axis=self.axis, keepdims=True)
         var = x.var(axis=self.axis, keepdims=True)
