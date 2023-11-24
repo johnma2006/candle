@@ -21,6 +21,36 @@ class ImageTransform(ABC):
         """
         pass
 
+    
+class Compose(ImageTransform):
+    
+    def __init__(self,
+                 transforms: List[ImageTransform]):
+        """Chains together multiple transforms into a single transform.
+
+        Parameters
+        ----------
+        transforms
+            Transforms to chain.
+
+        """
+        self.transforms = transforms
+    
+    
+    def __call__(self, images):
+        """Apply transform.
+
+        Parameters
+        ----------
+        images
+            Tensor of shape (batch, channel, height, width)
+
+        """
+        for transform in self.transforms:
+            images = transform(images)
+            
+        return images
+
 
 class RandomCrop(ImageTransform):
     
@@ -140,10 +170,12 @@ class Normalize(ImageTransform):
             Length `channel` list of means/stds per channel.
 
         """
-        means = np.array(means)[None, :, None, None]
-        stds = np.array(stds)[None, :, None, None]
-        self.means = means
-        self.stds = stds
+        if isinstance(means, (int, float)):
+            means = [means]
+        if isinstance(stds, (int, float)):
+            stds = [stds]
+        self.means = np.array(means)[None, :, None, None]
+        self.stds = np.array(stds)[None, :, None, None]
     
     
     def __call__(self, images):
@@ -155,4 +187,8 @@ class Normalize(ImageTransform):
             Tensor of shape (batch, channel, height, width)
 
         """
+        if images.shape[1] != self.means.shape[1]:
+            raise ValueError(f'Channel dimension of images is {images.shape[1]}, but channel '
+                             f'dimension of normalize transform is {self.means.shape[1]}.')
+            
         return Tensor((images.data - self.means) / self.stds)
