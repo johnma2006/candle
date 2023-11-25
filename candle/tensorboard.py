@@ -270,7 +270,7 @@ class ChartSettings:
             
             'xscale': 'linear',
             'yscale': 'linear',
-            'smoothness': 10,
+            'smoothness': 50,
             'xlabel': 'Step',
             'ylabel': None,
             

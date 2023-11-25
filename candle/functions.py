@@ -129,11 +129,14 @@ def cross_entropy_loss(logits: Tensor, target: Tensor):
     Parameters
     ----------
     logits
-        Tensor of shape (N, num_unique_labels)
+        Tensor of shape (A, B, ..., C, num_unique_labels)
     targets
-        Labels. Integer Tensor of shape (N,)
+        Labels. Integer Tensor of shape (A, B, ..., C)
         
     """
+    logits = logits.reshape((-1, logits.shape[-1]))
+    target = target.flatten()
+    
     return operations.CrossEntropyLossOperation([logits, target]).forward()
 
 

@@ -120,7 +120,7 @@ def get_byte_to_unicode_char():
             if chr(i) is a "single-char"-looking unicode, e.g. '!', '#', 'a', '3', '§', '©'
                 bytes_to_unicode[i] = chr(i)
             otherwise if chr(i) looks like e.g. '\x1c', '\x7f', '\x80', '\x84'
-                bytes_to_unicode[i] = chr(i + 256)  <-- this will be a single-char looking unicode
+                bytes_to_unicode[i] = chr(i + 256)  <-- this will happen to be a single-char looking unicode
           
     """
     bs = list(range(ord("!"), ord("~")+1))+list(range(ord("¡"), ord("¬")+1))+list(range(ord("®"), ord("ÿ")+1))

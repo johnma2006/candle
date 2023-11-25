@@ -60,11 +60,10 @@ class GPT(Module):
             Tensor with shape (batch, seqlen, vocab_size).
             
         """
-        # x: shape (batch, seqlen, embed_dim)
         position_indices = Tensor(np.arange(indices.shape[1]))
         
         x = self.word_embeddings(indices) + self.position_embeddings(position_indices)
-        x = self.dropout(x)
+        x = self.dropout(x)  # x: shape (batch, seqlen, embed_dim)
 
         for decoder_block in self.decoder_blocks:
             x = decoder_block(x)
