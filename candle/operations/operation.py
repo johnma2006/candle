@@ -63,8 +63,12 @@ class Operation(ABC):
             List of Numpy arrays, one array of shape input.shape for each tensor `input` in self.inputs.
         
         """
+        if self.output is None:
+            raise RuntimeError('.backward() was called a second time, but the intermediate activations '
+                               'have already been freed.')
+            
         input_grads = self._backward(output_grad)
-        
+                
         assert len(input_grads) == len(self.inputs)
         for (input_grad, inp) in zip(input_grads, self.inputs):
             assert type(input_grad) is np.ndarray
@@ -74,6 +78,13 @@ class Operation(ABC):
             
         return input_grads
             
+        
+    def free_memory(self):
+        """Remove pointers to facilitate garbage collection."""
+        self.output.operation = None
+        self.output = None
+        self.inputs = None
+        
         
     @abstractmethod
     def _forward(self):

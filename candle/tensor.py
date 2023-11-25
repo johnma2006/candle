@@ -124,7 +124,9 @@ class Tensor:
 
                 if node._outdegree == 0:
                     nodes_to_backprop.append(node)
-
+                    
+        self.operation.free_memory()  # Remove pointers to facilitate garbage collection
+        
         for node in set(nodes_to_backprop):
             node._backward()
         
