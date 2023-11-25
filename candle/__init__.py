@@ -44,7 +44,7 @@ class set_grad_enabled:
         print(candle.is_grad_enabled())  # False
     print(candle.is_grad_enabled())  # True
     
-    candle.set_grad_enabled(False):
+    candle.set_grad_enabled(False)
     print(candle.is_grad_enabled())  # False
     
     """
@@ -72,7 +72,7 @@ class no_grad:
         print(candle.is_grad_enabled())  # False
     print(candle.is_grad_enabled())  # True
     
-    candle.no_grad(False):
+    candle.no_grad(False)
     print(candle.is_grad_enabled())  # True
     
     """
