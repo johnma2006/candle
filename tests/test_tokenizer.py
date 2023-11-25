@@ -1,9 +1,6 @@
 import numpy as np
 import unittest
 
-import torch
-import torch.nn as nn
-
 import candle
 
 

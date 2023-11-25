@@ -28,3 +28,65 @@ from .layers import (
     MaxPool2d,
     AvgPool2d,
 )
+
+# ------------------------------------
+# Global is_grad_enabled functionality
+# ------------------------------------
+
+IS_GRAD_ENABLED = True
+
+class set_grad_enabled:
+    """Context manager that sets grad enabled on or off globally
+    
+    Examples
+    --------
+    with candle.set_grad_enabled(False):
+        print(candle.is_grad_enabled())  # False
+    print(candle.is_grad_enabled())  # True
+    
+    candle.set_grad_enabled(False):
+    print(candle.is_grad_enabled())  # False
+    
+    """
+    def __init__(self, mode):
+        global IS_GRAD_ENABLED
+        self.prev_is_grad_enabled = IS_GRAD_ENABLED
+        IS_GRAD_ENABLED = mode
+        
+        
+    def __enter__(self):
+        pass
+        
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        global IS_GRAD_ENABLED
+        IS_GRAD_ENABLED = self.prev_is_grad_enabled
+        
+        
+class no_grad:
+    """Context manager that disables grad.
+    
+    Examples
+    --------
+    with candle.no_grad(False):
+        print(candle.is_grad_enabled())  # False
+    print(candle.is_grad_enabled())  # True
+    
+    candle.no_grad(False):
+    print(candle.is_grad_enabled())  # True
+    
+    """
+    def __enter__(self):
+        global IS_GRAD_ENABLED
+        self.prev_is_grad_enabled = IS_GRAD_ENABLED
+        IS_GRAD_ENABLED = False
+        
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        global IS_GRAD_ENABLED
+        IS_GRAD_ENABLED = self.prev_is_grad_enabled
+        
+        
+def is_grad_enabled():
+    global IS_GRAD_ENABLED
+    return IS_GRAD_ENABLED

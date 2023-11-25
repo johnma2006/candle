@@ -41,10 +41,12 @@ class Operation(ABC):
             Tensor result of operation.
         
         """
+        from .. import is_grad_enabled
         output = self._forward()
         
-        output.operation = self
-        self.output = output
+        if is_grad_enabled():
+            output.operation = self
+            self.output = output
         
         return output
 

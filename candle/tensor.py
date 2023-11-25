@@ -1,3 +1,5 @@
+"""Tensor and autograd functionality."""
+
 import numpy as np
 from enum import Enum
 from typing import Union, Tuple
@@ -33,54 +35,14 @@ class Tensor:
         self.data = data.astype(dtype)
         
         self.grad = 0.0
-        self.operation = None  # Operation edge that points into this tensor node. None if is leaf
+        self.operation = None  # Operation edge whose result is this Tensor node. None if is leaf
         self.requires_grad = False
         
-        self._batch_grad = 0.0  # Grads for the batch during loss.backward() accumulate here.
+        self._batch_grad = 0.0  # Grads for each batch during loss.backward() accumulate here.
         self._outdegree = 0     # Outdegree in the computation graph. Uninitialized until .backward()
         self._requires_grad_computation = None  # If we need to compute grad during backprop.
                                                 # True iff any child node is True.
                                                 # Uninitialized until _initialize_requires_grad_computation()
-        
-    def clone(self):
-        """Returns copy of tensor."""
-        return Tensor(self.data.copy(), dtype=self.data.dtype)
-    
-        
-    @property
-    def shape(self):
-        """Tuple of array dimensions."""
-        return self.data.shape
-    
-    
-    @property
-    def dtype(self):
-        """Returns dtype of Tensor."""
-        return self.data.dtype
-    
-    
-    def astype(self, dtype):
-        """Casts Tensor to dtype.
-        
-        Parameters
-        ----------
-        dtype
-            Numpy dtype.
-            
-        """
-        return Tensor(self.data.copy(), dtype=dtype)
-    
-        
-    def __repr__(self):
-        if len(self.shape) == 0:
-            return self.data.__repr__().replace('array', 'Tensor')
-        else:
-            return f'Tensor({self.shape})-shape {str(self.data.dtype)} array)'
-    
-    
-    def __len__(self):
-        return self.shape[0]
-
     
     # ---------------
     # Backpropagation
@@ -92,7 +54,7 @@ class Tensor:
         
     
     def backward(self):
-        """Accumulates self.grad for this node and upstream nodes, the derivative w.r.t. this tensor."""
+        """Computes grad w.r.t. this tensor for all upstream nodes in the computation graph."""
         if self.shape != ():
             raise Exception('.backward() can only be called from a scalar Tensor.')
         
@@ -105,7 +67,7 @@ class Tensor:
 
     
     def _backward(self):
-        """Accumulates self.grad, the derivative w.r.t. the loss tensor, for upstream nodes."""
+        """Accumulates self.grad, the derivative w.r.t. the loss tensor, for this and all upstream nodes."""
         if self.operation is None:  # Is leaf
             return
         
@@ -132,7 +94,8 @@ class Tensor:
         
         
     def _reset_graph(self):
-        """Resets the graph in preparation for backprop.
+        """Resets the computation graph in preparation for backprop.
+        
         Resets self._outdegree, self._requires_grad_computation, and self.batch_grad.
         
         """
@@ -185,6 +148,53 @@ class Tensor:
                 self._requires_grad_computation |= child_node._initialize_requires_grad_computation()
 
         return self._requires_grad_computation
+
+    # ---------------------
+    # General functionality
+    # ---------------------
+    
+    @property
+    def shape(self):
+        """Tuple of array dimensions."""
+        return self.data.shape
+    
+    
+    @property
+    def dtype(self):
+        """Returns dtype of Tensor."""
+        return self.data.dtype
+    
+    
+    def astype(self, dtype):
+        """Casts Tensor to dtype.
+        
+        Parameters
+        ----------
+        dtype
+            Numpy dtype.
+            
+        """
+        return Tensor(self.data.copy(), dtype=dtype)
+    
+    
+    def clone(self):
+        """Returns clone of tensor with same relationship to the computation graph."""
+        cloned = Tensor(self.data.copy(), dtype=self.data.dtype)
+        cloned.operation = self.operation
+        cloned.requires_grad = self.requires_grad
+    
+        return cloned
+    
+        
+    def __repr__(self):
+        if len(self.shape) == 0:
+            return self.data.__repr__().replace('array', 'Tensor')
+        else:
+            return f'Tensor({self.shape})-shape {str(self.data.dtype)} array)'
+    
+    
+    def __len__(self):
+        return self.shape[0]
     
     # ----------
     # Operations
