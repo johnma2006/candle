@@ -7,13 +7,13 @@ import candle
 import candle.functions as F
 
 
-def beam_search_generation(model, 
-                           indices: Tensor,
-                           n_tokens_to_generate: int,
-                           beam_size: int,
-                           top_k: int = None,
-                           temperature: float = 1.0,
-                           sample: bool = True):
+def beam_search_decoder(model, 
+                        indices: Tensor,
+                        n_tokens_to_generate: int,
+                        beam_size: int,
+                        top_k: int = None,
+                        temperature: float = 1.0,
+                        sample: bool = True):
     """Given a conditioning sequence, generates N more tokens using beam search.
 
     Parameters
@@ -29,6 +29,12 @@ def beam_search_generation(model,
         Beam size to use in beam search. e.g., beam_size = 1 for greedy search.
     top_k
         Filter probabilities to those in the top k.
+    top_p
+        Nucleus sampling. Filter to top probs such that the sum prob is just less than top_p.
+
+        References:
+        [1] Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, Yejin Choi.
+            The Curious Case of Neural Text Degeneration. arXiv:1904.09751, 2019
     temperature
         Higher temperature raises the likelihood of lower probability sequences.
     sample
@@ -62,10 +68,10 @@ def beam_search_generation(model,
         probs = F.softmax(logits[:, -1] / temperature).data.T  # shape (vocab_size, beam_size)
 
         if top_k is not None:
-            # For each row, zero out everything except for top_k probs per row
-            top_k_prob = np.sort(probs, axis=0)[-top_k, :]
-            probs[probs < top_k_prob] = 0
-            probs /= probs.sum(axis=0)
+            probs = top_k_sample(probs, top_k)
+
+        if top_p is not None:
+            probs = nucleus_sample(probs, top_p)
 
         # Accumulate prob by scaling by `beam_search_cumulative_log_prob`
         with np.errstate(divide='ignore'):
@@ -118,3 +124,54 @@ def beam_search_generation(model,
 
     yield indices.data[best_index, head_index:]
     
+    
+def top_k_sample(probs: np.array,
+                 top_k: int):
+    """Top-k sampling.
+    
+    Parameters
+    ----------
+    probs
+        Numpy array of probabilities with shape (vocab_size, batch).
+        Modifies probs in place.
+    top_k
+        Top K words to filter to.
+    
+    """
+    # For each row, zero out everything except for top_k probs per row
+    top_k_prob = np.sort(probs, axis=0)[-top_k, :]
+    probs[probs < top_k_prob] = 0
+    
+    probs /= probs.sum(axis=0)
+    
+    return probs
+
+
+def nucleus_sample(probs: np.array,
+                   top_p: int):
+    """Nucleus sampling. Filter to top probs such that the sum prob is just less than top_p.
+    
+    References:
+    [1] Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, Yejin Choi.
+        The Curious Case of Neural Text Degeneration. arXiv:1904.09751, 2019
+    
+    Parameters
+    ----------
+    probs
+        Numpy array of probabilities with shape (vocab_size, batch).
+        Modifies probs in place.
+    top_p
+        Filter to the top `k` probs such that the sum probs is <= top_p and k is largest.
+    
+    """
+    sorted_probs = np.sort(probs, axis=0)[::-1]
+    cum_probs = sorted_probs.cumsum(axis=0)
+    top_k = (cum_probs <= top_p).sum(axis=0)
+
+    ranking = probs.shape[0] - np.argsort(np.argsort(probs, axis=0), axis=0)
+    mask = (ranking <= top_k) | (ranking == 1)  # | (ranking == 1) accounts for when the edge case if highest prob > top_p
+
+    probs[~mask] = 0
+    probs /= probs.sum(axis=0)
+
+    return probs
