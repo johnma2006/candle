@@ -33,7 +33,7 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 * Activation Distributions vs Init [(notebook)](https://github.com/johnma2006/candle/blob/main/experiments/initialization_experiments/1.0%20Activation%20Distribution%20by%20Layer%20w.r.t%20Initialization.ipynb)
 
 
-## Example Minimal GPT Implementation
+## Example GPT2 Implementation
 
 ```python
 import numpy as np
@@ -52,6 +52,8 @@ class GPT(Module):
                  block_size: int,
                  dropout_p: float):
         super().__init__()
+        
+        self.block_size = block_size
         
         self.dropout = candle.Dropout(dropout_p)
         self.word_embeddings = candle.Embedding(vocab_size, embed_dim)
@@ -138,12 +140,25 @@ model = GPT(num_layers=12,
             dropout_p=0.1)
 
 tokenizer = candle.models.gpt.GPT2BPETokenizer()
-indices = candle.Tensor([tokenizer.encode('Hi, my name is John 😊👍')])
-targets = indices[:, 1:]
+indices = candle.Tensor([tokenizer.encode('Hi, my name is John 😊')])
 
+# Example backprop step
+
+targets = indices[:, 1:]
 logits = model(indices[:, :-1])
 loss = F.cross_entropy_loss(logits, targets)
 loss.backward()
+
+# Example generation step
+
+model = candle.models.gpt.GPT.from_pretrained('gpt2')
+
+generator = candle.nlp.beam_search_decoder(model, indices[0],
+                                           n_tokens_to_generate=100, top_k=40, beam_size=3)
+
+for next_indices in generator:
+    token = tokenizer.decode(next_indices)
+    print(''.join(token), end='')    
 ```
 
 
