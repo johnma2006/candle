@@ -1,18 +1,17 @@
 Deep learning library, implemented from scratch in pure numpy for educational purposes.
 
 #### Features:
-* Tensor-based automatic differentiation
+* Tensor-based reverse-mode automatic differentiation
 * Object-oriented PyTorch-like API
 * [Tensor operations](https://github.com/johnma2006/candle/tree/main/candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
-* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): linear, multi-head attention, batch/layer/RMS norm, dropout, convolutional, max/avg pooling
-* [NLP](https://github.com/johnma2006/candle/tree/main/candle/nlp): beam search, speculative sampling, byte-pair encoding
+* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): linear, multi-head attention, batch/layer/RMS(todo) norm, dropout, convolutional, max/avg pooling
+* [NLP](https://github.com/johnma2006/candle/tree/main/candle/nlp): byte-pair encoding, beam search, speculative sampling (todo), nucleus sampling
 * Models: [GPT](https://github.com/johnma2006/candle/blob/main/candle/models/gpt/model.py), [ResNet](https://github.com/johnma2006/candle/blob/main/candle/models/resnet/model.py)
 * Optimizers: SGD, AdamW
 * LR schedulers: step decay, cosine annealing, warmup
 * Image data augmentation: random crop, random horizontal/vertical flips
 * Lightweight Tensorboard-like dashboarding
-* Equivalent numerical behaviour vs PyTorch for all layers, optimizer, etc.
-* Focus on readable, idiomatic, commented code
+* Focus on readable, understandable, idiomatic code
 
 
 ## Experiments
@@ -53,6 +52,8 @@ class GPT(Module):
                  dropout_p: float):
         super().__init__()
         
+        self.num_layers = num_layers
+        self.embed_dim = embed_dim
         self.block_size = block_size
         
         self.dropout = candle.Dropout(dropout_p)
@@ -130,6 +131,8 @@ class FeedForwardBlock(Module):
         x = self.linear2(x)
         
         return x
+```
+```python
 
     
 model = GPT(num_layers=12,
@@ -142,23 +145,29 @@ model = GPT(num_layers=12,
 tokenizer = candle.models.gpt.GPT2BPETokenizer()
 indices = candle.Tensor([tokenizer.encode('Hi, my name is John 😊')])
 
-# Example backprop step
+# Example backpropagation
 
 targets = indices[:, 1:]
 logits = model(indices[:, :-1])
 loss = F.cross_entropy_loss(logits, targets)
 loss.backward()
 
-# Example generation step
+# Example generation
 
 model = candle.models.gpt.GPT.from_pretrained('gpt2')
 
 generator = candle.nlp.beam_search_decoder(model, indices[0],
-                                           n_tokens_to_generate=100, top_k=40, beam_size=3)
+                                           n_tokens_to_generate=50,
+                                           beam_size=3,
+                                           top_p=0.95,  # Nucleus sampling
+                                           top_k=40)    # Top-k sampling
 
 for next_indices in generator:
     token = tokenizer.decode(next_indices)
-    print(''.join(token), end='')    
+    print(''.join(token), end='')  
+    
+# Output: I am a professional gamer and I love video games. The video game industry has been around for a long time and it has always been a great place to experience the games that people come to play. I have been playing video games for a long time but I've never seen anything like this.
+
 ```
 
 
