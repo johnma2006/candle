@@ -111,10 +111,14 @@ class Tensor:
         
         nodes_to_backprop = []
         input_grads = self.operation.backward(self._batch_grad)
+        self._batch_grad = 0.0  # Free memory
+        
         for (node, input_grad) in zip(self.operation.inputs, input_grads):
             if node._requires_grad_computation:
                 node._batch_grad += input_grad
-                node.grad += input_grad
+                if node.requires_grad:
+                    node.grad += input_grad
+                
                 node._outdegree -= 1
                 assert node._outdegree >= 0
 
