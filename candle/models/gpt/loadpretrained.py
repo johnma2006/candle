@@ -13,13 +13,11 @@ def load_pretrained_gpt(model_name: str):
     -----------
     model_name
         One of ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'].
+            gpt2:         124M params
+            gpt2-medium:  354M params
+            gpt2-large:   774M params
+            gpt2-xl:    1,557M params
 
-        Param Count:
-            gpt2:        124,439,808
-            gpt2-medium: 354,823,168
-            gpt2-large:  774,030,080
-            gpt2-xl:   1,557,611,200
-            
     Returns
     -------
     model
@@ -58,7 +56,7 @@ def load_pretrained_gpt(model_name: str):
 
     # Transfer embedding weights
 
-    params['word_embeddings.embeddings'].data[:] = openai_param('wte.weight')
+    params['output_projection'].data[:] = openai_param('wte.weight')  # tied to word_embeddings.embeddings
     params['position_embeddings.embeddings'].data[:] = openai_param('wpe.weight')
 
     # Transfer decoder weights

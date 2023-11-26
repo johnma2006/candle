@@ -48,6 +48,9 @@ class ParameterList(Module):
                 for subattr_name in attr_parameter_dict:
                     parameter_dict[f'{str(i)}.{subattr_name}'] = attr_parameter_dict[subattr_name]
                     
+        # Deduplicate parameter dict in case of weight tying
+        parameter_dict = self.deduplicate_parameter_dict(parameter_dict)
+                    
         return parameter_dict
     
     

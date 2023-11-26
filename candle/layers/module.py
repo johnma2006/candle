@@ -41,6 +41,9 @@ class Module(ABC):
                 for subattr_name in attr_parameter_dict:
                     parameter_dict[f'{attr_name}.{subattr_name}'] = attr_parameter_dict[subattr_name]
                     
+        # Deduplicate parameter dict in case of weight tying
+        parameter_dict = self.deduplicate_parameter_dict(parameter_dict)
+                    
         return parameter_dict
     
     
@@ -105,6 +108,30 @@ class Module(ABC):
             self._output_shape = None
         
         return output
+    
+
+    def deduplicate_parameter_dict(self, parameter_dict):
+        """When weights are tied together, we need to deduplicate the parameter dict.
+
+        We do that by choosing the parameter that comes first, alphabetically.
+
+        Example:
+            self.param1 = Parameter(Tensor([1, 2, 3]))
+            self.param2 = param1
+
+            We want model.parameters() to only return param1, not both param1 and param2.
+
+        """
+        dedup_parameter_dict = {}
+        seen = set()
+        for param_name in sorted(parameter_dict):
+            param = parameter_dict[param_name]
+
+            if id(param) not in seen:
+                dedup_parameter_dict[param_name] = param
+                seen.add(id(param))
+
+        return dedup_parameter_dict
         
         
     def summary(self,
@@ -182,7 +209,7 @@ class Module(ABC):
             if input_shape is not None:
                 model_summary_df.loc['Total', 'Output Shape'] = ''
             model_summary_df.loc['Total', 'Layer Type'] = ''
-            model_summary_df.loc['Total', '# Parameters'] = model_summary_df['# Parameters'].sum()
+            model_summary_df.loc['Total', '# Parameters'] = sum([np.prod(p.shape) for p in self.parameters().values()])
 
         return model_summary_df
     
