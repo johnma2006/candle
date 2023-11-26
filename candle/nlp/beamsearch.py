@@ -80,8 +80,8 @@ def beam_search_decoder(model,
             probs = nucleus_sample(probs, top_p)
 
         # Accumulate prob by scaling by `beam_search_cumulative_log_prob`
-        with np.errstate(divide='ignore'):
-            log_probs = np.log(probs) + beam_search_cumulative_log_prob
+        probs += 1.0e-3 / len(probs)  # Add small eps prob to guarentee that num_non_zero(probs) >= beam_size
+        log_probs = np.log(probs) + beam_search_cumulative_log_prob
 
         # `next_beam_indices` are the best `beam_size` candidates
         # Each `beam_index` in `next_beam_indices` is defined as:
@@ -90,9 +90,9 @@ def beam_search_decoder(model,
         if sample:
             normalized_probs = candle.utils.softmax(log_probs.flatten())
             next_beam_indices = np.random.choice(np.arange(log_probs.size),
-                                                   size=beam_size,
-                                                   p=normalized_probs,
-                                                   replace=False)
+                                                 size=beam_size,
+                                                 p=normalized_probs,
+                                                 replace=False)
         else:
             next_beam_indices = log_probs.flatten().argsort()[-beam_size:]
 
