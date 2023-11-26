@@ -14,7 +14,7 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 * Focus on readable, understandable, idiomatic code
 
 
-## Experiments
+## Demos & Experiments
 
 #### Language Modelling
 * Having a Conversation with GPT [(notebook)](https://github.com/johnma2006/candle/blob/main/experiments/gpt_experiments/1.0%20Conversation%20with%20Pretrained%20GPT2.ipynb)
@@ -133,8 +133,6 @@ class FeedForwardBlock(Module):
         return x
 ```
 ```python
-
-    
 model = GPT(num_layers=12,
             num_heads=12,
             embed_dim=768,
@@ -143,7 +141,9 @@ model = GPT(num_layers=12,
             dropout_p=0.1)
 
 tokenizer = candle.models.gpt.GPT2BPETokenizer()
-indices = candle.Tensor([tokenizer.encode('Hi, my name is John 😊')])
+indices = candle.Tensor([tokenizer.encode(
+    'Once upon a time, there is a cat whose name is Maukoo. He loves eating and cuddling.'
+)])
 
 # Example backpropagation
 
@@ -154,20 +154,19 @@ loss.backward()
 
 # Example generation
 
-model = candle.models.gpt.GPT.from_pretrained('gpt2')
+model = candle.models.gpt.GPT.from_pretrained('gpt2-large')
 
 generator = candle.nlp.beam_search_decoder(model, indices[0],
                                            n_tokens_to_generate=50,
-                                           beam_size=3,
-                                           top_p=0.95,  # Nucleus sampling
-                                           top_k=40)    # Top-k sampling
+                                           beam_size=1,
+                                           top_p=0.90,  # Nucleus sampling
+                                           top_k=100)
 
-for next_indices in generator:
-    token = tokenizer.decode(next_indices)
-    print(''.join(token), end='')  
-    
-# Output: I am a professional gamer and I love video games. The video game industry has been around for a long time and it has always been a great place to experience the games that people come to play. I have been playing video games for a long time but I've never seen anything like this.
+response_indices = np.concatenate(list(generator))
+print(tokenizer.decode(response_indices))
 
+# Output:  A lot.  He also loves drinking.  (But it's an odd habit for a cat that loves eating
+# and cuddling.)  This little kitty is not the sort of kitty you would expect to be a
 ```
 
 
