@@ -9,7 +9,6 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 * Models: [GPT](https://github.com/johnma2006/candle/blob/main/candle/models/gpt/model.py), [ResNet](https://github.com/johnma2006/candle/blob/main/candle/models/resnet/model.py)
 * Optimizers: SGD, AdamW
 * LR schedulers: step decay, cosine annealing, warmup
-* Image data augmentation: random crop, random horizontal/vertical flips
 * Lightweight Tensorboard-like dashboarding
 * Focus on readable, understandable, idiomatic code
 
@@ -17,7 +16,8 @@ Deep learning library, implemented from scratch in pure numpy for educational pu
 ## Demos & Experiments
 
 #### Language Modelling
-* Having a Conversation with GPT [(notebook)](https://github.com/johnma2006/candle/blob/main/experiments/gpt_experiments/1.0%20Conversation%20with%20Pretrained%20GPT2.ipynb)
+* Converse with Taylor, your Large GPT2 friend [(notebook)](https://github.com/johnma2006/candle/blob/main/experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
+ ![Sample conversation with Taylor](https://github.com/johnma2006/candle/blob/main/experiments/gpt_experiments/sample_conversation.png)
 
 #### Vision
 * Training a ResNet14 on MNIST [(notebook)](https://github.com/johnma2006/candle/blob/main/experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
@@ -163,8 +163,8 @@ generator = candle.nlp.beam_search_decoder(model, indices[0],
                                            top_k=100)
 
 response_indices = np.concatenate(list(generator))
-print(tokenizer.decode(response_indices))
 
+print(tokenizer.decode(response_indices))
 # Output:  A lot.  He also loves drinking.  (But it's an odd habit for a cat that loves eating
 # and cuddling.)  This little kitty is not the sort of kitty you would expect to be a
 ```
