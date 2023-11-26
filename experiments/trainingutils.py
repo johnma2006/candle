@@ -54,7 +54,8 @@ def get_loss_and_accuracy(model, X, y, logits: np.array = None):
     if logits is None:
         logits = []
         for (X_batch,) in candle.DataLoader(X, batch_size=64, shuffle=False):
-            output = model(X_batch)
+            with candle.no_grad():
+                output = model(X_batch)
             logits.append(output.data)
         logits = np.concatenate(logits)
         
@@ -79,7 +80,8 @@ def get_predictions(model, X):
     """
     predictions = []
     for (X_batch,) in candle.DataLoader(X, batch_size=64, shuffle=False):
-        output = model(X_batch)
+        with candle.no_grad():
+            output = model(X_batch)
         prediction_batch = np.argmax(output.data, axis=1)
         predictions.append(prediction_batch)
         

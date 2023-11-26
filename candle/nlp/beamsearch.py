@@ -12,6 +12,7 @@ def beam_search_decoder(model,
                         n_tokens_to_generate: int,
                         beam_size: int,
                         top_k: int = None,
+                        top_p: float = None,
                         temperature: float = 1.0,
                         sample: bool = True):
     """Given a conditioning sequence, generates N more tokens using beam search.
@@ -38,7 +39,7 @@ def beam_search_decoder(model,
     temperature
         Higher temperature raises the likelihood of lower probability sequences.
     sample
-        True to randomly sample sequences, False to take argmax.
+        True to randomly sample sequences from the distribution of probabilities, False to take argmax.
         
     Returns
     -------
@@ -48,6 +49,9 @@ def beam_search_decoder(model,
 
     """
     model.eval()
+    
+    if beam_size is None:
+        beam_size = 1
 
     # We will maintain `beam_search_cumulative_log_prob` to have the same length as `indices`
     # On the 0th iter, `indices` has shape (1, initial_seqlen).
@@ -60,10 +64,12 @@ def beam_search_decoder(model,
 
     for _ in range(n_tokens_to_generate):
         # If indices is too long, filter to last `block_size` tokens
-        if indices.shape[1] <= model.block_size:
-            logits = model(indices)
-        else:
-            logits = model(indices[:, -model.block_size])
+        
+        with candle.no_grad():
+            if indices.shape[1] <= model.block_size:
+                logits = model(indices)
+            else:
+                logits = model(indices[:, -model.block_size])
 
         probs = F.softmax(logits[:, -1] / temperature).data.T  # shape (vocab_size, beam_size)
 
