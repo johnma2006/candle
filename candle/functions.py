@@ -58,6 +58,10 @@ def transpose(a):
     return operations.TensorTranspose([a]).forward()
 
 
+def concat(tensors, axis: int = 0):
+    return operations.TensorConcatenation(tensors, axis).forward()
+
+
 def sum(a,
         axis: Union[int, Tuple[int]] = None,
         keepdims: bool = False):

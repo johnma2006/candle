@@ -312,3 +312,26 @@ class TensorMaskedFill(Operation):
         
         return (input_grad,)
     
+    
+class TensorConcatenation(Operation):
+    """f(inputs) = np.concatenate(*inputs[0], axis=axis)"""
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 axis: int = 0):
+        super().__init__(inputs)
+        self.axis = axis
+    
+    
+    def _forward(self):
+        return Tensor(np.concatenate([tensor.data for tensor in self.inputs], axis=self.axis))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        input_lengths_along_axis = [i.shape[self.axis] for i in self.inputs]
+        indices_or_sections = np.cumsum(input_lengths_along_axis)[:-1]
+
+        input_grads = tuple(np.split(output_grad, indices_or_sections, axis=self.axis))
+
+        return input_grads

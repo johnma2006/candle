@@ -18,8 +18,9 @@ from .tensorops import (
     TensorReshape,
     TensorSwapaxes,
     TensorTranspose,
-    BatchMatrixMultiply,
+    TensorConcatenation,
     TensorMaskedFill,
+    BatchMatrixMultiply,
 )
 from .activations import (
     ReLUActivation,

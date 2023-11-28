@@ -17,6 +17,7 @@ from candle.operations import (
     TensorReshape,
     TensorSwapaxes,
     TensorTranspose,
+    TensorConcatenation,
     TensorMaskedFill,
     BatchMatrixMultiply,
     Conv2dOperation,
@@ -300,3 +301,16 @@ class TestOperations(unittest.TestCase):
                              test_inputs=[Tensor(np.random.normal(size=(5, 3, 13, 17)))],
                              kwargs={'kernel_size': (3, 4),
                                      'padding': (1, 1)})
+        
+        
+    def test_concat(self):
+        numerical_grad_check(operation_class=TensorConcatenation,
+                             test_inputs=[Tensor(np.random.normal(size=(10, 12, 24))),
+                                          Tensor(np.random.normal(size=(10, 15, 24))),
+                                          Tensor(np.random.normal(size=(10, 13, 24)))],
+                             kwargs={'axis': -2})
+        
+        numerical_grad_check(operation_class=TensorConcatenation,
+                             test_inputs=[Tensor(np.random.normal(size=(10, 12, 24))),
+                                          Tensor(np.random.normal(size=(10, 12, 24))),
+                                          Tensor(np.random.normal(size=(10, 12, 24)))])
