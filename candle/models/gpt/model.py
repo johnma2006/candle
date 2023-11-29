@@ -47,12 +47,16 @@ class GPT(Module):
         # TODO: initialize weights properly
     
     
-    def forward(self, indices):
+    def forward(self,
+                indices: Tensor,
+                use_kv_cache: bool = False):
         """
         Parameters
         ----------
         indices
             Integer tensor with shape (batch, seq_len).
+        use_kv_cache
+            Whether or not to use kv_cache while computing self attention.
         
         Returns
         -------
@@ -60,17 +64,26 @@ class GPT(Module):
             Tensor with shape (batch, seqlen, vocab_size).
             
         """
-        position_indices = Tensor(np.arange(indices.shape[1]))
+        kv_cache = self.decoder_blocks[0].attn.kv_cache
+        if use_kv_cache and kv_cache is not None:
+            cache_seqlen = kv_cache[0].shape[2]
+        else:
+            cache_seqlen = 0
+
+        position_indices = Tensor(np.arange(cache_seqlen, cache_seqlen + indices.shape[1]))
         
         x = self.word_embeddings(indices) + self.position_embeddings(position_indices)
         x = self.dropout(x)  # x: shape (batch, seqlen, embed_dim)
 
+        new_kv_cache_by_layer = []
         for decoder_block in self.decoder_blocks:
-            x = decoder_block(x)
+            x = decoder_block(x, use_kv_cache)
 
         x = self.layer_norm(x)
         
-        return x @ self.output_projection.T
+        logits = x @ self.output_projection.T
+    
+        return logits
     
     
     def from_pretrained(model_name: str):
@@ -111,22 +124,28 @@ class DecoderBlock(Module):
         self.ffn = FeedForwardBlock(input_dim=embed_dim, hidden_dim=4 * embed_dim)
 
         
-    def forward(self, x):
-        # x: shape (batch, seqlen, embed_dim)
-        x = x + self.dropout(self.self_attn(self.ln1(x)))
+    def forward(self,
+                x: Tensor,
+                use_kv_cache: bool):
+        # x: Tensor with shape (batch, seqlen, embed_dim)
+        x = x + self.dropout(self.self_attn(self.ln1(x), use_kv_cache))
         x = x + self.dropout(self.ffn(self.ln2(x)))
-        
+
         return x
 
     
-    def self_attn(self, x):
+    def self_attn(self,
+                  x: Tensor,
+                  use_kv_cache: bool):
         """Self-attention with causal mask."""
         # causal_attn_mask[i, j] = 0 means that query[i] attends to key[j], and so
         # causal_attn_mask[i, j] = 0 if i >= j and 1 otherwise.
         causal_attn_mask = Tensor(1 - np.tri(x.shape[1]))
-        
-        (attn_output, attn_scores) = self.attn(x, x, x, attn_mask=causal_attn_mask)
-        
+
+        (attn_output, attn_scores) = self.attn(x, x, x,
+                                               attn_mask=causal_attn_mask,
+                                               use_kv_cache=use_kv_cache)
+
         return attn_output
     
     

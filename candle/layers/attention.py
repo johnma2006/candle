@@ -37,7 +37,7 @@ class MultiheadAttention(Module):
                 key: Tensor,
                 value: Tensor,
                 attn_mask: Tensor = None,
-                use_kv_cache: Tuple[Tensor, Tensor] = None):
+                use_kv_cache: bool = False):
         """Attention aggregation.
         
         Parameters
