@@ -27,48 +27,41 @@ class MultiheadAttention(Module):
         self.W_v = Linear(embed_dim, embed_dim)
         self.W_o = Linear(embed_dim, embed_dim)
         
+        # kv_cache: tuple of Tensors (key_cache, value_cache), where key_cache and value_cache
+        # are both shape (batch, num_heads, cache_seqlen, dims_per_head).
+        self.kv_cache = None
+        
         
     def forward(self,
                 query: Tensor,
                 key: Tensor,
                 value: Tensor,
                 attn_mask: Tensor = None,
-                kv_cache: Tuple[Tensor, Tensor] = None,
-                return_new_kv_cache: bool = False):
-        """Does attention aggregation.
+                use_kv_cache: Tuple[Tensor, Tensor] = None):
+        """Attention aggregation.
         
         Parameters
         ----------
         query
-            Tensor of shape (batch, query seqlen, embed_dim)
+            Tensor of shape (batch, query seqlen, embed_dim).
         key, value
-            Tensors of shape (batch, key seqlen, embed_dim)
+            Tensors of shape (batch, key seqlen, embed_dim).
         attn_mask
-            Tensor of shape (query seqlen, key seqlen)
-            If kv_cache is provided, attn_mask is shape (query seqlen, key seqlen + cache seqlen)
-        kv_cache
-            Optional. Tuple of Tensors (key_cache, value_cache), where key_cache and 
-            value_cache are both shape (batch, num_heads, cache_seqlen, dims_per_head).
-            
-            If provided, then pre-pends new_key_cache/new_value_cache to key/value
-            before computing attention, and the returns a new_kv_cache as well.
-            
-            Must be in eval() mode.
-        return_new_kv_cache
-            If True, then returns the updated kv_cache.
+            Tensor of shape (query seqlen, key seqlen). attn_mask[i, j] = 0 means that query_i
+                should attend to key_j.
+            If use_kv_cache is True, then attn_mask will be augmented attn_mask with 0s to shape 
+                (query seqlen, cache seqlen + key seqlen), which assumes that the query attends 
+                to all keys/values in the kv cache.
+        use_kv_cache
+            Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
+            before computing attention, and updates self.kv_cache with the new key/value.
             
         Returns
         -------
-        if kv_cache is None:
-            (attn_output, attn_scores)
-                attn_output is shape (batch, query seqlen, embed_dim)
-                attn_scores is shape (batch, query seqlen, key seqlen)
-        elif kv_cache is provided:
-            (attn_output, attn_scores, new_kv_cache)
-                attn_output is shape (batch, query seqlen, embed_dim)
-                attn_scores is shape (batch, query seqlen, key seqlen + cache seqlen)
-                new_kv_cache = (new_key_cache, new_value_cache) both with
-                    shape (batch, num_heads, key seqlen + cache_seqlen, dims_per_head)
+        (attn_output, attn_scores)
+            attn_output is shape (batch, query seqlen, embed_dim)
+            attn_scores is shape (batch, query seqlen, key seqlen)
+                or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True
             
         """
         def reshape_and_transpose(tensor):
@@ -88,28 +81,39 @@ class MultiheadAttention(Module):
         key = reshape_and_transpose(self.W_k(key))
         value = reshape_and_transpose(self.W_v(value))
 
-        if kv_cache is not None:
+        if use_kv_cache:
             if self.training:
                 raise RuntimeError('MultiheadAttention must be in .eval() mode if using KV caching.')
 
-            (key_cache, value_cache) = kv_cache
+            if self.kv_cache is not None:
+                (key_cache, value_cache) = self.kv_cache
 
-            # Prepend key_cache, value_cache along seqlen dimension
-            key = F.concat([key_cache, key], axis=2)
-            value = F.concat([value_cache, value], axis=2)
-            
+                # Prepend key_cache, value_cache along seqlen dimension
+                key = F.concat([key_cache, key], axis=2)
+                value = F.concat([value_cache, value], axis=2)
+
+                # Augments attn_mask with 0s to shape (query seqlen, cache seqlen + key seqlen),
+                # which assumes that the query attends to all keys/values in the kv cache.
+                if attn_mask is not None:
+                    cache_seqlen = self.kv_cache[0].shape[2]
+                    cache_attn_mask = Tensor(np.zeros((len(attn_mask), cache_seqlen)))
+                    attn_mask = F.concat([cache_attn_mask, attn_mask], axis=1)
+
+            self.kv_cache = (key, value)
+
         (attn_output, attn_scores) = self.attention(query, key, value, attn_mask)
         attn_output = inv_reshape_and_transpose(attn_output)
         attn_output = self.W_o(attn_output)
 
         attn_scores = attn_scores.mean(axis=1)  # Average attention scores across head
 
-        if return_new_kv_cache:
-            new_kv_cache = (key, value)
-            return (attn_output, attn_scores, new_kv_cache)
-        else:
-            return (attn_output, attn_scores)
-
+        return (attn_output, attn_scores)
+    
+    
+    def clear_kv_cache(self):
+        """Clears kv_cache."""
+        self.kv_cache = None
+        
         
     def __repr__(self):
         return (f'MultiheadAttention(embed_dim={self.embed_dim}, '
