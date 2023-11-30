@@ -56,24 +56,19 @@ class GPT(Module):
         indices
             Integer tensor with shape (batch, seq_len).
         use_kv_cache
-            Whether or not to use kv_cache while computing self attention.
+            Whether or not to use kv_cache to speed up inference.
         
         Returns
         -------
         logits
-            Tensor with shape (batch, seqlen, vocab_size).
+            Tensor with shape (batch, seqlen, vocab_size)
             
         """
-        kv_cache = self.decoder_blocks[0].attn.kv_cache
-        if use_kv_cache and kv_cache is not None:
-            cache_seqlen = kv_cache[0].shape[2]
-        else:
-            cache_seqlen = 0
-
-        position_indices = Tensor(np.arange(cache_seqlen, cache_seqlen + indices.shape[1]))
+        kv_cache_seqlen = self.decoder_blocks[0].attn.get_kv_cache_seqlen() if use_kv_cache else 0
+        position_indices = Tensor(np.arange(indices.shape[1]) + kv_cache_seqlen)
         
         x = self.word_embeddings(indices) + self.position_embeddings(position_indices)
-        x = self.dropout(x)  # x: shape (batch, seqlen, embed_dim)
+        x = self.dropout(x)  # shape (batch, seqlen, embed_dim)
 
         new_kv_cache_by_layer = []
         for decoder_block in self.decoder_blocks:
@@ -81,9 +76,7 @@ class GPT(Module):
 
         x = self.layer_norm(x)
         
-        logits = x @ self.output_projection.T
-    
-        return logits
+        return x @ self.output_projection.T
     
     
     def from_pretrained(model_name: str):
@@ -107,6 +100,48 @@ class GPT(Module):
 
         """
         return load_pretrained_gpt(model_name)
+    
+    
+    def clear_kv_cache(self):
+        """Clears kv_cache."""
+        for decoder_block in self.decoder_blocks:
+            decoder_block.attn.clear_kv_cache()
+            
+
+    def modify_kv_cache(self,
+                        trim_seqlen: int = None,
+                        reindex_batch_indices: List[int] = None):
+        """Modifies the kv_cache by trimming or reindexing.
+        
+        Parameters
+        ----------
+        trim_seqlen
+            Trims kv_cache along the seqlen dimension to length `new_seqlen`, keeping later tokens.
+            If `trim_seqlen` is negative, then keeps earlier tokens.
+        batch_indices
+            Reindexes the kv_cache along the batch dimension. Necessary during beam search.
+            
+        """
+        for decoder_block in self.decoder_blocks:
+            if decoder_block.attn.kv_cache is not None:
+                (key_cache, value_cache) = decoder_block.attn.kv_cache
+
+                if trim_seqlen is not None:
+                    if trim_seqlen > 0:
+                        key_cache = key_cache[:, :, -trim_seqlen:]
+                        value_cache = value_cache[:, :, -trim_seqlen:]
+                    elif trim_seqlen < 0:
+                        key_cache = key_cache[:, :, :-trim_seqlen]
+                        value_cache = value_cache[:, :, :-trim_seqlen]
+                    else: # trim_seqlen == 0
+                        key_cache = None
+                        value_cache = None
+
+                if reindex_batch_indices is not None:
+                    key_cache = Tensor(key_cache.data[reindex_batch_indices])
+                    value_cache = Tensor(value_cache.data[reindex_batch_indices])
+
+                decoder_block.attn.kv_cache = (key_cache, value_cache)
 
     
 class DecoderBlock(Module):

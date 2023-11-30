@@ -95,8 +95,7 @@ class MultiheadAttention(Module):
                 # Augments attn_mask with 0s to shape (query seqlen, cache seqlen + key seqlen),
                 # which assumes that the query attends to all keys/values in the kv cache.
                 if attn_mask is not None:
-                    cache_seqlen = self.kv_cache[0].shape[2]
-                    cache_attn_mask = Tensor(np.zeros((len(attn_mask), cache_seqlen)))
+                    cache_attn_mask = Tensor(np.zeros((len(attn_mask), self.get_kv_cache_seqlen())))
                     attn_mask = F.concat([cache_attn_mask, attn_mask], axis=1)
 
             self.kv_cache = (key, value)
@@ -108,6 +107,15 @@ class MultiheadAttention(Module):
         attn_scores = attn_scores.mean(axis=1)  # Average attention scores across head
 
         return (attn_output, attn_scores)
+    
+    
+    def get_kv_cache_seqlen(self):
+        """Gets sequence length of kv_cache."""
+        if self.kv_cache is None:
+            return 0
+        else:
+            # kv_cache[0] and [1] are shape (batch, num_heads, cache_seqlen, dims_per_head)
+            return self.kv_cache[0].shape[2]
     
     
     def clear_kv_cache(self):
