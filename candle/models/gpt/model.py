@@ -107,6 +107,11 @@ class GPT(Module):
         for decoder_block in self.decoder_blocks:
             decoder_block.attn.clear_kv_cache()
             
+            
+    def get_kv_cache_seqlen(self):
+        """Gets KV cache seqlen."""
+        return self.decoder_blocks[0].attn.get_kv_cache_seqlen()
+            
 
     def modify_kv_cache(self,
                         trim_seqlen: int = None,
@@ -142,7 +147,7 @@ class GPT(Module):
                     value_cache = Tensor(value_cache.data[reindex_batch_indices])
 
                 decoder_block.attn.kv_cache = (key_cache, value_cache)
-
+                
     
 class DecoderBlock(Module):
     

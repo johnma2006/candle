@@ -21,9 +21,9 @@ def beam_search_decoder(model,
     Tokens will be yielded as soon as all `beam_size` beams agree on that token.
     
     If KV caching, we will guarantee that:
-        (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + (num tokens yielded)
-        - This will be true even if the generator terminates early, as long as generator.close() is called
-        - Note this means that we feed in the last generated token to update the KV cache
+        (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + len(indices)
+    This will be true even if the generator terminates early, as long as generator.close() is called
+
 
     Parameters
     ----------
@@ -48,8 +48,13 @@ def beam_search_decoder(model,
         If True, uses kv_cache to speed up inference. If generator terminates early, make sure to call
         generator.close() to properly maintain the KV cache.
         
+        After generation, we will guarantee that:
+            (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + len(indices)
+        unless kv_cache gets larger than model.block_size.
+        
         If using KV caching, then model must implement
             model.modify_kv_cache(trim_seqlen, reindex_batch_indices)
+            model.get_kv_cache_seqlen()
         
     Returns
     -------
@@ -58,7 +63,7 @@ def beam_search_decoder(model,
         
     Examples
     --------
-    (Ppseudocode) In the following, response2 == kv_response2 while being faster to generate.
+    (Pseudocode) In the following, response2 == kv_response2 while being faster to generate.
 
         prompt1 = 'Hi, I am John.'
         prompt2 = 'That is great.'
@@ -66,16 +71,17 @@ def beam_search_decoder(model,
         response1 = beam_search_decoder(prompt1, use_kv_cache=False)
         response2 = beam_search_decoder(prompt1 + response1 + prompt2, use_kv_cache=False)
 
-        kv_response1 = beam_search_decoder(prompt1, use_kv_cache=True)
-        kv_response2 = beam_search_decoder(prompt2, use_kv_cache=True)
+        response1 = beam_search_decoder(prompt1, use_kv_cache=True)
+        kv_response2 = beam_search_decoder(response1 + prompt2, use_kv_cache=True)
 
     """
     model.eval()
-    
-    indices_seqlen = len(indices)
 
     if beam_size is None:
         beam_size = 1
+
+    if use_kv_cache:
+        final_kv_cache_len = model.get_kv_cache_seqlen() + len(indices)
 
     # We maintain `cumulative_log_prob_per_beam` to have the same length as `indices`
     # On the 0th iter, `indices` has shape (1, initial_seqlen).
@@ -97,7 +103,7 @@ def beam_search_decoder(model,
                     indices_to_input = indices_to_input[:, -1:]
 
                 # Trim kv_cache in case it gets too long
-                # TODO: KV cache won't be perfectly maintained right now if this happens
+                # Note: KV cache won't be perfectly maintained right now if this happens
                 model.modify_kv_cache(trim_seqlen=model.block_size - indices_to_input.shape[1])
 
             next_token_logits = model(indices_to_input, use_kv_cache)[:, -1]
@@ -157,19 +163,16 @@ def beam_search_decoder(model,
                 # This means that the generator exited early. We have to do some cleanup to
                 # maintain the KV cache.
                 if use_kv_cache:
-                    # Update the kv_cache with the last generated token.
-                    model.modify_kv_cache(trim_seqlen=model.block_size - 1)
-                    _ = model(indices[:, -1:], use_kv_cache=True)
-
-                    # Filter KV cache to first `head_index` tokens, and take arbitrary beam (they're
-                    # all the same)
-                    model.modify_kv_cache(trim_seqlen=-head_index,
+                    # Trim the KV cache to guarantee that
+                    # (kv_cache_seqlen after decoding) == final_kv_cache_len
+                    model.modify_kv_cache(trim_seqlen=-final_kv_cache_len,
                                           reindex_batch_indices=[0])
                 return
 
-            indices_at_head = indices.data[:, head_index]
             if head_index == indices.shape[1]:
                 break
+
+            indices_at_head = indices.data[:, head_index]
 
     # Yield rest of the generated indices
     if sample:
@@ -178,14 +181,11 @@ def beam_search_decoder(model,
     else:
         best_index = cumulative_log_prob_per_beam.argmax()
 
-    # To guarantee that:
-    #     (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + (num tokens yielded)
-    # we update the kv_cache with the last generated token.
+    # Trim the KV cache to guarantee that (kv_cache_seqlen after decoding) == final_kv_cache_len
     if use_kv_cache:
-        model.modify_kv_cache(trim_seqlen=model.block_size - 1,
+        model.modify_kv_cache(trim_seqlen=-final_kv_cache_len,
                               reindex_batch_indices=[best_index])
-        _ = model(indices[[best_index], -1:], use_kv_cache=True)
-        
+
     yield indices.data[best_index, head_index:]
     
     
@@ -239,6 +239,3 @@ def nucleus_sample(probs: np.array,
     probs /= probs.sum(axis=0)
 
     return probs
-
-
-
