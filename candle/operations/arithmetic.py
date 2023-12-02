@@ -1,11 +1,11 @@
 """Arithmetic operations."""
 
+from __future__ import annotations
 import numpy as np
 from typing import List
 
 from .operation import Operation
-from .. import utils
-from ..tensor import Tensor
+from .. import tensor, utils
 
 
 class Addition(Operation):
@@ -13,7 +13,7 @@ class Addition(Operation):
     
     def _forward(self):
         (a, b) = self.inputs
-        return Tensor(a.data + b.data)
+        return tensor.Tensor(a.data + b.data)
     
     
     def _backward(self,
@@ -31,7 +31,7 @@ class Subtraction(Operation):
     
     def _forward(self):
         (a, b) = self.inputs
-        return Tensor(a.data - b.data)
+        return tensor.Tensor(a.data - b.data)
     
     
     def _backward(self,
@@ -49,7 +49,7 @@ class Multiplication(Operation):
     
     def _forward(self):
         (a, b) = self.inputs
-        return Tensor(a.data * b.data)
+        return tensor.Tensor(a.data * b.data)
     
     
     def _backward(self,
@@ -70,7 +70,7 @@ class Division(Operation):
     
     def _forward(self):
         (a, b) = self.inputs
-        return Tensor(a.data / b.data)
+        return tensor.Tensor(a.data / b.data)
     
     
     def _backward(self,
@@ -100,7 +100,7 @@ class Power(Operation):
     def _forward(self):
         assert len(self.inputs) == 1
         assert isinstance(self.power, (int, float, complex))
-        return Tensor(self.inputs[0].data ** self.power)
+        return tensor.Tensor(self.inputs[0].data ** self.power)
     
     
     def _backward(self,
@@ -122,8 +122,8 @@ class Exponentiation(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
-        assert isinstance(self.base, (int, float, complex))
-        return Tensor(self.base ** self.inputs[0].data)
+        assert isinstance(self.base, (int, float, complex)) or np.issubdtype(self.base, np.number)
+        return tensor.Tensor(self.base ** self.inputs[0].data)
     
     
     def _backward(self,

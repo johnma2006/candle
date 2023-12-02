@@ -1,8 +1,7 @@
 import numpy as np
 
 from .operation import Operation
-from .. import utils
-from ..tensor import Tensor
+from .. import tensor, utils
 
     
 class CrossEntropyLossOperation(Operation):
@@ -15,7 +14,7 @@ class CrossEntropyLossOperation(Operation):
         
         log_softmax = utils.log_softmax(logits.data)
 
-        return Tensor(-np.mean(log_softmax[range(len(target)), target.data.astype(int)]))
+        return tensor.Tensor(-np.mean(log_softmax[range(len(target)), target.data.astype(int)]))
     
     
     def _backward(self,

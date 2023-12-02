@@ -2,14 +2,7 @@ import os
 # Workaround for OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'  
 
-from . import optimizer
-from . import scheduler
-from . import vision
-from . import nlp
-from . import models
-
-from .tensor import Tensor
-from .parameter import Parameter
+from .tensor import Tensor, Parameter
 from .dataloader import DataLoader
 from .tensorboard import Dashboard
 
@@ -28,6 +21,13 @@ from .layers import (
     MaxPool2d,
     AvgPool2d,
 )
+
+from . import optimizer
+from . import scheduler
+from . import vision
+from . import nlp
+from . import models
+
 
 # ------------------------------------
 # Global is_grad_enabled functionality

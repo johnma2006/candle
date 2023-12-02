@@ -1,10 +1,10 @@
 """Convenience wrappers over operations for commonly used functions."""
 
+from __future__ import annotations
 import numpy as np
 from typing import Union, Tuple
 
 from . import operations
-from .tensor import Tensor
 
 
 def add(a, b):
@@ -78,7 +78,7 @@ def mean(a,
     else:
         N = np.prod(np.array(a.shape)[list(axis)])
     
-    return operations.TensorSum([a], axis=axis, keepdims=keepdims).forward() / Tensor(N)
+    return operations.TensorSum([a], axis=axis, keepdims=keepdims).forward() / N
 
 
 def var(a,

@@ -1,8 +1,9 @@
+from __future__ import annotations
 import numpy as np
 from typing import List, Tuple, Union
 
 from .operation import Operation
-from ..tensor import Tensor
+from .. import tensor
 
 
 class TensorContraction(Operation):
@@ -17,7 +18,7 @@ class TensorContraction(Operation):
         
     def _forward(self):
         (a, b) = self.inputs
-        return Tensor(np.tensordot(a.data, b.data, axes=self.axes))
+        return tensor.Tensor(np.tensordot(a.data, b.data, axes=self.axes))
     
     
     def _backward(self,
@@ -52,7 +53,7 @@ class TensorSum(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.sum(axis=self.axis, keepdims=self.keepdims))
+        return tensor.Tensor(self.inputs[0].data.sum(axis=self.axis, keepdims=self.keepdims))
     
     
     def _backward(self,
@@ -84,7 +85,7 @@ class TensorMax(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.max(axis=self.axis, keepdims=self.keepdims))
+        return tensor.Tensor(self.inputs[0].data.max(axis=self.axis, keepdims=self.keepdims))
     
     
     def _backward(self,
@@ -121,7 +122,7 @@ class TensorMin(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.min(axis=self.axis, keepdims=self.keepdims))
+        return tensor.Tensor(self.inputs[0].data.min(axis=self.axis, keepdims=self.keepdims))
     
     
     def _backward(self,
@@ -166,12 +167,12 @@ class TensorSlice(Operation):
         
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data[self.key])
+        return tensor.Tensor(self.inputs[0].data[self.key])
     
     
     def _backward(self,
                   output_grad: np.array):
-        input_grad = np.zeros(self.inputs[0].shape, dtype=Tensor.DEFAULT_DTYPE)
+        input_grad = np.zeros(self.inputs[0].shape, dtype=tensor.Tensor.DEFAULT_DTYPE)
 
         if self.list_ndim <= 1:
             input_grad[self.key] = output_grad
@@ -195,7 +196,7 @@ class TensorReshape(Operation):
         
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.reshape(self.new_shape))
+        return tensor.Tensor(self.inputs[0].data.reshape(self.new_shape))
     
     
     def _backward(self,
@@ -219,7 +220,7 @@ class TensorSwapaxes(Operation):
         
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.swapaxes(self.dim0, self.dim1))
+        return tensor.Tensor(self.inputs[0].data.swapaxes(self.dim0, self.dim1))
     
     
     def _backward(self,
@@ -244,7 +245,7 @@ class BatchMatrixMultiply(Operation):
         (a, b) = self.inputs
         assert a.shape[:-2] == b.shape[:-2]  # Assert first N-2 dimensions match
 
-        return Tensor(np.einsum('...ij, ...jk -> ...ik', a.data, b.data))
+        return tensor.Tensor(np.einsum('...ij, ...jk -> ...ik', a.data, b.data))
     
     
     def _backward(self,
@@ -266,7 +267,7 @@ class TensorTranspose(Operation):
         
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(self.inputs[0].data.T)
+        return tensor.Tensor(self.inputs[0].data.T)
     
     
     def _backward(self,
@@ -303,7 +304,7 @@ class TensorMaskedFill(Operation):
     def _forward(self):
         assert len(self.inputs) == 1
         
-        return Tensor((1 - self.broadcasted_mask) * self.inputs[0].data + self.broadcasted_mask * self.fill_value)
+        return tensor.Tensor((1 - self.broadcasted_mask) * self.inputs[0].data + self.broadcasted_mask * self.fill_value)
     
     
     def _backward(self,
@@ -324,7 +325,7 @@ class TensorConcatenation(Operation):
     
     
     def _forward(self):
-        return Tensor(np.concatenate([tensor.data for tensor in self.inputs], axis=self.axis))
+        return tensor.Tensor(np.concatenate([tensor.data for tensor in self.inputs], axis=self.axis))
     
     
     def _backward(self,

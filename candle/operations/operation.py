@@ -1,11 +1,11 @@
 """Operations in a computation graph."""
 
+from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
 from typing import List
 
-from ..tensor import Tensor
-from ..parameter import Parameter
+from .. import tensor
 
 
 class Operation(ABC):
@@ -21,11 +21,17 @@ class Operation(ABC):
         
         """
         # If any of the inputs are scalars, cast to Tensor
-        inputs = [Tensor(x) if isinstance(x, (int, float, complex, np.ndarray)) else x
-                  for x in inputs]
+        def is_nontensor_scalar(x):
+            if isinstance(x, tensor.Tensor) or isinstance(x, np.ndarray):
+                return False
+            if isinstance(x, (int, float, complex)) or np.issubdtype(x, np.number):
+                return True
+            return False
+        
+        inputs = [tensor.Tensor(x) if is_nontensor_scalar(x) else x for x in inputs]
         
         for x in inputs:
-            if not isinstance(x, (Tensor, Parameter)):
+            if not isinstance(x, tensor.Tensor):
                 raise ValueError(f'Input is type {type(x)}, but all inputs must be type Tensor.')
         
         self.inputs = inputs

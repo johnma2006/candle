@@ -42,6 +42,7 @@ def numerical_grad_check(operation_class: Type,
 
     output_grad = RandomState(random_seed).normal(size=output.shape).astype(Tensor.DEFAULT_DTYPE)
     input_grads = operation.backward(output_grad)
+    output_grad_tensor = Tensor(output_grad)
 
     # Numerically estimate input_grads
 
@@ -56,12 +57,12 @@ def numerical_grad_check(operation_class: Type,
             flattened_input[i] = orig_val + eps
             test_inputs_eps[input_i] = Tensor(flattened_input.reshape(test_inputs[input_i].shape))
             output_eps = operation_class(test_inputs_eps, **kwargs).forward()
-            loss_eps = (output_eps * output_grad)
+            loss_eps = (output_eps * output_grad_tensor)
 
             flattened_input[i] = orig_val - eps
             test_inputs_eps[input_i] = Tensor(flattened_input.reshape(test_inputs[input_i].shape))
             output_eps = operation_class(test_inputs_eps, **kwargs).forward()
-            loss_minus_eps = (output_eps * output_grad)
+            loss_minus_eps = (output_eps * output_grad_tensor)
 
             numerical_input_grad.append((loss_eps - loss_minus_eps).sum().data / (2 * eps))
 

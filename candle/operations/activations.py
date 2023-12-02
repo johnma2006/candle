@@ -3,14 +3,14 @@
 import numpy as np
 
 from .operation import Operation
-from ..tensor import Tensor
+from .. import tensor
 
 
 class ReLUActivation(Operation):
     
     def _forward(self):
         assert len(self.inputs) == 1
-        return Tensor(np.maximum(self.inputs[0].data, 0.0))
+        return tensor.Tensor(np.maximum(self.inputs[0].data, 0.0))
     
     
     def _backward(self,
@@ -33,7 +33,7 @@ class GeLUActivation(Operation):
         assert len(self.inputs) == 1
         x = self.inputs[0].data
 
-        return Tensor(0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3))))
+        return tensor.Tensor(0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3))))
     
     
     def _backward(self,
