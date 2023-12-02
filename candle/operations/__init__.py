@@ -20,6 +20,7 @@ from .tensorops import (
     TensorTranspose,
     TensorConcatenation,
     TensorMaskedFill,
+    TensorRepeatInterleave,
     BatchMatrixMultiply,
     TensorClone,
 )

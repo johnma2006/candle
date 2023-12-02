@@ -196,6 +196,12 @@ class Tensor:
     
     def flatten(self):
         return functions.reshape(self, new_shape=(-1,))
+    
+    
+    def repeat_interleave(self,
+                          repeats: int,
+                          axis: int):
+        return functions.repeat_interleave(self, repeats, axis)
 
     
     def clone(self):

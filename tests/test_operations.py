@@ -19,6 +19,7 @@ from candle.operations import (
     TensorTranspose,
     TensorConcatenation,
     TensorMaskedFill,
+    TensorRepeatInterleave,
     BatchMatrixMultiply,
     Conv2dOperation,
     MaxPool2dOperation,
@@ -314,3 +315,31 @@ class TestOperations(unittest.TestCase):
                              test_inputs=[Parameter(np.random.normal(size=(10, 12, 24))),
                                           Parameter(np.random.normal(size=(10, 12, 24))),
                                           Parameter(np.random.normal(size=(10, 12, 24)))])
+        
+
+    def test_repeat_interleave(self):
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': -1})
+
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': -2})
+
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': 2})
+
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': 4})
+
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': 0})
+
+        numerical_grad_check(operation_class=TensorRepeatInterleave,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'repeats': 3, 'axis': None})
+
+

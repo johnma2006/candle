@@ -355,3 +355,41 @@ class TensorClone(Operation):
                   output_grad: np.array):
         return (output_grad,)
     
+    
+class TensorRepeatInterleave(Operation):
+    """f(inputs) = np.repeat(inputs[0], repeats, axis)"""
+
+    def __init__(self,
+                 inputs: List[Tensor],
+                 repeats: int,
+                 axis: int):
+        super().__init__(inputs)
+        assert type(repeats) is int
+        assert axis is None or type(axis) is int
+        self.repeats = repeats
+        
+        if axis is not None:
+            dim = len(self.inputs[0].shape)
+            axis = (axis + dim) % dim
+        self.axis = axis
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return tensor.Tensor(self.inputs[0].data.repeat(self.repeats, self.axis))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        orig_shape = self.inputs[0].shape
+        
+        if self.axis is None:
+            input_grad = output_grad.reshape(orig_shape + (self.repeats,)).sum(axis=-1)
+        else:
+            shape = (orig_shape[:self.axis]
+                     + (orig_shape[self.axis], self.repeats)
+                     + orig_shape[self.axis + 1:])
+
+            input_grad = output_grad.reshape(shape).sum(axis=self.axis + 1)
+
+        return (input_grad,)
