@@ -11,6 +11,7 @@ from .conv import (
 from .normalization import (
     BatchNorm,
     LayerNorm,
+    RMSNorm,
 )
 from .attention import (
     MultiheadAttention,

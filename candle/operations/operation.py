@@ -5,6 +5,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List
 
+import candle
 from .. import tensor
 
 
@@ -42,7 +43,7 @@ class Operation(ABC):
     
     
     def forward(self):
-        """Computes the result of the operation.
+        """Computes the result of the operation, and conditionally connects result to computation graph.
         
         Returns
         -------
@@ -50,7 +51,6 @@ class Operation(ABC):
             Tensor result of operation.
         
         """
-        from .. import is_grad_enabled
         output = self._forward()
         
         # Conditionally connect the output node to the computation graph if any of its inputs
@@ -58,7 +58,7 @@ class Operation(ABC):
         is_in_computation_graph = np.any([child_node.is_in_computation_graph()
                                           for child_node in self.inputs])
         
-        if is_in_computation_graph and is_grad_enabled():
+        if is_in_computation_graph and candle.is_grad_enabled():
             output.operation = self
             self.output = output
         
@@ -79,23 +79,22 @@ class Operation(ABC):
             List of Numpy arrays, one array of shape input.shape for each tensor `input` in self.inputs.
         
         """
-        if self.output is None:
-            raise RuntimeError('.backward() was called a second time, but the intermediate activations '
-                               'have already been freed.')
-        
         input_grads = self._backward(output_grad)
                 
+        # Sanity checks
+        
+        assert self.output is not None
         assert len(input_grads) == len(self.inputs)
         for (input_grad, inp) in zip(input_grads, self.inputs):
-            assert type(input_grad) is np.ndarray
-            
-            if input_grad.shape != inp.shape:
-                raise RuntimeError(f'input_grad.shape = {input_grad.shape} != inp.shape = {inp.shape}:')
+            assert isinstance(input_grad, np.ndarray) or np.issubdtype(input_grad, np.number)
+            assert input_grad.shape == inp.shape, (
+                f'input_grad.shape = {input_grad.shape} != inp.shape = {inp.shape}:'
+            )
             
         return input_grads
             
         
-    def free_memory(self):
+    def free_pointers(self):
         """Remove pointers to facilitate garbage collection."""
         self.output.operation = None  # Probably only need to do this, but free the rest just in case
         self.output = None

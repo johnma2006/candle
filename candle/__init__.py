@@ -14,6 +14,7 @@ from .layers import (
     Dropout,
     BatchNorm,
     LayerNorm,
+    RMSNorm,
     MultiheadAttention,
     DotProductAttention,
     PositionalEncoding,

@@ -11,7 +11,7 @@ class BatchNorm(Module):
                  axis: Union[int, Tuple[int]] = (0,),
                  momentum: float = 0.1,
                  eps: float = 1e-5):
-        """Batch normalization.
+        """Batch normalization (technically LazyLayerNorm).
         
         Parameters
         ----------
@@ -87,7 +87,7 @@ class LayerNorm(Module):
     def __init__(self,
                  axis: Union[int, Tuple[int]],
                  eps: float = 1e-5):
-        """Layer normalization.
+        """Layer normalization (technically LazyLayerNorm).
         
         Parameters
         ----------
@@ -134,4 +134,55 @@ class LayerNorm(Module):
         
     def __repr__(self):
         return f'LayerNorm(axis={self.axis})'
+    
+    
+class RMSNorm(Module):
+    
+    def __init__(self,
+                 axis: Union[int, Tuple[int]],
+                 eps: float = 1e-5):
+        """RMS normalization (technically, LazyRMSNorm).
+        
+        Parameters
+        ----------
+        axis
+            Axes to compute RMS over. Must not include the 0, batch axis.
+        eps
+            Value added to the denominator for numerical stability.
+            
+        """
+        super().__init__()
+        
+        if type(axis) is int:
+            axis = (axis,)
+        if type(axis) is not tuple or 0 in axis:
+            raise ValueError(f'axis = {axis} must not contain 0, the batch dimension.')
+        
+        self.axis = axis
+        self.eps = eps
+        
+        # Defer initialization to the first forward pass once we know the shape
+        self.features_shape = None
+        self.W = Parameter(Tensor(np.ones(0)))
+        
+        
+    def forward(self, x):
+        # input: shape (N, *)
+        # output: shape (N, *)
+        if self.features_shape is None:
+            features_shape = np.array(x.shape)
+            features_shape[[i for i in range(len(x.shape)) if i not in self.axis]] = 1
+            self.features_shape = tuple(features_shape)
+            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
+
+        rms = (x ** 2).mean(axis=self.axis, keepdims=True)
+
+        x_normalized = x / (rms + self.eps) ** 0.5
+        x_normalized = x_normalized * self.W
+
+        return x_normalized
+    
+        
+    def __repr__(self):
+        return f'RMSNorm(axis={self.axis})'
     

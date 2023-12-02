@@ -51,13 +51,14 @@ class Tensor:
         
     
     def backward(self):
-        """Computes grad w.r.t. this tensor for all upstream nodes in the computation graph."""
+        """Populates node.grad with respect to this Tensor for all nodes in the computation graph."""
         if self.shape != ():
             raise RuntimeError('.backward() can only be called from a scalar Tensor.')
             
         if self.operation is None:
-            raise RuntimeError('Missing grad function. Most likely, backward() was called a second time, '
-                               'but the intermediate activations have already been freed.')
+            raise RuntimeError('Empty computation graph. Either no Tensors have requires_grad == True, '
+                               'or backward() was called a second time, but the intermediate '
+                               'activations have already been freed.')
         
         def topological_sort(node):
             seen.add(node)
@@ -94,8 +95,7 @@ class Tensor:
                         
                     child_node.grad += input_grad
 
-            node.operation.free_memory()  # Delete pointers to facilitate garbage collection
-
+            node.operation.free_pointers()  # Delete pointers to facilitate garbage collection
 
     # ---------------------
     # General functionality
@@ -191,7 +191,6 @@ class Tensor:
     
     def reshape(self,
                 new_shape: Tuple[int]):
-        
         return functions.reshape(self, new_shape=new_shape)
     
     
@@ -202,10 +201,9 @@ class Tensor:
     def clone(self):
         return functions.clone(self)
     
-    
-    # -------------------
-    # Operation overloads
-    # -------------------
+    # ---------
+    # Overloads
+    # ---------
     
     def __getitem__(self, key):
         return functions.tensorslice(self, key)
@@ -263,7 +261,6 @@ class Tensor:
         return functions.tensordot(self, other, axes=1)
     
     
-    
 class Parameter(Tensor):
     """Wrapper around Tensors that indicates that it should be updated during backprop."""
     
@@ -277,7 +274,7 @@ class Parameter(Tensor):
         data
             Numpy array.
         dtype
-            Dtype of tensor. If None, autocasts to float32.
+            dtype of tensor. If None, autocasts to float32.
             
         """
         super().__init__(data, dtype)
@@ -289,5 +286,4 @@ class Parameter(Tensor):
             return self.data.__repr__().replace('array', 'Parameter')
         else:
             return f'Parameter({self.shape})-shape {str(self.data.dtype)} array)'
-  
         
