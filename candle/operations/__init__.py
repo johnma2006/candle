@@ -21,6 +21,7 @@ from .tensorops import (
     TensorConcatenation,
     TensorMaskedFill,
     BatchMatrixMultiply,
+    TensorClone,
 )
 from .activations import (
     ReLUActivation,

@@ -16,11 +16,14 @@ class Optimizer(ABC):
         pass
     
     
-    def zero_grad(self):
-        """Resets grad to 0."""
+    def zero_grad(self, set_to_none: bool = True):
+        """Resets grad to None."""
         for param in self.parameter_dict.values():
-            param.grad = 0.0
-    
+            if set_to_none:
+                param.grad = None
+            else:
+                param.grad = 0.0
+                
     
     def get_learning_rate(self):
         if self.scheduler is None:
@@ -59,6 +62,9 @@ class SGD(Optimizer):
     def step(self):
         for parameter_name in self.parameter_dict:
             param = self.parameter_dict[parameter_name]
+            
+            if param.grad is None:
+                continue  # Skip step, see https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
 
             if self.momentum[parameter_name] is None:
                 self.momentum[parameter_name] = param.grad
@@ -102,6 +108,9 @@ class AdamW(Optimizer):
 
         for parameter_name in self.parameter_dict:
             param = self.parameter_dict[parameter_name]
+            
+            if param.grad is None:
+                continue  # Skip step, see https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
             
             # Update momentum and variance
 

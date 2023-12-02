@@ -38,39 +38,37 @@ class TestSetGradEnabled(unittest.TestCase):
         
         
     def test_pointers_with_no_grad(self):
-        x = candle.Tensor([1, 2, 3])
+        x = candle.Parameter([1, 2, 3])
         y = 2 * x
         assert y.operation is not None
         assert y.operation.output is not None
 
         with candle.no_grad():
-            x = candle.Tensor([1, 2, 3])
+            x = candle.Parameter([1, 2, 3])
             y = 2 * x
             assert y.operation is None
 
-        x = candle.Tensor([1, 2, 3])
+        x = candle.Parameter([1, 2, 3])
         y = 2 * x
         assert y.operation is not None
         assert y.operation.output is not None
 
         candle.no_grad()
 
-        x = candle.Tensor([1, 2, 3])
+        x = candle.Parameter([1, 2, 3])
         y = 2 * x
         assert y.operation is not None
         assert y.operation.output is not None
 
-
         candle.set_grad_enabled(False)
 
-        x = candle.Tensor([1, 2, 3])
+        x = candle.Parameter([1, 2, 3])
         y = 2 * x
         assert y.operation is None
 
-
         candle.set_grad_enabled(True)
 
-        x = candle.Tensor([1, 2, 3])
+        x = candle.Parameter([1, 2, 3])
         y = 2 * x
         assert y.operation is not None
         assert y.operation.output is not None

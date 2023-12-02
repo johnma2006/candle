@@ -9,6 +9,102 @@ from .utils import model_numerical_grad_check
 
 
 class TestAutograd(unittest.TestCase):
+        
+    def test_computation_graph(self):
+        a1 = Tensor([1, 2, 3])
+        a2 = Tensor([1, 2, 3])
+        a3 = Parameter([1, 2, 3])
+        a4 = Tensor([1, 2, 3])
+
+        b2 = a1 + a2
+        b3 = b2 + a3
+        b4 = b3 + a4
+
+        assert not a1.is_in_computation_graph()
+        assert not a2.is_in_computation_graph()
+        assert a3.is_in_computation_graph()
+        assert not a4.is_in_computation_graph()
+        assert not b2.is_in_computation_graph()
+        assert b3.is_in_computation_graph()
+        assert b4.is_in_computation_graph()
+
+        b4.sum().backward()
+
+        assert a1.grad is None
+        assert a2.grad is None
+        assert np.alltrue(a3.grad == np.array([1, 1, 1]))
+        assert a4.grad is None
+        assert b2.grad is None
+        assert b3.grad is None
+        assert b4.grad is None
+        
+        
+    def test_cloning(self):
+        x = Parameter([1, 2, 3])
+        y = x.clone()
+        z = y ** 2
+        (x + z).sum().backward()
+
+        assert np.alltrue(x.grad == np.array([3, 5, 7]))
+
+    
+    def test_astype(self):
+        x = Parameter([1, 2, 3])
+        y = x ** 2
+        z = y.astype(np.float64)
+
+        (y + z).sum().backward()
+
+        assert np.alltrue(x.grad == np.array([4, 8, 12]))
+        
+
+    def test_grad_accumulation(self):
+        x = Parameter([1, 2, 3])
+
+        y = x ** 2
+        z = y ** 2
+        z.sum().backward()
+
+        s1 = x.grad.sum()
+
+        y = x ** 2
+        z = y ** 2
+        z.sum().backward()
+
+        s2 = x.grad.sum()
+
+        assert np.isclose(s2 / s1, 2.0)
+        
+        
+    def test_zero_grad(self):
+        x = Tensor(np.random.random(size=(12, 128)))
+        y = Tensor(np.random.random(size=(256)))
+
+        layer = candle.Linear(128, 256)
+
+        W_batch_grad = None
+        b_batch_grad = None
+        for i in range(1, 10):
+            loss = (layer(x) - y).mean()
+            loss.backward()
+
+            if W_batch_grad is None:
+                W_batch_grad = layer.W.grad.copy()
+            if b_batch_grad is None:
+                b_batch_grad = layer.b.grad.copy()
+
+            assert np.isclose(i, (layer.W.grad / W_batch_grad).min())
+            assert np.isclose(i, (layer.b.grad / b_batch_grad).max())
+            np.isclose(i, (layer.W.grad / W_batch_grad).min())
+
+        layer.zero_grad()
+
+        for i in range(1, 10):
+            loss = (layer(x) - y).mean()
+            loss.backward()
+            assert np.isclose(i, (layer.W.grad / W_batch_grad).min())
+            assert np.isclose(i, (layer.b.grad / b_batch_grad).max())
+
     
     def test_mlp(self):
         
@@ -162,69 +258,3 @@ class TestAutograd(unittest.TestCase):
         model_numerical_grad_check(model, loss_fn)
         
         Tensor.DEFAULT_DTYPE = default_dtype
-        
-        
-    def test_outdegree(self):
-        # Checks that outdegree is 0 after backprop
-        x1 = Parameter(Tensor(np.array([1, 2, 3])))
-        x2 = x1[:]
-        x3 = x2 + x1
-        x4 = x3 ** 2
-        x5 = x4.sum()
-        
-        x5._initialize_outdegree()
-        
-        assert x1._outdegree == 2
-        assert x2._outdegree == 1
-        assert x3._outdegree == 1
-        assert x4._outdegree == 1
-        assert x5._outdegree == 0
-
-        x5.backward()
-        
-        assert x1._outdegree == 0
-        assert x2._outdegree == 0
-        assert x3._outdegree == 0
-        assert x4._outdegree == 0
-        assert x5._outdegree == 0
-        
-        
-    def test_requires_grad_computation(self):
-        a = Tensor(np.array([0, 1, 2, 3]))
-        b = Parameter(Tensor(np.array([0, 1, 2, 3])))
-        c = Tensor(np.array([0, 1, 2, 3]))
-
-        assert a.requires_grad == False
-        assert b.requires_grad == True
-        assert c.requires_grad == False
-
-        d = a + b
-        e = c + d
-
-        e._initialize_requires_grad_computation()
-        assert a._requires_grad_computation == False
-        assert b._requires_grad_computation == True
-        assert c._requires_grad_computation == False
-        assert d._requires_grad_computation == True
-        assert e._requires_grad_computation == True
-        
-        
-    def test_zero_grad(self):
-        x = Tensor(np.random.random(size=(12, 128)))
-        y = Tensor(np.random.random(size=(256)))
-
-        layer = candle.Linear(128, 256)
-
-        for i in range(1, 10):
-            loss = (layer(x) - y).mean()
-            loss.backward()
-            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).min())
-            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).max())
-
-        layer.zero_grad()
-
-        for i in range(1, 10):
-            loss = (layer(x) - y).mean()
-            loss.backward()
-            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).min())
-            assert np.isclose(i, (layer.W.grad / layer.W._batch_grad).max())

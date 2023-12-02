@@ -1,5 +1,6 @@
 """Tensor and autograd functionality."""
 
+from __future__ import annotations
 import numpy as np
 from typing import Union, Tuple
 
@@ -16,7 +17,7 @@ class Tensor:
                  data: np.array,
                  dtype: type = None):
         """Initialize Tensor.
-        
+
         Parameters
         ----------
         data
@@ -33,122 +34,68 @@ class Tensor:
         if not isinstance(data, np.ndarray):
             data = np.array(data, dtype=dtype)
             
-        self.data = data.astype(dtype)
-        
-        self.grad = 0.0
-        self.operation = None  # Operation edge whose result is this Tensor node. None if is leaf
+        self.data: np.array = data.astype(dtype)
+        self.grad: np.array = None
+        self.operation: Operation = None  # Operation edge whose result is this Tensor node
         self.requires_grad = False
         
-        self._batch_grad = 0.0  # Grads for each batch during loss.backward() accumulate here.
-        self._outdegree = 0     # Outdegree in the computation graph. Uninitialized until .backward()
-        self._requires_grad_computation = None  # If we need to compute grad during backprop.
-                                                # True iff any child node is True.
-                                                # Uninitialized until _initialize_requires_grad_computation()
-    
     # ---------------
     # Backpropagation
-    # ---------------
+    # ---------------        
     
-    def zero_grad(self):
-        """Resets grad to 0."""
-        self.grad = 0.0
+    def is_in_computation_graph(self):
+        """Returns True if this node is in the computation graph."""
+        # If self.operation is not None, we know that one of its upstream children
+        # has requires_grad == True
+        return self.operation is not None or self.requires_grad
         
     
     def backward(self):
         """Computes grad w.r.t. this tensor for all upstream nodes in the computation graph."""
         if self.shape != ():
-            raise Exception('.backward() can only be called from a scalar Tensor.')
+            raise RuntimeError('.backward() can only be called from a scalar Tensor.')
+            
+        if self.operation is None:
+            raise RuntimeError('Missing grad function. Most likely, backward() was called a second time, '
+                               'but the intermediate activations have already been freed.')
         
-        self._reset_graph()
-        self._initialize_outdegree()
-        self._initialize_requires_grad_computation()
-        
-        self._batch_grad = np.array(1.0, dtype=Tensor.DEFAULT_DTYPE)
-        self._backward()
-
-    
-    def _backward(self):
-        """Accumulates self.grad, the derivative w.r.t. the loss tensor, for this and all upstream nodes."""
-        if self.operation is None:  # Is leaf
-            return
-        
-        nodes_to_backprop = []
-        input_grads = self.operation.backward(self._batch_grad)
-        self._batch_grad = 0.0  # Free memory
-        
-        for (node, input_grad) in zip(self.operation.inputs, input_grads):
-            if node._requires_grad_computation:
-                node._batch_grad += input_grad
-                if node.requires_grad:
-                    node.grad += input_grad
-                
-                node._outdegree -= 1
-                assert node._outdegree >= 0
-
-                if node._outdegree == 0:
-                    nodes_to_backprop.append(node)
-                    
-        self.operation.free_memory()  # Remove pointers to facilitate garbage collection
-        
-        for node in set(nodes_to_backprop):
-            node._backward()
-        
-        
-    def _reset_graph(self):
-        """Resets the computation graph in preparation for backprop.
-        
-        Resets self._outdegree, self._requires_grad_computation, and self.batch_grad.
-        
-        """
-        children = [self]
-        seen = set()
-
-        while children:
-            node = children.pop(0)
-            node._batch_grad = 0.0
-            node._outdegree = 0
-            node._requires_grad_computation = None
-
-            if node.operation is not None:
-                for child_node in set(node.operation.inputs):
-                    if id(child_node) not in seen:
-                        children.append(child_node)
-
-            seen.add(id(node))
-        
-                
-    def _initialize_outdegree(self):
-        """Initializes self._outdegree for this node and upstream nodes."""
-        children = [self]
-        seen = set()
-
-        while children:
-            node = children.pop(0)
+        def topological_sort(node):
+            seen.add(node)
 
             if node.operation is not None:
                 for child_node in node.operation.inputs:
-                    child_node._outdegree += 1
-
-                for child_node in set(node.operation.inputs):
-                    if id(child_node) not in seen:
-                        children.append(child_node)
-
-            seen.add(id(node))
+                    if child_node.is_in_computation_graph() and child_node not in seen:
+                        topological_sort(child_node)
             
-            
-    def _initialize_requires_grad_computation(self):
-        """Initializes self._requires_grad_computation for this node and upstream nodes."""
-        if self._requires_grad_computation is not None:
-            return self._requires_grad_computation
+            topologically_sorted_graph.append(node)
+
+        seen = set()
+        topologically_sorted_graph = []
+        topological_sort(self)
         
-        if self.operation is None:  # Is leaf
-            self._requires_grad_computation = self.requires_grad
-        else:
-            self._requires_grad_computation = False
-            for child_node in set(self.operation.inputs):
-                self._requires_grad_computation |= child_node._initialize_requires_grad_computation()
+        self.grad = np.array(1.0, dtype=Tensor.DEFAULT_DTYPE)
 
-        return self._requires_grad_computation
+        # Backprop in reverse order through the topologically sorted list of nodes
+        # Since the list is topologically sorted, we know that upon reaching node N,
+        # all parents of N have already been backpropped through
+        for node in topologically_sorted_graph[::-1]:
+            if node.operation is None:  # If leaf node, do nothing
+                assert node.requires_grad
+                continue
+
+            assert not node.requires_grad
+            input_grads = node.operation.backward(node.grad)
+            node.grad = None  # Free memory
+
+            for (child_node, input_grad) in zip(node.operation.inputs, input_grads):
+                if child_node.is_in_computation_graph():
+                    if child_node.grad is None:
+                        child_node.grad = 0.0
+                        
+                    child_node.grad += input_grad
+
+            node.operation.free_memory()  # Delete pointers to facilitate garbage collection
+
 
     # ---------------------
     # General functionality
@@ -167,7 +114,7 @@ class Tensor:
     
     
     def astype(self, dtype):
-        """Casts Tensor to dtype.
+        """Returns cloned Tensor casted to dtype.
         
         Parameters
         ----------
@@ -175,17 +122,11 @@ class Tensor:
             Numpy dtype.
             
         """
-        return Tensor(self.data.copy(), dtype=dtype)
-    
-    
-    def clone(self):
-        """Returns clone of tensor with same relationship to the computation graph."""
-        cloned = Tensor(self.data.copy(), dtype=self.data.dtype)
-        cloned.operation = self.operation
-        cloned.requires_grad = self.requires_grad
-    
+        cloned = self.clone()
+        cloned.data = cloned.data.astype(dtype)
+        
         return cloned
-    
+        
         
     def __repr__(self):
         if len(self.shape) == 0:
@@ -256,6 +197,11 @@ class Tensor:
     
     def flatten(self):
         return functions.reshape(self, new_shape=(-1,))
+
+    
+    def clone(self):
+        return functions.clone(self)
+    
     
     # -------------------
     # Operation overloads

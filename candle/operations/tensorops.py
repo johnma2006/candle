@@ -336,3 +336,22 @@ class TensorConcatenation(Operation):
         input_grads = tuple(np.split(output_grad, indices_or_sections, axis=self.axis))
 
         return input_grads
+    
+    
+class TensorClone(Operation):
+    """f(inputs) = inputs[0].copy()"""
+    
+    def __init__(self,
+                 inputs: List[Tensor]):
+        super().__init__(inputs)
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return tensor.Tensor(self.inputs[0].data.copy())
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        return (output_grad,)
+    

@@ -46,6 +46,10 @@ def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 
 
+def clone(a):
+    return operations.TensorClone([a]).forward()
+
+
 def reshape(a, new_shape: Tuple[int]):
     return operations.TensorReshape([a], new_shape=new_shape).forward()
 

@@ -21,11 +21,14 @@ class Module(ABC):
         pass
     
     
-    def zero_grad(self):
-        """Resets grad to 0."""
+    def zero_grad(self, set_to_none: bool = True):
+        """Resets grad to None."""
         for param in self.parameters().values():
-            param.grad = 0.0
-    
+            if set_to_none:
+                param.grad = None
+            else:
+                param.grad = 0.0
+                
 
     def parameters(self):
         """Returns dictionary mapping parameter name to Parameter."""

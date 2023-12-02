@@ -2,11 +2,11 @@ import numpy as np
 from numpy.random import RandomState
 from typing import List, Type, Callable
 
-from candle.tensor import Tensor
+from candle.tensor import Tensor, Parameter
 
 
 def numerical_grad_check(operation_class: Type,
-                         test_inputs: List[Tensor],
+                         test_inputs: List[Parameter],
                          kwargs: dict = {},
                          eps: float = 1e-4,
                          random_seed: int = None,
@@ -140,7 +140,7 @@ def model_numerical_grad_check(model,
     # Compute grads
 
     loss = loss_fn(model, random_seed=random_seed)
-    loss._reset_graph()
+    model.zero_grad()
     loss.backward()
 
     param_grads = [np.array(parameters[key].grad) for key in parameters]
