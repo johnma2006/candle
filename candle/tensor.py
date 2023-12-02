@@ -337,3 +337,32 @@ class Tensor:
         from . import functions
         return functions.tensordot(self, other, axes=1)
     
+    
+    
+class Parameter(Tensor):
+    """Wrapper around Tensors that indicates that it should be updated during backprop."""
+    
+    def __init__(self,
+                 data: np.array,
+                 dtype: type = None):
+        """Initialize Parameter
+        
+        Parameters
+        ----------
+        data
+            Numpy array.
+        dtype
+            Dtype of tensor. If None, autocasts to float32.
+            
+        """
+        super().__init__(data, dtype)
+        self.requires_grad = True
+        
+        
+    def __repr__(self):
+        if len(self.shape) == 0:
+            return self.data.__repr__().replace('array', 'Parameter')
+        else:
+            return f'Parameter({self.shape})-shape {str(self.data.dtype)} array)'
+  
+        

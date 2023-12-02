@@ -1,7 +1,6 @@
 import numpy as np
 
-from ..tensor import Tensor
-from ..parameter import Parameter
+from ..tensor import Tensor, Parameter
 from .module import Module
 
     

@@ -2,8 +2,7 @@ import numpy as np
 from typing import Tuple, Union
 
 from .module import Module
-from ..tensor import Tensor
-from ..parameter import Parameter
+from ..tensor import Tensor, Parameter
 
     
 class BatchNorm(Module):

@@ -3,8 +3,7 @@ from typing import Tuple, Union
 
 from .module import Module
 from .. import operations
-from ..tensor import Tensor
-from ..parameter import Parameter
+from ..tensor import Tensor, Parameter
     
     
 class Conv2d(Module):

@@ -2,8 +2,7 @@ import numpy as np
 
 from .module import Module
 from .. import utils
-from ..tensor import Tensor
-from ..parameter import Parameter
+from ..tensor import Tensor, Parameter
     
 
 class Linear(Module):

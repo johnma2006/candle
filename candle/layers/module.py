@@ -3,8 +3,7 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from typing import Callable, Tuple
 
-from ..tensor import Tensor
-from ..parameter import Parameter
+from ..tensor import Tensor, Parameter
 
 
 class Module(ABC):
