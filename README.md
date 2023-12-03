@@ -4,7 +4,7 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 * Tensor-based reverse-mode automatic differentiation
 * Object-oriented PyTorch-like API
 * [Tensor operations](https://github.com/johnma2006/candle/tree/main/candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
-* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, convolutional, max/avg pooling, dropout
+* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
 * [NLP](https://github.com/johnma2006/candle/tree/main/candle/nlp): byte-pair encoding, beam search with top-k/-p, speculative sampling (todo), chat templates (ChatML)
 * Models: [GPT](https://github.com/johnma2006/candle/blob/main/candle/models/gpt/model.py), [ResNet](https://github.com/johnma2006/candle/blob/main/candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
@@ -16,12 +16,12 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 #### Language Modelling
 * Converse with Taylor, your Large GPT2 friend [(notebook)](experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
   <img src="experiments/gpt_experiments/sample_conversation.png" width="600" height="350" />
-* KV Caching Speedup and Memory Consumption [(notebook)](experiments/gpt_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
-* Beam Search vs Top P vs Top K Sampling Quality [(notebook)](experiments/gpt_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
+* KV-caching speedup and memory consumption [(notebook)](experiments/gpt_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
+* Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/gpt_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
-  <img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1176" height="350" />
+  <img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="973" height="350" />
 * Training ResNet14 on MNIST [(notebook)](experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
 * Training MLP on MNIST [(notebook)](experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 

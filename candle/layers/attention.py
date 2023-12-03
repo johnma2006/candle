@@ -80,9 +80,9 @@ class GroupedQueryRotaryAttention(Module):
         attn_mask
             Tensor of shape (query seqlen, key seqlen). attn_mask[i, j] = 0 means that query_i
                 should attend to key_j.
-            If use_kv_cache is True, then attn_mask will be augmented attn_mask with 0s to shape 
+            If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
                 (query seqlen, cache seqlen + key seqlen), which assumes that the query attends 
-                to all keys/values in the kv cache.
+                to all keys/values in the KV cache.
         use_kv_cache
             Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
             before computing attention, and updates self.kv_cache with the new key/value.
@@ -113,10 +113,10 @@ class GroupedQueryRotaryAttention(Module):
             rotate (x, y) by angle A := i / rotary_base^(2j / embed_dim).
 
             This means (x, y) -> (cos(A) * x + sin(A) * y, cos(A) * y - sin(A) * x)
-                               = (cos(A), cos(A)) o (x, y) + (sin(A), -sin(A)) o (y, x)  .
+                               = (cos(A), cos(A)) o (x, y) + (sin(A), -sin(A)) o (y, x)
                                  where o is the elementwise product
                                  
-            If `offset` is provided, adds `position_offset` to `i`.
+            If `offset` is provided, adds `offset` to `i`.
             """
             # Reshape to (batch, head, seqlen, dims_per_head/2, 2)
             qk = qk.reshape((*qk.shape[:3], -1, 2))
@@ -234,9 +234,9 @@ class MultiheadAttention(Module):
         attn_mask
             Tensor of shape (query seqlen, key seqlen). attn_mask[i, j] = 0 means that query_i
                 should attend to key_j.
-            If use_kv_cache is True, then attn_mask will be augmented attn_mask with 0s to shape 
+            If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
                 (query seqlen, cache seqlen + key seqlen), which assumes that the query attends 
-                to all keys/values in the kv cache.
+                to all keys/values in the KV cache.
         use_kv_cache
             Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
             before computing attention, and updates self.kv_cache with the new key/value.

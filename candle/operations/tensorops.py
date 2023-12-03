@@ -179,7 +179,7 @@ class TensorSlice(Operation):
 
         else:  # list_ndim == 2
             for (i, subarray) in enumerate(self.key[0]):
-                input_grad[(self.key[0][i],) + self.key[1:]] += output_grad[i]
+                input_grad[(subarray,) + self.key[1:]] += output_grad[i]
 
         return (input_grad,)
     
