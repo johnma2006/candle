@@ -64,13 +64,12 @@ class GPT(Module):
             Tensor with shape (batch, seqlen, vocab_size)
             
         """
-        kv_cache_seqlen = self.decoder_blocks[0].attn.get_kv_cache_seqlen() if use_kv_cache else 0
-        position_indices = Tensor(np.arange(indices.shape[1]) + kv_cache_seqlen)
+        offset = self.get_kv_cache_seqlen() if use_kv_cache else 0
+        position_indices = Tensor(np.arange(indices.shape[1]) + offset)
         
         x = self.word_embeddings(indices) + self.position_embeddings(position_indices)
         x = self.dropout(x)  # shape (batch, seqlen, embed_dim)
 
-        new_kv_cache_by_layer = []
         for decoder_block in self.decoder_blocks:
             x = decoder_block(x, use_kv_cache)
 

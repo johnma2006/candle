@@ -108,7 +108,7 @@ class GroupedQueryRotaryAttention(Module):
             tensor = tensor.reshape((tensor.shape[0], tensor.shape[1], -1))
             return tensor
 
-        def apply_rotation_matrix(qk, position_offset: int):
+        def apply_rotation_matrix(qk, offset: int):
             """For each 2D point (x, y) at position index `i` and embed_dim index `(2j, 2j+1)`,
             rotate (x, y) by angle A := i / rotary_base^(2j / embed_dim).
 
@@ -116,7 +116,7 @@ class GroupedQueryRotaryAttention(Module):
                                = (cos(A), cos(A)) o (x, y) + (sin(A), -sin(A)) o (y, x)  .
                                  where o is the elementwise product
                                  
-            If `position_offset` is provided, adds `position_offset` to `i`.
+            If `offset` is provided, adds `position_offset` to `i`.
             """
             # Reshape to (batch, head, seqlen, dims_per_head/2, 2)
             qk = qk.reshape((*qk.shape[:3], -1, 2))
@@ -137,9 +137,9 @@ class GroupedQueryRotaryAttention(Module):
         value = reshape_and_transpose(self.W_v(value), N=self.num_groups)
     
         if self.apply_rotary_embedding:
-            position_offset = self.get_kv_cache_seqlen() if use_kv_cache else 0
-            query = apply_rotation_matrix(query, position_offset)
-            key = apply_rotation_matrix(key, position_offset)
+            offset = self.get_kv_cache_seqlen() if use_kv_cache else 0
+            query = apply_rotation_matrix(query, offset)
+            key = apply_rotation_matrix(key, offset)
 
         if use_kv_cache:
             if self.training:
