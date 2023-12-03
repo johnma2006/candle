@@ -21,40 +21,11 @@ class ChatTemplate(ABC):
             If True, then filters to the `n_recent_messages` most recent messages. This is useful for
             cumulative KV-cached decoding.
             
-            Returns `s` such that:
+            Concretely, returns `s` such that:
                 apply_chat_template(messages[:-n_recent_messages]) + `s` = apply_chat_template(messages)
             
             if n_recent_messages >= len(messages), simply returns apply_chat_template(messages).
-            
-        Examples
-        --------
-        >>> messages = [
-        ...     ('user', 'Hi, how are you?'),
-        ...     ('assistant', 'I am doing well. How about you?'),
-        ...     ('user', 'Great thanks!'),
-        ...     ('assistant', 'Nice!'),
-        ...     ('user', 'What is your favourite baseball team?'),
-        ... ]
 
-        >>> chat_template = SimpleConversationTemplate(user_name='John', assistant_name='Taylor')
-        >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
-
-        Two friends, John and Taylor, are having an online conversation. Taylor is friendly,
-        talkative, and loves to ask Taylor questions.
-
-        John: Hi, how are you?
-        Taylor: I am doing well. How about you?
-        John: Great thanks!
-        Taylor: Nice!
-        John: What is your favourite baseball team?
-        Taylor:
-
-        >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
-
-         Nice!
-        John: What is your favourite baseball team?
-        Taylor:
-        
         """
         full_chat = self._apply_chat_template(messages, add_generation_prompt)
 
@@ -65,7 +36,8 @@ class ChatTemplate(ABC):
             partial_chat = self._apply_chat_template(messages[:-n_recent_messages], add_generation_prompt)
 
             if not full_chat.startswith(partial_chat):
-                raise ValueError(f'full chat = "{full_chat}" must start with partial_chat = "{partial_chat}".')
+                raise ValueError(f'full chat = \n"""{full_chat}""" \n\nmust start with '
+                                 f'partial_chat = \n"""{partial_chat}""".')
 
             # `diff` satisfies `partial_chat + diff == full_chat`
             diff = full_chat[len(partial_chat):]
@@ -90,18 +62,18 @@ class SimpleConversationTemplate(ChatTemplate):
     Examples
     --------
     >>> messages = [
-    ...     ('user', 'Hi, how are you?'),
-    ...     ('assistant', 'I am doing well. How about you?'),
-    ...     ('user', 'Great thanks!'),
-    ...     ('assistant', 'Nice!'),
-    ...     ('user', 'What is your favourite baseball team?'),
+    ...     {'role': 'user', 'content': 'Hi, how are you?'},
+    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+    ...     {'role': 'user', 'content': 'Great thanks!'},
+    ...     {'role': 'assistant', 'content': 'Nice!'},
+    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
     ... ]
 
     >>> chat_template = SimpleConversationTemplate(user_name='John', assistant_name='Taylor')
     >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
 
     Two friends, John and Taylor, are having an online conversation. Taylor is friendly,
-    talkative, and loves to ask Taylor questions.
+    talkative, and loves to ask John questions.
 
     John: Hi, how are you?
     Taylor: I am doing well. How about you?
@@ -110,7 +82,8 @@ class SimpleConversationTemplate(ChatTemplate):
     John: What is your favourite baseball team?
     Taylor:
 
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
+                                                n_recent_messages=2))
 
      Nice!
     John: What is your favourite baseball team?
@@ -137,11 +110,72 @@ class SimpleConversationTemplate(ChatTemplate):
                              add_generation_prompt: bool):
         chat = self.system_message + '\n\n'
 
-        for (role, message) in messages:
-            chat += f'{self.name_by_role[role]}: {message}\n'
+        for message in messages:
+            chat += f'{self.name_by_role[message["role"]]}: {message["content"]}\n'
             
         if add_generation_prompt:
             chat += f'{self.name_by_role["assistant"]}:'
 
         return chat
     
+
+class ChatML(ChatTemplate):
+    """OpenAI's Chat Markup Language (*I think... I haven't found that much documentation online)
+
+    Examples
+    --------
+    >>> messages = [
+    ...     {'role': 'user', 'content': 'Hi, how are you?'},
+    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+    ...     {'role': 'user', 'content': 'Great thanks!'},
+    ...     {'role': 'assistant', 'content': 'Nice!'},
+    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
+    ... ]
+
+    >>> chat_template = chat_template = ChatML(system_message='You are a helpful assistant.')
+    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+
+    <|im_start|>system
+    You are a helpful assistant.
+    <|im_start|>user
+    Hi, how are you?
+    <|im_start|>assistant
+    I am doing well. How about you?
+    <|im_start|>user
+    Great thanks!
+    <|im_start|>assistant
+    Nice!
+    <|im_start|>user
+    What is your favourite baseball team?
+    <|im_start|>assistant
+
+    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
+                                                n_recent_messages=2))
+
+    Nice!
+    <|im_start|>user
+    What is your favourite baseball team?
+    <|im_start|>assistant
+    
+    """
+    
+    def __init__(self,
+                 system_message: str):
+        
+        self.system_message = system_message
+        
+        
+    def _apply_chat_template(self,
+                             messages: List[Tuple[str, str]],
+                             add_generation_prompt: bool):
+        chat = '<|im_start|>system'
+        chat += f'\n{self.system_message}'
+
+        for message in messages:
+            chat += f'\n<|im_start|>{message["role"]}'
+            chat += f'\n{message["content"]}'
+
+        if add_generation_prompt:
+            chat += f'\n<|im_start|>assistant\n'
+
+        return chat
