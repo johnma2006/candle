@@ -23,6 +23,7 @@ from .tensorops import (
     TensorRepeatInterleave,
     BatchMatrixMultiply,
     TensorClone,
+    TensorFlip,
 )
 from .activations import (
     ReLUActivation,

@@ -14,6 +14,7 @@ from .normalization import (
     RMSNorm,
 )
 from .attention import (
+    GroupedQueryRotaryAttention,
     MultiheadAttention,
     DotProductAttention,
 )

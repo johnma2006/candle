@@ -343,3 +343,20 @@ class TestOperations(unittest.TestCase):
                              kwargs={'repeats': 3, 'axis': None})
 
 
+    def test_flip(self):
+        numerical_grad_check(operation_class=TensorFlip,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'axis': None})
+
+        numerical_grad_check(operation_class=TensorFlip,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'axis': 1})
+
+        numerical_grad_check(operation_class=TensorFlip,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'axis': -1})
+
+
+        numerical_grad_check(operation_class=TensorFlip,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))],
+                             kwargs={'axis': (-1, 2)})

@@ -15,6 +15,7 @@ from .layers import (
     BatchNorm,
     LayerNorm,
     RMSNorm,
+    GroupedQueryRotaryAttention,
     MultiheadAttention,
     DotProductAttention,
     PositionalEncoding,

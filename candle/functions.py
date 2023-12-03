@@ -66,6 +66,14 @@ def concat(tensors, axis: int = 0):
     return operations.TensorConcatenation(tensors, axis).forward()
 
 
+def repeat_interleave(a, repeats: int, axis: int):
+    return operations.TensorRepeatInterleave([a], repeats, axis).forward()
+
+
+def flip(a, axis: int = None):
+    return operations.TensorFlip([a], axis).forward()
+
+
 def sum(a,
         axis: Union[int, Tuple[int]] = None,
         keepdims: bool = False):

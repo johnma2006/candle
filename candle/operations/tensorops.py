@@ -393,3 +393,23 @@ class TensorRepeatInterleave(Operation):
             input_grad = output_grad.reshape(shape).sum(axis=self.axis + 1)
 
         return (input_grad,)
+    
+    
+class TensorFlip(Operation):
+    """f(inputs) = np.flip(inputs[0].T"""
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 axis: int = None):
+        super().__init__(inputs)
+        self.axis = axis
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 1
+        return tensor.Tensor(np.flip(self.inputs[0].data, axis=self.axis))
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        return (np.flip(output_grad, axis=self.axis),)
