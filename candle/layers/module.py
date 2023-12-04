@@ -160,7 +160,11 @@ class Module(ABC):
             _ = self(Tensor(np.zeros(input_shape)))
             self.train(mode=training_mode)
 
-        model_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
+        columns = ['Layer Type', '# Parameters']
+        if input_shape is not None:
+            columns += ['Output Shape']
+            
+        model_summary_df = pd.DataFrame(columns=columns)
 
         # Add child parameters to summary
 
@@ -188,7 +192,7 @@ class Module(ABC):
             else:
                 # Condense submodule_summary_df into one line
                 num_parameters = submodule_summary_df['# Parameters'].sum()
-                submodule_summary_df = pd.DataFrame(columns=['Layer Type', '# Parameters'])
+                submodule_summary_df = pd.DataFrame(columns=columns)
                 submodule_summary_df.loc[attr_name, 'Layer Type'] = type(module).__name__
                 submodule_summary_df.loc[attr_name,  '# Parameters'] = num_parameters
                 if input_shape is not None:
