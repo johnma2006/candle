@@ -148,6 +148,8 @@ class FeedForwardBlock(Module):
         
         return x
 ```
+
+#### Example Backprop
 ```python
 model = GPT(n_layers=12,
             n_heads=12,
@@ -161,15 +163,14 @@ indices = candle.Tensor([tokenizer.encode(
     'Once upon a time, there is a cat whose name is Maukoo. He loves eating and cuddling.'
 )])
 
-# Example backpropagation
-
 targets = indices[:, 1:]
 logits = model(indices[:, :-1])
 loss = F.cross_entropy_loss(logits, targets)
 loss.backward()
+```
 
-# Example generation
-
+#### Example generation
+```python
 model = candle.models.gpt.GPT.from_pretrained('gpt2-large')
 
 with candle.no_grad():

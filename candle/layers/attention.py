@@ -31,7 +31,8 @@ class GroupedQueryRotaryAttention(Module):
                  dropout_p: float,
                  apply_rotary_embedding: bool,
                  rotary_base: int = 10000,
-                 max_seqlen: int = 4096):
+                 max_seqlen: int = 4096,
+                 bias: bool = True):
         super().__init__()
         assert embed_dim % n_heads == 0
         assert n_heads % n_kv_heads == 0
@@ -45,10 +46,10 @@ class GroupedQueryRotaryAttention(Module):
         self.dims_per_head = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
-        self.W_q = Linear(embed_dim, embed_dim)
-        self.W_k = Linear(embed_dim, n_kv_heads * self.dims_per_head)
-        self.W_v = Linear(embed_dim, n_kv_heads * self.dims_per_head)
-        self.W_o = Linear(embed_dim, embed_dim)
+        self.W_q = Linear(embed_dim, embed_dim, bias=bias)
+        self.W_k = Linear(embed_dim, n_kv_heads * self.dims_per_head, bias=bias)
+        self.W_v = Linear(embed_dim, n_kv_heads * self.dims_per_head, bias=bias)
+        self.W_o = Linear(embed_dim, embed_dim, bias=bias)
         
         # kv_cache = (key_cache, value_cache), both of shape (batch, n_kv_heads, cache_seqlen, dims_per_head).
         self.kv_cache: Tuple[Tensor] = None
@@ -224,7 +225,8 @@ class MultiheadAttention(Module):
     def __init__(self,
                  embed_dim: int,
                  n_heads: int,
-                 dropout_p: float):
+                 dropout_p: float,
+                 bias: bool = True):
         super().__init__()
         assert embed_dim % n_heads == 0
         self.embed_dim = embed_dim
@@ -232,10 +234,10 @@ class MultiheadAttention(Module):
         self.dims_per_head = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
-        self.W_q = Linear(embed_dim, embed_dim)
-        self.W_k = Linear(embed_dim, embed_dim)
-        self.W_v = Linear(embed_dim, embed_dim)
-        self.W_o = Linear(embed_dim, embed_dim)
+        self.W_q = Linear(embed_dim, embed_dim, bias=bias)
+        self.W_k = Linear(embed_dim, embed_dim, bias=bias)
+        self.W_v = Linear(embed_dim, embed_dim, bias=bias)
+        self.W_o = Linear(embed_dim, embed_dim, bias=bias)
         
         # kv_cache == (key_cache, value_cache), both of shape (batch, n_heads, cache_seqlen, dims_per_head).
         self.kv_cache: Tuple[Tensor] = None

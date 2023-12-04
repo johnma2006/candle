@@ -23,7 +23,6 @@ class Llama(Module):
                  embed_dim: int,
                  vocab_size: int,
                  block_size: int,
-                 dropout_p: float,
                  ffn_hidden_dim: int = None,
                  rotary_base: int = 10000):
         super().__init__()
@@ -47,17 +46,15 @@ class Llama(Module):
         self.rotary_base = rotary_base
         self.ffn_hidden_dim = ffn_hidden_dim
         
-        self.dropout = candle.Dropout(dropout_p)
         self.word_embeddings = candle.Embedding(vocab_size, embed_dim)
         self.decoder_blocks = candle.ParameterList([
-            DecoderBlock(embed_dim, ffn_hidden_dim, n_heads, n_kv_heads,
-                         dropout_p, rotary_base, block_size)
+            DecoderBlock(embed_dim, ffn_hidden_dim, n_heads,
+                         n_kv_heads, block_size, rotary_base)
             for _ in range(n_layers)
         ])
-        self.layer_norm = candle.LayerNorm(axis=2)
-        
-        # Tie output projection weights to word embeddings. See "Weight Tying" paper.
-        self.output_projection = self.word_embeddings.embeddings
+        self.rms_norm = candle.RMSNorm(axis=2)
+        # Unlike GPT, LLaMA output layer is not tied to word embeddings
+        self.output_projection = candle.Linear(embed_dim, vocab_size, bias=False)
         
         # Precompute rotation matrix
         self.rotation_matr = self.decoder_blocks[0].attn.compute_rotation_matrix()
@@ -82,15 +79,15 @@ class Llama(Module):
             Tensor with shape (batch, seqlen, vocab_size)
             
         """
-        x = self.word_embeddings(indices)
-        x = self.dropout(x)  # shape (batch, seqlen, embed_dim)
+        x = self.word_embeddings(indices)  # shape (batch, seqlen, embed_dim)
 
         for decoder_block in self.decoder_blocks:
             x = decoder_block(x, use_kv_cache, self.rotation_matr)
 
-        x = self.layer_norm(x)
+        x = self.rms_norm(x)
+        logits = self.output_projection(x)
         
-        return x @ self.output_projection.T
+        return logits
     
     
     def from_pretrained(model_name: str):
@@ -131,18 +128,17 @@ class DecoderBlock(Module):
                  ffn_hidden_dim: int,
                  n_heads: int,
                  n_kv_heads: int,
-                 dropout_p: float,
-                 rotary_base: int,
-                 block_size: int):
+                 block_size: int,
+                 rotary_base: int):
         super().__init__()
-        self.dropout = candle.Dropout(dropout_p)
-        
-        self.ln1 = candle.LayerNorm(axis=2)
-        self.attn = candle.GroupedQueryRotaryAttention(embed_dim, n_heads, n_kv_heads, dropout_p,
+        self.norm1 = candle.RMSNorm(axis=2)
+        self.attn = candle.GroupedQueryRotaryAttention(embed_dim, n_heads, n_kv_heads,
+                                                       dropout_p=0.0,
                                                        apply_rotary_embedding=True,
                                                        rotary_base=rotary_base,
-                                                       max_seqlen=block_size)
-        self.ln2 = candle.LayerNorm(axis=2)
+                                                       max_seqlen=block_size,
+                                                       bias=False)
+        self.norm2 = candle.RMSNorm(axis=2)
         self.ffn = FeedForwardBlock(input_dim=embed_dim, ffn_hidden_dim=ffn_hidden_dim)
 
         
@@ -151,8 +147,8 @@ class DecoderBlock(Module):
                 use_kv_cache: bool,
                 rotation_matr: Tuple[Tensor, Tensor] = None):
         # x: Tensor with shape (batch, seqlen, embed_dim)
-        x = x + self.dropout(self.self_attn(self.ln1(x), use_kv_cache, rotation_matr))
-        x = x + self.dropout(self.ffn(self.ln2(x)))
+        x = x + self.self_attn(self.norm1(x), use_kv_cache, rotation_matr)
+        x = x + self.ffn(self.norm2(x))
 
         return x
 
@@ -178,9 +174,9 @@ class FeedForwardBlock(Module):
                  input_dim: int,
                  ffn_hidden_dim: int):
         super().__init__()
-        self.w1 = candle.Linear(input_dim, ffn_hidden_dim)
-        self.w2 = candle.Linear(ffn_hidden_dim, input_dim)
-        self.w3 = candle.Linear(input_dim, ffn_hidden_dim)
+        self.w1 = candle.Linear(input_dim, ffn_hidden_dim, bias=False)
+        self.w2 = candle.Linear(ffn_hidden_dim, input_dim, bias=False)
+        self.w3 = candle.Linear(input_dim, ffn_hidden_dim, bias=False)
         
         
     def forward(self, x):
