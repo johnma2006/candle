@@ -33,8 +33,8 @@ class TestGPT(unittest.TestCase):
         
     def test_decoder_use_kv_cache_vs_no_cache_equivalency(self):
         model = GPT(
-            num_layers=12,
-            num_heads=8,
+            n_layers=12,
+            n_heads=8,
             embed_dim=32,
             vocab_size=200,
             block_size=128,

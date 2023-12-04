@@ -21,8 +21,8 @@ class TestBeamSearch(unittest.TestCase):
         for _ in range(4):
 
             model = GPT(
-                num_layers=12,
-                num_heads=8,
+                n_layers=12,
+                n_heads=8,
                 embed_dim=32,
                 vocab_size=200,
                 block_size=128,
@@ -112,8 +112,8 @@ class TestBeamSearch(unittest.TestCase):
             # No KV cache
 
             model = GPT(
-                num_layers=12,
-                num_heads=8,
+                n_layers=12,
+                n_heads=8,
                 embed_dim=32,
                 vocab_size=200,
                 block_size=128,
@@ -206,8 +206,8 @@ class TestBeamSearch(unittest.TestCase):
 
         for _ in range(4):
             model = GPT(
-                num_layers=12,
-                num_heads=8,
+                n_layers=12,
+                n_heads=8,
                 embed_dim=32,
                 vocab_size=200,
                 block_size=128,

@@ -3,10 +3,10 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 #### Features:
 * Tensor-based reverse-mode automatic differentiation
 * Object-oriented PyTorch-like API
-* [Tensor operations](https://github.com/johnma2006/candle/tree/main/candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
-* [Layers](https://github.com/johnma2006/candle/tree/main/candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
-* [NLP](https://github.com/johnma2006/candle/tree/main/candle/nlp): byte-pair encoding, beam search with top-k/-p, speculative sampling (todo), chat templates (ChatML)
-* Models: [GPT](https://github.com/johnma2006/candle/blob/main/candle/models/gpt/model.py), [ResNet](https://github.com/johnma2006/candle/blob/main/candle/models/resnet/model.py)
+* [Tensor operations](candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
+* [Layers](candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
+* [NLP](candle/nlp): byte-pair encoding, beam search with top-k/-p, speculative sampling (todo), chat templates (ChatML)
+* Models: [LLaMA](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
 * Focus on readable, understandable, idiomatic code
 
@@ -21,7 +21,7 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
-  <img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="973" height="350" />
+  <img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" height="350" />
 * Training ResNet14 on MNIST [(notebook)](experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
 * Training MLP on MNIST [(notebook)](experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 
@@ -46,23 +46,23 @@ from candle import Module, Tensor
 class GPT(Module):
     
     def __init__(self,
-                 num_layers: int,
-                 num_heads: int,
+                 n_layers: int,
+                 n_heads: int,
                  embed_dim: int,
                  vocab_size: int,
                  block_size: int,
                  dropout_p: float):
         super().__init__()
         
-        self.num_layers = num_layers
+        self.n_layers = n_layers
         self.embed_dim = embed_dim
         self.block_size = block_size
         
         self.dropout = candle.Dropout(dropout_p)
         self.word_embeddings = candle.Embedding(vocab_size, embed_dim)
         self.position_embeddings = candle.Embedding(block_size, embed_dim)
-        self.decoder_blocks = candle.ParameterList([DecoderBlock(embed_dim, num_heads, dropout_p)
-                                                    for _ in range(num_layers)])
+        self.decoder_blocks = candle.ParameterList([DecoderBlock(embed_dim, n_heads, dropout_p)
+                                                    for _ in range(n_layers)])
         self.layer_norm = candle.LayerNorm(axis=2)
         
         # Tie output projection weights to word embeddings. See "Weight Tying" paper.
@@ -95,13 +95,13 @@ class DecoderBlock(Module):
     
     def __init__(self,
                  embed_dim: int,
-                 num_heads: int,
+                 n_heads: int,
                  dropout_p: float):
         super().__init__()
         self.dropout = candle.Dropout(dropout_p)
         
         self.ln1 = candle.LayerNorm(axis=2)
-        self.attn = candle.MultiheadAttention(embed_dim, num_heads, dropout_p)
+        self.attn = candle.MultiheadAttention(embed_dim, n_heads, dropout_p)
         self.ln2 = candle.LayerNorm(axis=2)
         self.ffn = FeedForwardBlock(input_dim=embed_dim, hidden_dim=4 * embed_dim)
 
@@ -149,8 +149,8 @@ class FeedForwardBlock(Module):
         return x
 ```
 ```python
-model = GPT(num_layers=12,
-            num_heads=12,
+model = GPT(n_layers=12,
+            n_heads=12,
             embed_dim=768,
             vocab_size=50257,
             block_size=1024,

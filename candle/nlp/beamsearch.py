@@ -1,6 +1,7 @@
 """Beam search decoding algorithm."""
 
 import numpy as np
+from typing import List, Callable
 
 from ..tensor import Tensor
 import candle
@@ -15,7 +16,8 @@ def beam_search_decoder(model,
                         top_p: float = None,
                         temperature: float = 1.0,
                         sample: bool = True,
-                        use_kv_cache: bool = True):
+                        use_kv_cache: bool = True,
+                        modify_kv_cache_func: Callable = None):
     """Generates tokens using beam search with KV caching.
     
     Tokens will be yielded as soon as all `beam_size` beams agree on that token.
@@ -52,9 +54,12 @@ def beam_search_decoder(model,
             (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + len(indices)
         unless kv_cache gets larger than model.block_size.
         
-        If using KV caching, then model must implement
-            model.modify_kv_cache(trim_seqlen, reindex_batch_indices)
-            model.get_kv_cache_seqlen()
+        If using KV caching, then must pass in `modify_kv_cache_func`.
+    modify_kv_cache_func
+        Function with signature `modify_kv_cache_func(model, trim_seqlen, reindex_batch_indices),
+        that modifies the model's kv_cache by trimming or reindexing.
+
+        See `default_modify_kv_cache` for example implementation.
         
     Returns
     -------
@@ -77,9 +82,10 @@ def beam_search_decoder(model,
     """
     model.eval()
 
+    if modify_kv_cache_func is None: 
+        modify_kv_cache_func = default_modify_kv_cache
     if beam_size is None:
         beam_size = 1
-
     if use_kv_cache:
         final_kv_cache_len = model.get_kv_cache_seqlen() + len(indices)
 
@@ -93,7 +99,6 @@ def beam_search_decoder(model,
     head_index = indices.shape[1]
 
     for token_n in range(n_tokens_to_generate):
-        # If indices is too long, filter to last `block_size` tokens
         indices_to_input = indices[:, -model.block_size:]
 
         with candle.no_grad():
@@ -104,7 +109,7 @@ def beam_search_decoder(model,
 
                 # Trim kv_cache in case it gets too long
                 # Note: KV cache won't be perfectly maintained right now if this happens
-                model.modify_kv_cache(trim_seqlen=model.block_size - indices_to_input.shape[1])
+                modify_kv_cache_func(model, trim_seqlen=model.block_size - indices_to_input.shape[1])
 
             next_token_logits = model(indices_to_input, use_kv_cache)[:, -1]
 
@@ -133,7 +138,6 @@ def beam_search_decoder(model,
         else:
             next_beam_indices = log_probs.flatten().argsort()[-beam_size:]
 
-        # Update cumulative_log_prob_per_beam
         cumulative_log_prob_per_beam = log_probs.flatten()[next_beam_indices]
 
         # Update indices by appending the tokens from next_beam_indices
@@ -149,7 +153,7 @@ def beam_search_decoder(model,
 
         # Realign kv_cache with new beam search indices
         if use_kv_cache:
-            model.modify_kv_cache(reindex_batch_indices=reindex_kv_indices)
+            modify_kv_cache_func(model, reindex_batch_indices=reindex_kv_indices)
 
         # If all `beam_index` beams have the same token at head_index, then it's
         # safe to yield that token
@@ -165,8 +169,9 @@ def beam_search_decoder(model,
                 if use_kv_cache:
                     # Trim the KV cache to guarantee that
                     # (kv_cache_seqlen after decoding) == final_kv_cache_len
-                    model.modify_kv_cache(trim_seqlen=-final_kv_cache_len,
-                                          reindex_batch_indices=[0])
+                    modify_kv_cache_func(model,
+                                         trim_seqlen=-final_kv_cache_len,
+                                         reindex_batch_indices=[0])
                 return
 
             if head_index == indices.shape[1]:
@@ -183,8 +188,9 @@ def beam_search_decoder(model,
 
     # Trim the KV cache to guarantee that (kv_cache_seqlen after decoding) == final_kv_cache_len
     if use_kv_cache:
-        model.modify_kv_cache(trim_seqlen=-final_kv_cache_len,
-                              reindex_batch_indices=[best_index])
+        modify_kv_cache_func(model,
+                             trim_seqlen=-final_kv_cache_len,
+                             reindex_batch_indices=[best_index])
 
     yield indices.data[best_index, head_index:]
     
@@ -239,3 +245,39 @@ def nucleus_sample(probs: np.array,
     probs /= probs.sum(axis=0)
 
     return probs
+
+
+def default_modify_kv_cache(model,
+                            trim_seqlen: int = None,
+                            reindex_batch_indices: List[int] = None):
+    """Modifies the kv_cache by trimming or reindexing.
+
+    Parameters
+    ----------
+    trim_seqlen
+        Trims kv_cache along the seqlen dimension to length `new_seqlen`, keeping later tokens.
+        If `trim_seqlen` is negative, then keeps earlier tokens.
+    batch_indices
+        Reindexes the kv_cache along the batch dimension. Necessary during beam search.
+
+    """
+    for decoder_block in model.decoder_blocks:
+        if decoder_block.attn.kv_cache is not None:
+            (key_cache, value_cache) = decoder_block.attn.kv_cache
+
+            if trim_seqlen is not None:
+                if trim_seqlen > 0:
+                    key_cache = key_cache[:, :, -trim_seqlen:]
+                    value_cache = value_cache[:, :, -trim_seqlen:]
+                elif trim_seqlen < 0:
+                    key_cache = key_cache[:, :, :-trim_seqlen]
+                    value_cache = value_cache[:, :, :-trim_seqlen]
+                else: # trim_seqlen == 0
+                    key_cache = None
+                    value_cache = None
+
+            if reindex_batch_indices is not None:
+                key_cache = Tensor(key_cache.data[reindex_batch_indices])
+                value_cache = Tensor(value_cache.data[reindex_batch_indices])
+
+            decoder_block.attn.kv_cache = (key_cache, value_cache)

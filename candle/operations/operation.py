@@ -5,7 +5,6 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List
 
-import candle
 from .. import tensor
 
 
@@ -51,6 +50,7 @@ class Operation(ABC):
             Tensor result of operation.
         
         """
+        from .. import is_grad_enabled
         output = self._forward()
         
         # Conditionally connect the output node to the computation graph if any of its inputs
@@ -58,7 +58,7 @@ class Operation(ABC):
         is_in_computation_graph = np.any([child_node.is_in_computation_graph()
                                           for child_node in self.inputs])
         
-        if is_in_computation_graph and candle.is_grad_enabled():
+        if is_in_computation_graph and is_grad_enabled():
             output.operation = self
             self.output = output
         

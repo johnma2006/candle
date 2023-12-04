@@ -77,7 +77,7 @@ class TestSetGradEnabled(unittest.TestCase):
 
 
     def test_inference_with_no_grad(self):
-        model = candle.models.resnet.ResNet(num_classes=10,
+        model = candle.models.resnet.ResNet(n_classes=10,
                                             in_channels=3,
                                             resnet_blocks=[
                                                 (16, 16, 1),

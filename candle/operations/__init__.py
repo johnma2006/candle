@@ -28,6 +28,7 @@ from .tensorops import (
 from .activations import (
     ReLUActivation,
     GeLUActivation,
+    SiLUActivation,
 )
 from .loss import CrossEntropyLossOperation
 from .conv import (

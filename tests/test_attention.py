@@ -18,7 +18,7 @@ class TestMultiHeadAttention(unittest.TestCase):
         # when using causal atten
         # ----------------------------------------------------------------
 
-        self = MultiheadAttention(embed_dim=512, num_heads=8, dropout_p=0.1)
+        self = MultiheadAttention(embed_dim=512, n_heads=8, dropout_p=0.1)
         self.eval()
 
         # with kv_cache
@@ -55,7 +55,7 @@ class TestMultiHeadAttention(unittest.TestCase):
         # when using causal atten
         # ---------------------------------------------------------
 
-        self = MultiheadAttention(embed_dim=512, num_heads=8, dropout_p=0.1)
+        self = MultiheadAttention(embed_dim=512, n_heads=8, dropout_p=0.1)
         self.eval()
 
         # with kv_cache
@@ -103,36 +103,42 @@ class TestGroupedQueryRotaryAttention(unittest.TestCase):
         # when using causal atten
         # ----------------------------------------------------------------
 
-        self = GroupedQueryRotaryAttention(embed_dim=512, num_heads=8, dropout_p=0.1,
-                                           num_groups=2, apply_rotary_embedding=True)
+        self = GroupedQueryRotaryAttention(embed_dim=512, n_heads=8, dropout_p=0.1,
+                                           n_kv_heads=2, apply_rotary_embedding=True)
         self.eval()
 
-        # with kv_cache
+        for rotation_matr in [None, self.compute_rotation_matrix()]:
+            self.clear_kv_cache()
 
-        xs = []
+            # with kv_cache
 
-        attn_outputs = []
-        for _ in range(10):
-            x = Tensor(np.random.normal(size=(16, 3, 512)))
+            xs = []
+
+            attn_outputs = []
+            for _ in range(10):
+                x = Tensor(np.random.normal(size=(16, 3, 512)))
+                causal_attn_mask = Tensor(1 - np.tri(x.shape[1]))
+                (attn_output, attn_scores) = self.forward(x, x, x, causal_attn_mask, use_kv_cache=True,
+                                                          rotation_matr=rotation_matr)
+
+                xs.append(x)
+                attn_outputs.append(attn_output)
+
+            attn_output_kv_caching = F.concat(attn_outputs, axis=1)
+
+            # without kv_cache
+
+            x = F.concat(xs, axis=1)
             causal_attn_mask = Tensor(1 - np.tri(x.shape[1]))
-            (attn_output, attn_scores) = self.forward(x, x, x, causal_attn_mask, use_kv_cache=True)
 
-            xs.append(x)
-            attn_outputs.append(attn_output)
+            (attn_output, attn_scores) = self.forward(x, x, x, causal_attn_mask,
+                                                      use_kv_cache=False, rotation_matr=rotation_matr)
 
-        attn_output_kv_caching = F.concat(attn_outputs, axis=1)
+            ratio = attn_output_kv_caching.data / attn_output.data
+            ratio[np.isnan(ratio)] = 1.0 
 
-        # without kv_cache
+            assert 1 - 1e-3 < np.quantile(ratio, 0.01) <= np.quantile(ratio, 0.99) < 1 + 1e-3
 
-        x = F.concat(xs, axis=1)
-        causal_attn_mask = Tensor(1 - np.tri(x.shape[1]))
-
-        (attn_output, attn_scores) = self.forward(x, x, x, causal_attn_mask, use_kv_cache=False)
-
-        ratio = attn_output_kv_caching.data / attn_output.data
-        ratio[np.isnan(ratio)] = 1.0 
-
-        assert 1 - 1e-3 < np.quantile(ratio, 0.01) <= np.quantile(ratio, 0.99) < 1 + 1e-3
 
         
     def test_kv_cache_vs_no_cache_with_regular_attention(self):
@@ -141,42 +147,47 @@ class TestGroupedQueryRotaryAttention(unittest.TestCase):
         # when using causal atten
         # ---------------------------------------------------------
 
-        self = GroupedQueryRotaryAttention(embed_dim=512, num_heads=8, dropout_p=0.1,
-                                           num_groups=2, apply_rotary_embedding=True)
+        self = GroupedQueryRotaryAttention(embed_dim=512, n_heads=8, dropout_p=0.1,
+                                           n_kv_heads=2, apply_rotary_embedding=True)
         self.eval()
+        
+        for rotation_matr in [None, self.compute_rotation_matrix()]:
+            self.clear_kv_cache()
 
-        # with kv_cache
+            # with kv_cache
 
-        queries = []
-        keys = []
-        values = []
+            queries = []
+            keys = []
+            values = []
 
-        attn_outputs = []
-        for _ in range(10):
-            query = Tensor(np.random.normal(size=(16, 3, 512)))
-            key = Tensor(np.random.normal(size=(16, 3, 512)))
-            value = Tensor(np.random.normal(size=(16, 3, 512)))
+            attn_outputs = []
+            for _ in range(10):
+                query = Tensor(np.random.normal(size=(16, 3, 512)))
+                key = Tensor(np.random.normal(size=(16, 3, 512)))
+                value = Tensor(np.random.normal(size=(16, 3, 512)))
+                causal_attn_mask = Tensor(1 - np.tri(query.shape[1]))
+
+                (attn_output, attn_scores) = self.forward(query, key, value, causal_attn_mask, use_kv_cache=True,
+                                                          rotation_matr=rotation_matr)
+
+                attn_outputs.append(attn_output)
+                queries.append(query)
+                keys.append(key)
+                values.append(value)
+
+            attn_output_kv_caching = F.concat(attn_outputs, axis=1)
+
+            # without kv_cache
+
+            query = F.concat(queries, axis=1)
+            key = F.concat(keys, axis=1)
+            value = F.concat(values, axis=1)
             causal_attn_mask = Tensor(1 - np.tri(query.shape[1]))
 
-            (attn_output, attn_scores) = self.forward(query, key, value, causal_attn_mask, use_kv_cache=True)
+            (attn_output, attn_scores) = self.forward(query, key, value, causal_attn_mask, use_kv_cache=False,
+                                                      rotation_matr=rotation_matr)
 
-            attn_outputs.append(attn_output)
-            queries.append(query)
-            keys.append(key)
-            values.append(value)
+            ratio = attn_output_kv_caching.data / attn_output.data
+            ratio[np.isnan(ratio)] = 1.0 
 
-        attn_output_kv_caching = F.concat(attn_outputs, axis=1)
-
-        # without kv_cache
-
-        query = F.concat(queries, axis=1)
-        key = F.concat(keys, axis=1)
-        value = F.concat(values, axis=1)
-        causal_attn_mask = Tensor(1 - np.tri(query.shape[1]))
-
-        (attn_output, attn_scores) = self.forward(query, key, value, causal_attn_mask, use_kv_cache=False)
-
-        ratio = attn_output_kv_caching.data / attn_output.data
-        ratio[np.isnan(ratio)] = 1.0 
-
-        assert 1 - 1e-3 < np.quantile(ratio, 0.005) < np.quantile(ratio, 0.995) < 1 + 1e-3
+            assert 1 - 1e-3 < np.quantile(ratio, 0.005) < np.quantile(ratio, 0.995) < 1 + 1e-3

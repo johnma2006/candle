@@ -19,6 +19,7 @@ from candle.operations import (
     TensorTranspose,
     TensorConcatenation,
     TensorMaskedFill,
+    TensorFlip,
     TensorRepeatInterleave,
     BatchMatrixMultiply,
     Conv2dOperation,
@@ -26,6 +27,7 @@ from candle.operations import (
     AvgPool2dOperation,
     ReLUActivation,
     GeLUActivation,
+    SiLUActivation,
 )
 from .utils import numerical_grad_check
 
@@ -108,6 +110,9 @@ class TestOperations(unittest.TestCase):
                              test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))])
         
         numerical_grad_check(operation_class=GeLUActivation,
+                             test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))])
+
+        numerical_grad_check(operation_class=SiLUActivation,
                              test_inputs=[Parameter(np.random.normal(size=(2, 3, 5, 7, 11)))])
         
         

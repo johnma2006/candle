@@ -198,11 +198,11 @@ class TestAutograd(unittest.TestCase):
         class ResNet(candle.Module):
 
             def __init__(self,
-                         num_classes: int,
+                         n_classes: int,
                          in_channels: int,
                          resnet_blocks: List[Tuple[int, int, int]]):
                 super().__init__()
-                self.num_classes = num_classes
+                self.n_classes = n_classes
 
                 self.conv = candle.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=7, padding=3, stride=2)
                 self.batch_norm = candle.BatchNorm(axis=(0, 2, 3))
@@ -214,7 +214,7 @@ class TestAutograd(unittest.TestCase):
 
                 ])
 
-                self.linear = candle.Linear(resnet_blocks[-1][1], num_classes)
+                self.linear = candle.Linear(resnet_blocks[-1][1], n_classes)
 
 
             def forward(self, x):
@@ -247,7 +247,7 @@ class TestAutograd(unittest.TestCase):
         default_dtype = Tensor.DEFAULT_DTYPE
         Tensor.DEFAULT_DTYPE = np.float64
 
-        model = ResNet(num_classes=10,
+        model = ResNet(n_classes=10,
                        in_channels=3,
                        resnet_blocks=[
                            # (in_channels, out_channels, stride)

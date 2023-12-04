@@ -12,7 +12,7 @@ class GroupedQueryRotaryAttention(Module):
     """Grouped-query rotary attention with KV caching.
     
     This is a generalization of MultiheadAttention. In particular, 
-        MultiheadAttention = GroupedQueryRotaryAttention(num_groups=num_heads,
+        MultiheadAttention = GroupedQueryRotaryAttention(n_kv_heads=n_heads,
                                                          apply_rotary_embedding=False)
                                                          
     References
@@ -26,49 +26,41 @@ class GroupedQueryRotaryAttention(Module):
     
     def __init__(self,
                  embed_dim: int,
-                 num_heads: int,
+                 n_heads: int,
+                 n_kv_heads: int,
                  dropout_p: float,
-                 num_groups: int,
                  apply_rotary_embedding: bool,
                  rotary_base: int = 10000,
                  max_seqlen: int = 4096):
         super().__init__()
-        assert embed_dim % num_heads == 0
-        assert num_heads % num_groups == 0
+        assert embed_dim % n_heads == 0
+        assert n_heads % n_kv_heads == 0
+        
         self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.dims_per_head = embed_dim // num_heads
-        self.num_groups = num_groups
+        self.n_heads = n_heads
+        self.n_kv_heads = n_kv_heads
         self.apply_rotary_embedding = apply_rotary_embedding
+        self.rotary_base = rotary_base
+        self.max_seqlen = max_seqlen
+        self.dims_per_head = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
         self.W_q = Linear(embed_dim, embed_dim)
-        self.W_k = Linear(embed_dim, num_groups * self.dims_per_head)
-        self.W_v = Linear(embed_dim, num_groups * self.dims_per_head)
+        self.W_k = Linear(embed_dim, n_kv_heads * self.dims_per_head)
+        self.W_v = Linear(embed_dim, n_kv_heads * self.dims_per_head)
         self.W_o = Linear(embed_dim, embed_dim)
         
-        # kv_cache == (key_cache, value_cache), both of shape (batch, num_groups, cache_seqlen, dims_per_head).
+        # kv_cache = (key_cache, value_cache), both of shape (batch, n_kv_heads, cache_seqlen, dims_per_head).
         self.kv_cache: Tuple[Tensor] = None
             
-        if apply_rotary_embedding:
-            # Precompute the sparse rotation matrix for rotary embedding
-            # angle: shape (max_seqlen, dims_per_head/2)
-            #        angle[i, j] = i / rotary_base^(2j / embed_dim)
-            # cos_A, sin_A: shape (max_seqlen, dims_per_head/2, 2)
-            angle = np.outer(
-                np.arange(max_seqlen),
-                rotary_base ** (2 * np.arange(self.dims_per_head // 2) / self.dims_per_head)
-            )
-            self.cos_A = Tensor(np.stack([np.cos(angle), np.cos(angle)], axis=2))
-            self.sin_A = Tensor(np.stack([np.sin(angle), -np.sin(angle)], axis=2))
-
         
     def forward(self,
                 query: Tensor,
                 key: Tensor,
                 value: Tensor,
                 attn_mask: Tensor = None,
-                use_kv_cache: bool = False):
+                use_kv_cache: bool = False,
+                rotation_matr: Tuple[Tensor, Tensor] = None):
         """Attention aggregation.
         
         Parameters
@@ -86,6 +78,8 @@ class GroupedQueryRotaryAttention(Module):
         use_kv_cache
             Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
             before computing attention, and updates self.kv_cache with the new key/value.
+        rotation_matr
+            The result of self.compute_rotation_matrix(). Precompute to save time/memory.
             
         Returns
         -------
@@ -95,51 +89,32 @@ class GroupedQueryRotaryAttention(Module):
                 or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True
             
         """
-        def reshape_and_transpose(tensor, N):
-            """Reshapes tensor with shape (batch, seqlen, N * dims_per_head)
-                                 to shape (batch, N, seqlen, dims_per_head)."""
-            tensor = tensor.reshape((tensor.shape[0], tensor.shape[1], N, self.dims_per_head))
+        def reshape_and_transpose(tensor, n_heads):
+            """Reshapes tensor with shape (batch, seqlen, n_heads * dims_per_head)
+                                 to shape (batch, n_heads, seqlen, dims_per_head)."""
+            (batch, seqlen, _) = tensor.shape
+            tensor = tensor.reshape((batch, seqlen, n_heads, self.dims_per_head))
             tensor = tensor.transpose(1, 2)
             return tensor
 
         def inv_reshape_and_transpose(tensor):
             """The inverse of reshape_and_transpose."""
+            (batch, n_heads, seqlen, _) = tensor.shape
             tensor = tensor.transpose(1, 2)
-            tensor = tensor.reshape((tensor.shape[0], tensor.shape[1], -1))
+            tensor = tensor.reshape((batch, seqlen, -1))
             return tensor
 
-        def apply_rotation_matrix(qk, offset: int):
-            """For each 2D point (x, y) at position index `i` and embed_dim index `(2j, 2j+1)`,
-            rotate (x, y) by angle A := i / rotary_base^(2j / embed_dim).
-
-            This means (x, y) -> (cos(A) * x + sin(A) * y, cos(A) * y - sin(A) * x)
-                               = (cos(A), cos(A)) o (x, y) + (sin(A), -sin(A)) o (y, x)
-                                 where o is the elementwise product
-                                 
-            If `offset` is provided, adds `offset` to `i`.
-            """
-            # Reshape to (batch, head, seqlen, dims_per_head/2, 2)
-            qk = qk.reshape((*qk.shape[:3], -1, 2))
-
-            seqlen = qk.shape[2]
-            
-            # Compute (cos(A), cos(A)) o (x, y) + (sin(A), -sin(A)) o (y, x)
-            qk_rotated = (self.cos_A[position_offset:position_offset + seqlen] * qk
-                          + self.sin_A[position_offset:position_offset + seqlen] * F.flip(qk, axis=-1))
-
-            # Reshape back to (batch, head, seqlen, dims_per_head)
-            qk_rotated = qk_rotated.reshape((*qk_rotated.shape[:3], -1))
-
-            return qk_rotated
-
-        query = reshape_and_transpose(self.W_q(query), N=self.num_heads)
-        key = reshape_and_transpose(self.W_k(key), N=self.num_groups)
-        value = reshape_and_transpose(self.W_v(value), N=self.num_groups)
+        query = reshape_and_transpose(self.W_q(query), self.n_heads)
+        key = reshape_and_transpose(self.W_k(key), self.n_kv_heads)
+        value = reshape_and_transpose(self.W_v(value), self.n_kv_heads)
     
         if self.apply_rotary_embedding:
+            if rotation_matr is None:
+                rotation_matr = self.compute_rotation_matrix()
+            
             offset = self.get_kv_cache_seqlen() if use_kv_cache else 0
-            query = apply_rotation_matrix(query, offset)
-            key = apply_rotation_matrix(key, offset)
+            query = self.apply_rotation_matrix(query, rotation_matr, offset)
+            key = self.apply_rotation_matrix(key, rotation_matr, offset)
 
         if use_kv_cache:
             if self.training:
@@ -161,9 +136,9 @@ class GroupedQueryRotaryAttention(Module):
             self.kv_cache = (key, value)
             
         # Repeat key and value along head dimension
-        if self.num_heads != self.num_groups:
-            key = key.repeat_interleave(repeats=self.num_heads // self.num_groups, axis=1)
-            value = value.repeat_interleave(repeats=self.num_heads // self.num_groups, axis=1)
+        if self.n_heads != self.n_kv_heads:
+            key = key.repeat_interleave(repeats=self.n_heads // self.n_kv_heads, axis=1)
+            value = value.repeat_interleave(repeats=self.n_heads // self.n_kv_heads, axis=1)
 
         (attn_output, attn_scores) = self.attention(query, key, value, attn_mask)
         attn_output = inv_reshape_and_transpose(attn_output)
@@ -174,12 +149,61 @@ class GroupedQueryRotaryAttention(Module):
         return (attn_output, attn_scores)
     
     
+    def compute_rotation_matrix(self):
+        """Precompute the sparse rotation matrix for rotary embedding.
+                
+        Returns
+        -------
+        rotation_matr: Tuple[Tensor, Tensor]
+            rotation_matr = (cos_A, sin_A), both shaped (max_seqlen, dims_per_head/2, 2)
+            See `self.apply_rotation_matrix` for how cos_A, sin_A are defined.
+        
+        """
+        # angle: shape (max_seqlen, dims_per_head/2), angle[i, j] = i / rotary_base^(2j / dims_per_head)
+        angle = np.outer(
+            np.arange(self.max_seqlen),
+            self.rotary_base ** (2 * np.arange(self.dims_per_head // 2) / self.dims_per_head)
+        )
+        cos_A = Tensor(np.stack([np.cos(angle), np.cos(angle)], axis=2))
+        sin_A = Tensor(np.stack([np.sin(angle), -np.sin(angle)], axis=2))
+        rotation_matr = (cos_A, sin_A)
+        
+        return rotation_matr
+
+    
+    def apply_rotation_matrix(self, qk: Tensor, rotation_matr: Tuple[Tensor, Tensor], offset: int):
+        """For each 2D point (x, y) at position index `i` and embed_dim index `(2j, 2j+1)`,
+        rotate (x, y) by angle A := i / rotary_base^(2j / dims_per_head).
+
+        This means (x, y) -> (cos(A) * x + sin(A) * y, cos(A) * y - sin(A) * x)
+                           = (cos(A), cos(A)) * (x, y) + (sin(A), -sin(A)) * (y, x)
+                           = cos_A * (x, y) + sin_A * (y, x)
+
+        If `offset` is provided, adds `offset` to `i`.
+        """
+        # cos_A := (cos(A), cos(A)), sin_A := (sin(A), -sin(A))
+        (cos_A, sin_A) = rotation_matr
+        seqlen = qk.shape[2]
+        
+        # Reshape to (batch, head, seqlen, dims_per_head/2, 2)
+        qk = qk.reshape((*qk.shape[:3], -1, 2))
+
+        # Compute (cos(A), cos(A)) * (x, y) + (sin(A), -sin(A)) * (y, x)
+        qk_rotated = (cos_A[offset:offset + seqlen] * qk
+                      + sin_A[offset:offset + seqlen] * F.flip(qk, axis=-1))
+
+        # Reshape back to (batch, head, seqlen, dims_per_head)
+        qk_rotated = qk_rotated.reshape((*qk_rotated.shape[:3], -1))
+
+        return qk_rotated
+    
+    
     def get_kv_cache_seqlen(self):
         """Gets sequence length of kv_cache."""
         if self.kv_cache is None:
             return 0
         else:
-            # kv_cache[0] and [1] are shape (batch, num_heads, cache_seqlen, dims_per_head)
+            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, dims_per_head)
             return self.kv_cache[0].shape[2]
     
     
@@ -190,7 +214,7 @@ class GroupedQueryRotaryAttention(Module):
         
     def __repr__(self):
         return (f'GroupedQueryRotaryAttention(embed_dim={self.embed_dim}, '
-                f'num_heads={self.num_heads}, num_groups={self.num_groups}, '
+                f'n_heads={self.n_heads}, n_kv_heads={self.n_kv_heads}, '
                 f'apply_rotary_embedding={self.apply_rotary_embedding})')
 
     
@@ -199,13 +223,13 @@ class MultiheadAttention(Module):
     
     def __init__(self,
                  embed_dim: int,
-                 num_heads: int,
+                 n_heads: int,
                  dropout_p: float):
         super().__init__()
-        assert embed_dim % num_heads == 0
+        assert embed_dim % n_heads == 0
         self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.dims_per_head = embed_dim // num_heads
+        self.n_heads = n_heads
+        self.dims_per_head = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
         self.W_q = Linear(embed_dim, embed_dim)
@@ -213,7 +237,7 @@ class MultiheadAttention(Module):
         self.W_v = Linear(embed_dim, embed_dim)
         self.W_o = Linear(embed_dim, embed_dim)
         
-        # kv_cache == (key_cache, value_cache), both of shape (batch, num_heads, cache_seqlen, dims_per_head).
+        # kv_cache == (key_cache, value_cache), both of shape (batch, n_heads, cache_seqlen, dims_per_head).
         self.kv_cache: Tuple[Tensor] = None
         
         
@@ -250,16 +274,18 @@ class MultiheadAttention(Module):
             
         """
         def reshape_and_transpose(tensor):
-            """Reshapes tensor with shape (batch, seqlen, num_heads * dims_per_head)
-                                 to shape (batch, num_heads, seqlen, dims_per_head)."""
-            tensor = tensor.reshape((tensor.shape[0], tensor.shape[1], self.num_heads, self.dims_per_head))
+            """Reshapes tensor with shape (batch, seqlen, n_heads * dims_per_head)
+                                 to shape (batch, n_heads, seqlen, dims_per_head)."""
+            (batch, seqlen, _) = tensor.shape
+            tensor = tensor.reshape((batch, seqlen, self.n_heads, self.dims_per_head))
             tensor = tensor.transpose(1, 2)
             return tensor
 
         def inv_reshape_and_transpose(tensor):
             """The inverse of reshape_and_transpose."""
+            (batch, n_heads, seqlen, _) = tensor.shape
             tensor = tensor.transpose(1, 2)
-            tensor = tensor.reshape((tensor.shape[0], tensor.shape[1], -1))
+            tensor = tensor.reshape((batch, seqlen, -1))
             return tensor
 
         query = reshape_and_transpose(self.W_q(query))
@@ -299,7 +325,7 @@ class MultiheadAttention(Module):
         if self.kv_cache is None:
             return 0
         else:
-            # kv_cache[0] and [1] are shape (batch, num_heads, cache_seqlen, dims_per_head)
+            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, dims_per_head)
             return self.kv_cache[0].shape[2]
     
     
@@ -310,7 +336,7 @@ class MultiheadAttention(Module):
         
     def __repr__(self):
         return (f'MultiheadAttention(embed_dim={self.embed_dim}, '
-                f'num_heads={self.num_heads})')
+                f'n_heads={self.n_heads})')
 
     
 class DotProductAttention(Module):

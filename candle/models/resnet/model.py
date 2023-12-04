@@ -16,14 +16,14 @@ from candle.layers.module import Module
 class ResNet(Module):
     
     def __init__(self,
-                 num_classes: int,
+                 n_classes: int,
                  in_channels: int,
                  resnet_blocks: List[Tuple[int, int, int]],
                  use_maxpool: bool = False):
         """
         Parameters
         ----------
-        num_classes
+        n_classes
             Num output classes
         in_channel
             Num channels in the input image.
@@ -49,7 +49,7 @@ class ResNet(Module):
         
         """
         super().__init__()
-        self.num_classes = num_classes
+        self.n_classes = n_classes
         self.in_channels = in_channels
         self.resnet_blocks = resnet_blocks
         self.use_maxpool = use_maxpool
@@ -65,7 +65,7 @@ class ResNet(Module):
             for (in_channels, out_channels, stride) in resnet_blocks
         ])
         
-        self.linear = candle.Linear(resnet_blocks[-1][1], num_classes)
+        self.linear = candle.Linear(resnet_blocks[-1][1], n_classes)
         
         
     def forward(self, x):

@@ -48,3 +48,31 @@ class GeLUActivation(Operation):
         
         return (input_grad,)
     
+    
+class SiLUActivation(Operation):
+    """Sigmoid Linear Units activation function.
+
+    References:
+    [1] Stefan Elfwing, Eiji Uchibe, Kenji Doya,
+        Sigmoid-Weighted Linear Units for Neural Network Function Approximation in Reinforcement Learning
+        arXiv:1702.03118v3, 2017.
+    
+    """
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        x = self.inputs[0].data
+        sigmoid_x = 1 / (1 + np.exp(-x))
+
+        return tensor.Tensor(sigmoid_x * x)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        x = self.inputs[0].data
+        sigmoid_x = 1 / (1 + np.exp(-x))
+        partial_grad = sigmoid_x * (1 - sigmoid_x) * x + sigmoid_x
+        input_grad = output_grad * partial_grad
+
+        return (input_grad,)
+    

@@ -129,6 +129,10 @@ def gelu(a):
     return operations.GeLUActivation([a]).forward()
 
 
+def silu(a):
+    return operations.SiLUActivation([a]).forward()
+
+
 def softmax(a):
     """Applies softmax along the last axis of a Tensor."""
     softmax = a.T

@@ -33,8 +33,8 @@ def load_pretrained_gpt(model_name: str):
     model_hf = transformers.GPT2LMHeadModel.from_pretrained(model_name)
 
     config = {
-        'num_layers': len(model_hf.transformer.h),
-        'num_heads': model_hf.transformer.h[0].attn.num_heads,
+        'n_layers': len(model_hf.transformer.h),
+        'n_heads': model_hf.transformer.h[0].attn.num_heads,
         'embed_dim': model_hf.transformer.h[0].attn.embed_dim,
         'vocab_size': model_hf.lm_head.out_features,
         'block_size': model_hf.transformer.wpe.num_embeddings,

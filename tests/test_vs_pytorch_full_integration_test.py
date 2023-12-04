@@ -38,8 +38,8 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
         X_train = (X_train - train_mean) / train_std
         X_test = (X_test - train_mean) / train_std
 
-        num_features = X_train.shape[1]
-        num_classes = len(set(y_train.data))
+        n_features = X_train.shape[1]
+        n_classes = len(set(y_train.data))
 
         X_train = candle.Tensor(X_train)
         y_train = candle.Tensor(y_train)
@@ -83,7 +83,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
 
         from candle.models.resnet import ResNet
 
-        model = ResNet(num_classes=num_classes,
+        model = ResNet(n_classes=n_classes,
                        in_channels=X_train.shape[1],
                        resnet_blocks=config.RESNET_BLOCKS)
 
@@ -98,11 +98,11 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
         class ResNetTorch(nn.Module):
 
             def __init__(self,
-                         num_classes: int,
+                         n_classes: int,
                          in_channels: int,
                          resnet_blocks: List[Tuple[int, int, int]]):
                 super().__init__()
-                self.num_classes = num_classes
+                self.n_classes = n_classes
 
                 self.conv = nn.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=3, padding=1, stride=1)
                 self.batch_norm = nn.BatchNorm2d(resnet_blocks[0][0])
@@ -113,7 +113,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
                     for (in_channels, out_channels, stride) in resnet_blocks
                 ])
 
-                self.linear = nn.Linear(resnet_blocks[-1][1], num_classes)
+                self.linear = nn.Linear(resnet_blocks[-1][1], n_classes)
 
 
             def forward(self, x):
@@ -174,7 +174,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
 
         # Copy torch weights over
 
-        model_torch = ResNetTorch(num_classes=num_classes,
+        model_torch = ResNetTorch(n_classes=n_classes,
                        in_channels=X_train.shape[1],
                        resnet_blocks=config.RESNET_BLOCKS)
 
@@ -297,7 +297,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
             model
                 Module that outputs logits.
             X
-                Features, shape (batch_size, num_features)
+                Features, shape (batch_size, n_features)
             y
                 Target, int tensor with shape (batch_size,)
 
@@ -326,7 +326,7 @@ class TestFullIntegrationTestVsPytorch(unittest.TestCase):
             model
                 Module that outputs logits.
             X
-                Features, shape (batch_size, num_features)
+                Features, shape (batch_size, n_features)
             y
                 Target, int tensor with shape (batch_size,)
 
