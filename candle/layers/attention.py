@@ -163,22 +163,26 @@ class GroupedQueryRotaryAttention(Module):
         # angle: shape (max_seqlen, dims_per_head/2), angle[i, j] = i / rotary_base^(2j / dims_per_head)
         angle = np.outer(
             np.arange(self.max_seqlen),
-            self.rotary_base ** (2 * np.arange(self.dims_per_head // 2) / self.dims_per_head)
+            1.0 / self.rotary_base ** (2 * np.arange(self.dims_per_head // 2) / self.dims_per_head)
         )
         cos_A = Tensor(np.stack([np.cos(angle), np.cos(angle)], axis=2))
-        sin_A = Tensor(np.stack([np.sin(angle), -np.sin(angle)], axis=2))
+        sin_A = Tensor(np.stack([-np.sin(angle), np.sin(angle)], axis=2))
         rotation_matr = (cos_A, sin_A)
         
         return rotation_matr
 
     
     def apply_rotation_matrix(self, qk: Tensor, rotation_matr: Tuple[Tensor, Tensor], offset: int):
-        """For each 2D point (x, y) at position index `i` and embed_dim index `(2j, 2j+1)`,
+        """Rotates qk = shape (batch, n_heads, seqlen, dims_per_head) by `rotation_matr`.
+        
+        For each 2D point (x, y) at seqlen index `i` and dims_per_head indices `(2j, 2j+1)`,
         rotate (x, y) by angle A := i / rotary_base^(2j / dims_per_head).
 
-        This means (x, y) -> (cos(A) * x + sin(A) * y, cos(A) * y - sin(A) * x)
-                           = (cos(A), cos(A)) * (x, y) + (sin(A), -sin(A)) * (y, x)
-                           = cos_A * (x, y) + sin_A * (y, x)
+        This means (x, y) -> (cos(A) * x - sin(A) * y, cos(A) * y + sin(A) * x)
+                           = (cos(A), cos(A)) * (x, y) + (-sin(A), sin(A)) * (y, x)
+                           
+        Thus we define rotation_matr = (cos_A, sin_A) where cos_A := (cos(A), cos(A))
+                                                            sin_A := (-sin(A), sin(A))
 
         If `offset` is provided, adds `offset` to `i`.
         """
