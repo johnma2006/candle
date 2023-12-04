@@ -1,7 +1,6 @@
 """Functionality to load GPT2 with OpenAI's pre-trained weights"""
 
 import numpy as np
-import transformers
 
 from candle.tensor import Tensor
 
@@ -25,6 +24,7 @@ def load_pretrained_gpt(model_name: str):
 
     """
     from .model import GPT
+    import transformers
     
     model_names = ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl']
     if model_name not in model_names:

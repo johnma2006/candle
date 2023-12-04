@@ -14,8 +14,6 @@ import candle.functions as F
 from candle.tensor import Tensor
 from candle.layers.module import Module
 
-from .loadpretrained import load_pretrained_gpt
-
 
 class GPT(Module):
     
@@ -98,6 +96,7 @@ class GPT(Module):
             GPT instance with pre-trained weights initialized.
 
         """
+        from .loadpretrained import load_pretrained_gpt
         return load_pretrained_gpt(model_name)
     
     
