@@ -2,8 +2,6 @@
 
 import numpy as np
 
-from candle.tensor import Tensor
-
 
 def load_pretrained_gpt(model_name: str):
     """Returns GPT2 with pretrained weights.
@@ -42,7 +40,7 @@ def load_pretrained_gpt(model_name: str):
     }
 
     model = GPT(**config)
-    _ = model(Tensor(np.zeros((1, 32))))  # Feed fake batch to initialized deferred params
+    _ = model.summary((1, 32))  # To initialize deferred params
 
     # -----------------------
     # Transfer OpenAI weights

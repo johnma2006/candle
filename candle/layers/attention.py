@@ -43,15 +43,15 @@ class GroupedQueryRotaryAttention(Module):
         self.apply_rotary_embedding = apply_rotary_embedding
         self.rotary_base = rotary_base
         self.max_seqlen = max_seqlen
-        self.dims_per_head = embed_dim // n_heads
+        self.per_head_dims = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
         self.W_q = Linear(embed_dim, embed_dim, bias=bias)
-        self.W_k = Linear(embed_dim, n_kv_heads * self.dims_per_head, bias=bias)
-        self.W_v = Linear(embed_dim, n_kv_heads * self.dims_per_head, bias=bias)
+        self.W_k = Linear(embed_dim, n_kv_heads * self.per_head_dims, bias=bias)
+        self.W_v = Linear(embed_dim, n_kv_heads * self.per_head_dims, bias=bias)
         self.W_o = Linear(embed_dim, embed_dim, bias=bias)
         
-        # kv_cache = (key_cache, value_cache), both of shape (batch, n_kv_heads, cache_seqlen, dims_per_head).
+        # kv_cache = (key_cache, value_cache), both of shape (batch, n_kv_heads, cache_seqlen, per_head_dims).
         self.kv_cache: Tuple[Tensor] = None
             
         
@@ -91,10 +91,10 @@ class GroupedQueryRotaryAttention(Module):
             
         """
         def reshape_and_transpose(tensor, n_heads):
-            """Reshapes tensor with shape (batch, seqlen, n_heads * dims_per_head)
-                                 to shape (batch, n_heads, seqlen, dims_per_head)."""
+            """Reshapes tensor with shape (batch, seqlen, n_heads * per_head_dims)
+                                 to shape (batch, n_heads, seqlen, per_head_dims)."""
             (batch, seqlen, _) = tensor.shape
-            tensor = tensor.reshape((batch, seqlen, n_heads, self.dims_per_head))
+            tensor = tensor.reshape((batch, seqlen, n_heads, self.per_head_dims))
             tensor = tensor.transpose(1, 2)
             return tensor
 
@@ -156,14 +156,14 @@ class GroupedQueryRotaryAttention(Module):
         Returns
         -------
         rotation_matr: Tuple[Tensor, Tensor]
-            rotation_matr = (cos_A, sin_A), both shaped (max_seqlen, dims_per_head/2, 2)
+            rotation_matr = (cos_A, sin_A), both shaped (max_seqlen, per_head_dims/2, 2)
             See `self.apply_rotation_matrix` for how cos_A, sin_A are defined.
         
         """
-        # angle: shape (max_seqlen, dims_per_head/2), angle[i, j] = i / rotary_base^(2j / dims_per_head)
+        # angle: shape (max_seqlen, per_head_dims/2), angle[i, j] = i / rotary_base^(2j / per_head_dims)
         angle = np.outer(
             np.arange(self.max_seqlen),
-            1.0 / self.rotary_base ** (2 * np.arange(self.dims_per_head // 2) / self.dims_per_head)
+            1.0 / self.rotary_base ** (2 * np.arange(self.per_head_dims // 2) / self.per_head_dims)
         )
         cos_A = Tensor(np.stack([np.cos(angle), np.cos(angle)], axis=2))
         sin_A = Tensor(np.stack([-np.sin(angle), np.sin(angle)], axis=2))
@@ -173,10 +173,10 @@ class GroupedQueryRotaryAttention(Module):
 
     
     def apply_rotation_matrix(self, qk: Tensor, rotation_matr: Tuple[Tensor, Tensor], offset: int):
-        """Rotates qk = shape (batch, n_heads, seqlen, dims_per_head) by `rotation_matr`.
+        """Rotates qk = shape (batch, n_heads, seqlen, per_head_dims) by `rotation_matr`.
         
-        For each 2D point (x, y) at seqlen index `i` and dims_per_head indices `(2j, 2j+1)`,
-        rotate (x, y) by angle A := i / rotary_base^(2j / dims_per_head).
+        For each 2D point (x, y) at seqlen index `i` and per_head_dims indices `(2j, 2j+1)`,
+        rotate (x, y) by angle A := i / rotary_base^(2j / per_head_dims).
 
         This means (x, y) -> (cos(A) * x - sin(A) * y, cos(A) * y + sin(A) * x)
                            = (cos(A), cos(A)) * (x, y) + (-sin(A), sin(A)) * (y, x)
@@ -190,14 +190,14 @@ class GroupedQueryRotaryAttention(Module):
         (cos_A, sin_A) = rotation_matr
         seqlen = qk.shape[2]
         
-        # Reshape to (batch, head, seqlen, dims_per_head/2, 2)
+        # Reshape to (batch, head, seqlen, per_head_dims/2, 2)
         qk = qk.reshape((*qk.shape[:3], -1, 2))
 
         # Compute (cos(A), cos(A)) * (x, y) + (sin(A), -sin(A)) * (y, x)
         qk_rotated = (cos_A[offset:offset + seqlen] * qk
                       + sin_A[offset:offset + seqlen] * F.flip(qk, axis=-1))
 
-        # Reshape back to (batch, head, seqlen, dims_per_head)
+        # Reshape back to (batch, head, seqlen, per_head_dims)
         qk_rotated = qk_rotated.reshape((*qk_rotated.shape[:3], -1))
 
         return qk_rotated
@@ -208,7 +208,7 @@ class GroupedQueryRotaryAttention(Module):
         if self.kv_cache is None:
             return 0
         else:
-            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, dims_per_head)
+            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, per_head_dims)
             return self.kv_cache[0].shape[2]
     
     
@@ -235,7 +235,7 @@ class MultiheadAttention(Module):
         assert embed_dim % n_heads == 0
         self.embed_dim = embed_dim
         self.n_heads = n_heads
-        self.dims_per_head = embed_dim // n_heads
+        self.per_head_dims = embed_dim // n_heads
         
         self.attention = DotProductAttention(dropout_p)
         self.W_q = Linear(embed_dim, embed_dim, bias=bias)
@@ -243,7 +243,7 @@ class MultiheadAttention(Module):
         self.W_v = Linear(embed_dim, embed_dim, bias=bias)
         self.W_o = Linear(embed_dim, embed_dim, bias=bias)
         
-        # kv_cache == (key_cache, value_cache), both of shape (batch, n_heads, cache_seqlen, dims_per_head).
+        # kv_cache == (key_cache, value_cache), both of shape (batch, n_heads, cache_seqlen, per_head_dims).
         self.kv_cache: Tuple[Tensor] = None
         
         
@@ -280,10 +280,10 @@ class MultiheadAttention(Module):
             
         """
         def reshape_and_transpose(tensor):
-            """Reshapes tensor with shape (batch, seqlen, n_heads * dims_per_head)
-                                 to shape (batch, n_heads, seqlen, dims_per_head)."""
+            """Reshapes tensor with shape (batch, seqlen, n_heads * per_head_dims)
+                                 to shape (batch, n_heads, seqlen, per_head_dims)."""
             (batch, seqlen, _) = tensor.shape
-            tensor = tensor.reshape((batch, seqlen, self.n_heads, self.dims_per_head))
+            tensor = tensor.reshape((batch, seqlen, self.n_heads, self.per_head_dims))
             tensor = tensor.transpose(1, 2)
             return tensor
 
@@ -331,7 +331,7 @@ class MultiheadAttention(Module):
         if self.kv_cache is None:
             return 0
         else:
-            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, dims_per_head)
+            # kv_cache[0] and [1] are shape (batch, n_heads, cache_seqlen, per_head_dims)
             return self.kv_cache[0].shape[2]
     
     

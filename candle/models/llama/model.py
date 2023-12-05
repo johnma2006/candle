@@ -19,14 +19,18 @@ class Llama(Module):
     def __init__(self,
                  n_layers: int,
                  n_heads: int,
-                 n_kv_heads: int,
                  embed_dim: int,
                  vocab_size: int,
                  block_size: int,
+                 n_kv_heads: int = None,
                  ffn_hidden_dim: int = None,
-                 rotary_base: int = 10000):
+                 rotary_base: int = 10000,
+                 norm_eps: float = 1e-5):
         super().__init__()
 
+        if n_kv_heads is None:
+            n_kv_heads = n_heads
+            
         if ffn_hidden_dim is None:
             # Conventionally, ffn_hidden_dim = 4 * embed_dim
             # Since LLaMA uses the SwiGLU "activation", ffn_hidden_dim is set to 4 * embed_dim * 2/3
@@ -45,14 +49,15 @@ class Llama(Module):
         self.block_size = block_size
         self.rotary_base = rotary_base
         self.ffn_hidden_dim = ffn_hidden_dim
+        self.norm_eps = norm_eps
         
         self.word_embeddings = candle.Embedding(vocab_size, embed_dim)
         self.decoder_blocks = candle.ParameterList([
-            DecoderBlock(embed_dim, ffn_hidden_dim, n_heads,
-                         n_kv_heads, block_size, rotary_base)
+            DecoderBlock(embed_dim, ffn_hidden_dim, n_heads, n_kv_heads,
+                         block_size, rotary_base, norm_eps)
             for _ in range(n_layers)
         ])
-        self.rms_norm = candle.RMSNorm(axis=2)
+        self.rms_norm = candle.RMSNorm(axis=2, eps=norm_eps)
         # Unlike GPT, LLaMA output layer is not tied to word embeddings
         self.output_projection = candle.Linear(embed_dim, vocab_size, bias=False)
         
@@ -90,24 +95,46 @@ class Llama(Module):
         return logits
     
     
-    def from_pretrained(model_name: str):
-        """Returns LLaMA 2 with pretrained weights. TODO
+    def from_pretrained(model_name: str,
+                        model_dir: str):
+        """Returns LLaMA2 with pretrained weights.
 
         Parameters
         -----------
         model_name
-            One of ['todo']
+            One of ['7b', '7b-chat', '13b', '13b-chat', '70b', '70b-chat'].
+        model_dir
+            Directory with LLaMA weights. To download, go to https://ai.meta.com/llama/.
+            E.g. if model_dir = '/path/to/llama', the directory should look like this:
 
-            Param Count:
-                llama:        124,439,808
+                /path/to/llama
+                ├── tokenizer.model
+                ├── tokenizer_checklist.chk
+                ├── 7b
+                │   ├── checklist.chk
+                │   ├── consolidated.00.pth
+                │   └── params.json
+                ├── 7b-chat
+                │   ├── checklist.chk
+                │   ├── consolidated.00.pth
+                │   └── params.json
+                ├── 13b
+                │   ├── checklist.chk
+                │   ├── consolidated.00.pth
+                │   ├── consolidated.01.pth
+                │   └── params.json
+                ├── 13b-chat
+                │   ├─ ...
+                │   ...
 
         Returns
         -------
         model
-            LLaMA instance with pre-trained weights initialized.
+            LLaMA2 instance with Meta's weights initialized.
 
         """
-        return load_pretrained_llama(model_name)
+        from .loadpretrained import load_pretrained_llama
+        return load_pretrained_llama(model_name, model_dir)
     
     
     def clear_kv_cache(self):
@@ -129,16 +156,17 @@ class DecoderBlock(Module):
                  n_heads: int,
                  n_kv_heads: int,
                  block_size: int,
-                 rotary_base: int):
+                 rotary_base: int,
+                 norm_eps: float):
         super().__init__()
-        self.norm1 = candle.RMSNorm(axis=2)
+        self.norm1 = candle.RMSNorm(axis=2, eps=norm_eps)
         self.attn = candle.GroupedQueryRotaryAttention(embed_dim, n_heads, n_kv_heads,
                                                        dropout_p=0.0,
                                                        apply_rotary_embedding=True,
                                                        rotary_base=rotary_base,
                                                        max_seqlen=block_size,
                                                        bias=False)
-        self.norm2 = candle.RMSNorm(axis=2)
+        self.norm2 = candle.RMSNorm(axis=2, eps=norm_eps)
         self.ffn = FeedForwardBlock(input_dim=embed_dim, ffn_hidden_dim=ffn_hidden_dim)
 
         
