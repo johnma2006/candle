@@ -12,7 +12,7 @@ LLAMA_CONFIG_BY_SIZE = {
 
 
 def load_pretrained_llama(model_name: str,
-                          model_dir: str:
+                          model_dir: str):
     """Returns LLaMA2 with pretrained weights.
 
     Parameters
@@ -49,6 +49,7 @@ def load_pretrained_llama(model_name: str,
         LLaMA2 instance with Meta's weights initialized.
 
     """
+    from .model import Llama
     import torch
     assert model_name in ['7b', '7b-chat', '13b', '13b-chat', '70b', '70b-chat']
     model_dir = Path(model_dir)
@@ -81,7 +82,7 @@ def load_pretrained_llama(model_name: str,
     # ----------------
 
     def meta_param(name):
-        return state_dict[name].float().numpy()
+        return state_dict.pop(name).float().numpy().copy()
 
     params = dict(model.parameters())
 
@@ -99,8 +100,8 @@ def load_pretrained_llama(model_name: str,
         params[f'decoder_blocks.{i}.ffn.w2.W'].data[:] = meta_param(f'layers.{i}.feed_forward.w2.weight').T
         params[f'decoder_blocks.{i}.ffn.w3.W'].data[:] = meta_param(f'layers.{i}.feed_forward.w3.weight').T
 
-        params[f'decoder_blocks.{i}.norm1.W'].data[:] = meta_param(f'layers.{i}.ffn_norm.weight')
-        params[f'decoder_blocks.{i}.norm2.W'].data[:] = meta_param(f'layers.{i}.attention_norm.weight')
+        params[f'decoder_blocks.{i}.norm1.W'].data[:] = meta_param(f'layers.{i}.attention_norm.weight')
+        params[f'decoder_blocks.{i}.norm2.W'].data[:] = meta_param(f'layers.{i}.ffn_norm.weight')
         
     return model
                           
