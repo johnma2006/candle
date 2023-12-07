@@ -179,3 +179,92 @@ class ChatML(ChatTemplate):
             chat += f'\n<|im_start|>assistant\n'
 
         return chat
+
+    
+class LlamaChatTemplate(ChatTemplate):
+    """The conversation template used in LLaMA's chat fine-tuned models.
+
+    References
+    ----------
+    [1] https://github.com/facebookresearch/llama/blob/main/llama/generation.py#L284
+    
+    Examples
+    --------
+    >>> messages = [
+    ...     {'role': 'system', 'content': self.system_message},
+    ...     {'role': 'user', 'content': 'Hi, how are you?'},
+    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+    ...     {'role': 'user', 'content': 'Great thanks!'},
+    ...     {'role': 'assistant', 'content': 'Nice!'},
+    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
+    ... ]
+
+    >>> chat_template = chat_template = ChatML(system_message='You are a helpful assistant.')
+    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+
+    <s>[/INST] <<SYS>>
+    You are a helpful, respectful and honest assistant. Always answer as helpfully as
+    possible, while being safe. Your answers should not include any harmful, unethical,
+    racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses
+    are socially unbiased and positive in nature.
+
+    If a question does not make any sense, or is not factually coherent, explain why
+    instead of answering something not correct. If you don't know the answer to a question,
+    please don't share false information.
+    <</SYS>>
+
+    Hi, how are you? [/INST] I am doing well. How about you? </s><s>[/INST] Great
+    thanks! [/INST] Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
+
+    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
+                                                n_recent_messages=2))
+
+     Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
+    
+    """
+    
+    DEFAULT_SYSTEM_MESSAGE = (
+        'You are a helpful, respectful and honest assistant. Always answer as helpfully as '
+        'possible, while being safe. Your answers should not include any harmful, unethical, '
+        'racist, sexist, toxic, dangerous, or illegal content. Please ensure that your '
+        'responses are socially unbiased and positive in nature.\n\nIf a question does not '
+        'make any sense, or is not factually coherent, explain why instead of answering '
+        'something not correct. If you don\'t know the answer to a question, please '
+        'don\'t share false information.'
+    )
+    
+    B_INST = '[INST]'
+    E_INST = '[/INST]'
+    B_SYS = '<<SYS>>\n'
+    E_SYS = '\n<</SYS>>\n\n'
+    
+    def __init__(self,
+                 system_message: str = DEFAULT_SYSTEM_MESSAGE):
+        
+        self.system_message = system_message
+        
+        
+    def get_system_message(self):
+        return {'role': 'system', 'content': self.DEFAULT_SYSTEM_MESSAGE}
+        
+        
+    def _apply_chat_template(self,
+                             messages: List[Tuple[str, str]],
+                             add_generation_prompt: bool):
+        # If messages[0] is a system message, merge it with first user message messages[01] 
+        if messages[0]['role'] == 'system':
+            messages = [
+                {'role': messages[1]['role'],  # This is a user message
+                 'content': self.B_SYS + messages[0]['content'] + self.E_SYS + messages[1]['content']}
+            ] + messages[2:]
+
+        chat = ''
+        for (prompt, answer) in zip(messages[::2], messages[1::2]):
+            chat += (f'<s>{self.B_INST} {(prompt["content"]).strip()} '
+                     f'{self.E_INST} {(answer["content"]).strip()} </s>')
+
+        if add_generation_prompt:
+            chat += f'<s>{self.B_INST} {(messages[-1]["content"]).strip()} {self.E_INST}'
+
+        return chat
+    

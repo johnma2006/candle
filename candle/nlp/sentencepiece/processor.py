@@ -92,7 +92,7 @@ class Processor:
             raise NotImplementedError()
     
         
-    def decode(self, input_ids: List[int]):
+    def decode(self, input_ids: List[int], remove_dummy_prefix: bool = True):
         """Decodes list of ids."""
         decoded = []
         byte_accumulation = []
@@ -117,7 +117,7 @@ class Processor:
             decoded.append(bytes(byte_accumulation).decode())
 
         decoded = ''.join(decoded)
-        decoded = self._undo_preprocess_input(decoded)
+        decoded = self._undo_preprocess_input(decoded, remove_dummy_prefix)
 
         return decoded
 
@@ -130,6 +130,8 @@ class Processor:
                     emit_unk_piece: bool = False):
         """O(nlogn) BPE merging algorithm using priority queue"""
         assert out_type in [int, str]
+        if input_str == '':
+            return []
         
         # We initialize tokens as single characters, and form TokenPairs from
         # consecutive tokens and add to `token_pairs`, a min heap sorted by TokenPair.score.
@@ -255,10 +257,10 @@ class Processor:
 
         return input_str
     
-    def _undo_preprocess_input(self, input_str: str):
+    def _undo_preprocess_input(self, input_str: str, remove_dummy_prefix: bool = True):
         input_str = input_str.replace(self.WHITESPACE_REPLACEMENT, ' ')
         
-        if self.normalizer_spec.add_dummy_prefix:
+        if self.normalizer_spec.add_dummy_prefix and remove_dummy_prefix:
             input_str = input_str[1:]
 
         return input_str

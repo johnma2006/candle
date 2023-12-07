@@ -1,1 +1,1 @@
-from .processor import SentencePieceProcessor
+from .processor import Processor

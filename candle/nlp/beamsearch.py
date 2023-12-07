@@ -64,7 +64,8 @@ def beam_search_decoder(model,
     Returns
     -------
     generator
-        The generator will yield tokens as soon as all `beam_size` beams agree on that token.
+        The generator will yield List[int] of tokens as soon as all `beam_size` beams
+        agree on the tokens.
         
     Examples
     --------
@@ -161,7 +162,7 @@ def beam_search_decoder(model,
         while np.unique(indices_at_head).size == 1:
             try:
                 head_index += 1
-                yield np.array([indices_at_head[0]])
+                yield [int(indices_at_head[0])]
 
             except GeneratorExit:
                 # This means that the generator exited early. We have to do some cleanup to
@@ -192,7 +193,7 @@ def beam_search_decoder(model,
                              trim_seqlen=-final_kv_cache_len,
                              reindex_batch_indices=[best_index])
 
-    yield indices.data[best_index, head_index:]
+    yield indices.data[best_index, head_index:].astype(int).tolist()
     
     
 def top_k_sample(probs: np.array,
