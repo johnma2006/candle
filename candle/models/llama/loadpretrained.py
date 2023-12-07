@@ -13,40 +13,47 @@ LLAMA_CONFIG_BY_SIZE = {
 
 def load_pretrained_llama(model_name: str,
                           model_dir: str):
-    """Returns LLaMA2 with pretrained weights.
+    """Loads a pre-trained LLaMA2 model with Meta's weights.
 
     Parameters
-    -----------
-    model_name
-        One of ['7b', '7b-chat', '13b', '13b-chat', '70b', '70b-chat'].
-    model_dir
-        Directory with LLaMA weights.
-        E.g. if model_dir = '/path/to/llama', the directory should look like this:
+    ----------
+    model_name : str
+        Name of the pre-trained LLaMA2 model. Valid options are:
+        * '7b'
+        * '7b-chat'
+        * '13b'
+        * '13b-chat'
+        * '70b'
+        * '70b-chat'
 
-            /path/to/llama
-            ├── tokenizer.model
-            ├── tokenizer_checklist.chk
-            ├── 7b
-            │   ├── checklist.chk
-            │   ├── consolidated.00.pth
-            │   └── params.json
-            ├── 7b-chat
-            │   ├── checklist.chk
-            │   ├── consolidated.00.pth
-            │   └── params.json
-            ├── 13b
-            │   ├── checklist.chk
-            │   ├── consolidated.00.pth
-            │   ├── consolidated.01.pth
-            │   └── params.json
-            ├── 13b-chat
-            │   ├─ ...
-            │   ...
+    model_dir : str
+        Directory containing the pre-trained LLaMA2 model weights.
+        The directory structure should be as follows:
+
+        /path/to/llama
+        ├── tokenizer.model
+        ├── tokenizer_checklist.chk
+        ├── 7b
+        │   ├── checklist.chk
+        │   ├── consolidated.00.pth
+        │   └── params.json
+        ├── 7b-chat
+        │   ├── checklist.chk
+        │   ├── consolidated.00.pth
+        │   └── params.json
+        ├── 13b
+        │   ├── checklist.chk
+        │   ├── consolidated.00.pth
+        │   ├── consolidated.01.pth
+        │   └── params.json
+        ├── 13b-chat
+        │   ...
+        ...
 
     Returns
     -------
-    model
-        LLaMA2 instance with Meta's weights initialized.
+    model : Llama
+        A Llama model instance with Meta's pre-trained weights loaded.
 
     """
     from .model import Llama

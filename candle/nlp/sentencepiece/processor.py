@@ -25,7 +25,7 @@ class PieceType(IntEnum):
     UNUSED = 5        # This piece is not used.
 
 
-class SentencePieceProcessor:
+class Processor:
 
     WHITESPACE_REPLACEMENT = '▁'  # If you squint you will notice this is not the same as '_'
                                   # '▁' has unicode ID ord('▁') = 9601  <-- what we use
@@ -33,7 +33,7 @@ class SentencePieceProcessor:
         
     def __init__(self,
                  model_file: str):
-        """Initialize SentencePieceProcessor.
+        """Initialize Processor.
         
         Parameters
         ----------

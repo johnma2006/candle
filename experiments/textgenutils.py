@@ -146,3 +146,91 @@ def display_stream_of_text(model,
             break
     
     return response
+
+
+def ansi_color(text: str,
+               style: str = None,
+               color: str = None,
+               bg_color: str = None):
+    """Formats text with ANSI escape codes for adding color and style.
+
+    Parameters
+    ----------
+    text : str
+        The text to be formatted.
+    style : str, optional
+        The desired text style. Valid options are:
+
+        * 'bright'
+        * 'dim'
+        * 'underscore'
+        * 'blink'
+        * 'reverse'
+        * 'hidden'
+    color : str, optional
+        The desired text color. Valid options are:
+
+        * 'black'
+        * 'red'
+        * 'green'
+        * 'yellow'
+        * 'blue'
+        * 'magenta'
+        * 'cyan'
+        * 'white'
+        * 'bluegreen'
+    bg_color : str, optional
+        The desired background color. Valid options are the same as for
+        `color`.
+
+    Returns
+    -------
+    str
+        The formatted text with ANSI escape sequences added.
+
+    """
+    RESET_CODE = "\x1b[0m"
+    ANSI_CODES={
+        'style': dict(
+            bright='\x1b[1m',
+            dim='\x1b[2m',
+            underscore='\x1b[4m',
+            blink='\x1b[5m',
+            reverse='\x1b[7m',
+            hidden='\x1b[8m',
+        ),
+        'color': dict(
+            black='\x1b[30m',
+            red='\x1b[31m',
+            green='\x1b[32m',
+            yellow='\x1b[33m',
+            blue='\x1b[34m',
+            magenta='\x1b[35m',
+            cyan='\x1b[36m',
+            white='\x1b[37m',
+            bluegreen='\x1b[48;5;109m',
+        ),
+        'bg_color': dict(
+            black='\x1b[40m',
+            red='\x1b[41m',
+            green='\x1b[42m',
+            yellow='\x1b[43m',
+            blue='\x1b[44m',
+            magenta='\x1b[45m',
+            cyan='\x1b[46m',
+            white='\x1b[47m',
+            bluegreen='\x1b[48;5;109m',
+        )
+    }
+
+    for (setting, setting_str) in [(style, 'style'),
+                                   (color, 'color'),
+                                   (bg_color, 'bg_color')]:
+        if setting is not None:
+            if setting not in ANSI_CODES[setting_str]:
+                raise ValueError(f'{setting_str} must be one of {list(ANSI_CODES[setting_str].keys())}.')
+            text = ANSI_CODES[setting_str][setting] + text
+
+    text = text + RESET_CODE
+
+    return text

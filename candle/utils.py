@@ -110,14 +110,11 @@ def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None
     cache_file_path = os.path.join(cache_dir, cache_file_name)
     os.makedirs(cache_dir, exist_ok=True)
 
-    if os.path.isfile(cache_file_path):
-        with open(cache_file_path, 'r', encoding=encoding) as f:
-            return f.read()
-
-    else:
+    if not os.path.isfile(cache_file_path):
         print(f'Downloading from {url} and caching to {cache_file_name}')
         contents = requests.get(url).content
         with open(cache_file_path, 'wb') as f:
             f.write(contents)
-        return contents
-    
+
+    with open(cache_file_path, 'r', encoding=encoding) as f:
+        return f.read()

@@ -69,7 +69,7 @@ class SimpleConversationTemplate(ChatTemplate):
     ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
     ... ]
 
-    >>> chat_template = SimpleConversationTemplate(user_name='John', assistant_name='Taylor')
+    >>> chat_template = SimpleConversationTemplate(user_name='John', asst_name='Taylor')
     >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
 
     Two friends, John and Taylor, are having an online conversation. Taylor is friendly,
@@ -93,16 +93,16 @@ class SimpleConversationTemplate(ChatTemplate):
     
     def __init__(self,
                  user_name: str,
-                 assistant_name: str,
-                 system_message = ('Two friends, {user_name} and {assistant_name}, are having '
-                                   'an online conversation. {assistant_name} is friendly, '
+                 asst_name: str,
+                 system_message = ('Two friends, {user_name} and {asst_name}, are having '
+                                   'an online conversation. {asst_name} is friendly, '
                                    'talkative, and loves to ask {user_name} questions.')):
         self.name_by_role = {
             'user': user_name,
-            'assistant': assistant_name
+            'assistant': asst_name
         }
         
-        self.system_message = system_message.format(user_name=user_name, assistant_name=assistant_name)
+        self.system_message = system_message.format(user_name=user_name, asst_name=asst_name)
         
         
     def _apply_chat_template(self,
