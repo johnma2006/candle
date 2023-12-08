@@ -5,7 +5,7 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 * Object-oriented PyTorch-like API
 * [Tensor operations](candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
 * [Layers](candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
-* [NLP](candle/nlp): byte-pair encoding, beam search with top-k/-p, speculative sampling (todo), chat templates (ChatML)
+* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/doc, beam search with top-k/nucleus, speculative sampling (todo), chat templates (ChatML)
 * Models: [LLaMA](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
 * Focus on readable, understandable, idiomatic code
@@ -15,7 +15,7 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 
 #### Language Modelling
 * Converse with Taylor, your Large GPT2 friend [(notebook)](experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
-  <img src="experiments/gpt_experiments/sample_conversation.png" width="600" height="350" />
+  <img src="experiments/gpt_experiments/example_gpt2_conversation.png" width="600" height="350" />
 * KV-caching speedup and memory consumption [(notebook)](experiments/gpt_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/gpt_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
