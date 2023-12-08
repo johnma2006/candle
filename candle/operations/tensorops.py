@@ -245,14 +245,14 @@ class BatchMatrixMultiply(Operation):
         (a, b) = self.inputs
         assert a.shape[:-2] == b.shape[:-2]  # Assert first N-2 dimensions match
 
-        return tensor.Tensor(np.einsum('...ij, ...jk -> ...ik', a.data, b.data))
+        return tensor.Tensor(a.data @ b.data)
     
     
     def _backward(self,
                   output_grad: np.array):
         (a, b) = self.inputs
-        input_grad_a = np.einsum('...ij, ...kj -> ...ik', output_grad, b.data)
-        input_grad_b = np.einsum('...ij, ...ik -> ...kj', output_grad, a.data)
+        input_grad_a = output_grad @ b.data.swapaxes(-1, -2)
+        input_grad_b = a.data.swapaxes(-1, -2) @ output_grad
         
         return (input_grad_a, input_grad_b)
     

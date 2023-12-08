@@ -135,11 +135,10 @@ def silu(a):
 
 def softmax(a):
     """Applies softmax along the last axis of a Tensor."""
-    softmax = a.T
-    softmax = softmax - softmax.max(axis=0)  # For numerical stabiility
+    softmax = a - a.max(axis=-1, keepdims=True)    # For numerical stability
     softmax = exp(softmax, base=np.e)
-    softmax = (softmax / softmax.sum(axis=0)).T
-
+    softmax = softmax / softmax.sum(axis=-1, keepdims=True)
+    
     return softmax
     
 
