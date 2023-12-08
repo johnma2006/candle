@@ -33,7 +33,7 @@ class ChatTemplate(ABC):
             if n_recent_messages <= 0:
                 raise ValueError(f'n_recent_messages = {n_recent_messages} must be > 0.')
 
-            partial_chat = self._apply_chat_template(messages[:-n_recent_messages], add_generation_prompt)
+            partial_chat = self._apply_chat_template(messages[:-n_recent_messages], add_generation_prompt=False)
 
             if not full_chat.startswith(partial_chat):
                 raise ValueError(f'full chat = \n"""{full_chat}""" \n\nmust start with '
@@ -108,13 +108,13 @@ class SimpleConversationTemplate(ChatTemplate):
     def _apply_chat_template(self,
                              messages: List[Tuple[str, str]],
                              add_generation_prompt: bool):
-        chat = self.system_message + '\n\n'
+        chat = self.system_message + '\n'
 
         for message in messages:
-            chat += f'{self.name_by_role[message["role"]]}: {message["content"]}\n'
+            chat += f'\n{self.name_by_role[message["role"]]}: {message["content"]}'
             
         if add_generation_prompt:
-            chat += f'{self.name_by_role["assistant"]}:'
+            chat += f'\n{self.name_by_role["assistant"]}:'
 
         return chat
     

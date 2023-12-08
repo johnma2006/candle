@@ -32,7 +32,7 @@ class TestAutograd(unittest.TestCase):
 
         assert a1.grad is None
         assert a2.grad is None
-        assert np.alltrue(a3.grad == np.array([1, 1, 1]))
+        assert np.all(a3.grad == np.array([1, 1, 1]))
         assert a4.grad is None
         assert b2.grad is None
         assert b3.grad is None
@@ -45,7 +45,7 @@ class TestAutograd(unittest.TestCase):
         z = y ** 2
         (x + z).sum().backward()
 
-        assert np.alltrue(x.grad == np.array([3, 5, 7]))
+        assert np.all(x.grad == np.array([3, 5, 7]))
 
     
     def test_astype(self):
@@ -55,7 +55,7 @@ class TestAutograd(unittest.TestCase):
 
         (y + z).sum().backward()
 
-        assert np.alltrue(x.grad == np.array([4, 8, 12]))
+        assert np.all(x.grad == np.array([4, 8, 12]))
         
 
     def test_grad_accumulation(self):

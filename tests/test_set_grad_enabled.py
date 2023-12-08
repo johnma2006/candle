@@ -99,6 +99,6 @@ class TestSetGradEnabled(unittest.TestCase):
         with candle.no_grad():
             output2 = model(x)
 
-        assert np.alltrue(output1.data == output2.data)
+        assert np.all(output1.data == output2.data)
 
         

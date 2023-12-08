@@ -295,7 +295,7 @@ class TensorMaskedFill(Operation):
             
         """
         super().__init__(inputs)
-        if not np.alltrue(np.isclose(mask.data, 0) | np.isclose(mask.data, 1)):
+        if not np.all(np.isclose(mask.data, 0) | np.isclose(mask.data, 1)):
             raise ValueError('mask must be a Tensor with only 0s and 1s.')
         self.broadcasted_mask = np.broadcast_to(mask.data, self.inputs[0].shape)
         self.fill_value = fill_value

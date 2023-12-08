@@ -115,6 +115,8 @@ def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None
         contents = requests.get(url).content
         with open(cache_file_path, 'wb') as f:
             f.write(contents)
+    else:
+        print(f'Loading file from cache: {cache_file_path}')
 
     with open(cache_file_path, 'r', encoding=encoding) as f:
         return f.read()
