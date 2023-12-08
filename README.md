@@ -14,12 +14,12 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 ## Demos & Experiments
 
 #### Language Modelling
-* Get assistance from LLaMA, your fined tuned assistant [(notebook)](experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
-* Converse with Fleecy, your base model LLaMA friend [(notebook)](experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20GPT2%20friend.ipynb)
-* Converse with Taylor, your GPT2 friend [(notebook)](experiments/gpt_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
-  <img src="experiments/gpt_experiments/example_gpt2_conversation.png" width="600" height="350" />
-* KV-caching speedup and memory consumption [(notebook)](experiments/gpt_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
-* Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/gpt_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
+* Get assistance from LLaMA, your fined tuned assistant [(notebook)](experiments/nlp_experiments/1.2%20Get%20assistance%20from%20LLaMA%2C%20your%20fined%20tuned%20assistant.ipynb)
+* Converse with Fleecy, your base model LLaMA friend [(notebook)](experiments/nlp_experiments/1.1%20Converse%20with%20Fleecy%2C%20your%20base%20model%20LLaMA%20friend.ipynb)
+* Converse with Taylor, your GPT2 friend [(notebook)](experiments/nlp_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)                 
+  <img src="experiments/nlp_experiments/example_gpt2_conversation.png" width="600" height="350" />
+* KV-caching speedup and memory consumption [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
+* Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/nlp_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
