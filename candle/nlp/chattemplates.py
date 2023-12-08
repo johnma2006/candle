@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 class ChatTemplate(ABC):
     """Chat templates format chat messages into a format conducive to chat modelling."""
     
+    @abstractmethod
     def apply_chat_template(self,
                             messages: List[Tuple[str, str]],
                             add_generation_prompt: bool = False,
@@ -27,34 +28,8 @@ class ChatTemplate(ABC):
             if n_recent_messages >= len(messages), simply returns apply_chat_template(messages).
 
         """
-        full_chat = self._apply_chat_template(messages, add_generation_prompt)
-
-        if n_recent_messages is not None and n_recent_messages < len(messages):
-            if n_recent_messages <= 0:
-                raise ValueError(f'n_recent_messages = {n_recent_messages} must be > 0.')
-
-            partial_chat = self._apply_chat_template(messages[:-n_recent_messages], add_generation_prompt=False)
-
-            if not full_chat.startswith(partial_chat):
-                raise ValueError(f'full chat = \n"""{full_chat}""" \n\nmust start with '
-                                 f'partial_chat = \n"""{partial_chat}""".')
-
-            # `diff` satisfies `partial_chat + diff == full_chat`
-            diff = full_chat[len(partial_chat):]
-            assert partial_chat + diff == full_chat
-            
-            return diff
-        
-        else:
-            return full_chat
-
-    
-    @abstractmethod
-    def _apply_chat_template(self,
-                             messages: List[Tuple[str, str]],
-                             add_generation_prompt: bool = False):
         pass
-    
+        
     
 class SimpleConversationTemplate(ChatTemplate):
     """Simple conversation chat template.
@@ -62,6 +37,7 @@ class SimpleConversationTemplate(ChatTemplate):
     Examples
     --------
     >>> messages = [
+    ...     {'role': 'system', 'content': self.system_message},
     ...     {'role': 'user', 'content': 'Hi, how are you?'},
     ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
     ...     {'role': 'user', 'content': 'Great thanks!'},
@@ -81,13 +57,6 @@ class SimpleConversationTemplate(ChatTemplate):
     Taylor: Nice!
     John: What is your favourite baseball team?
     Taylor:
-
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
-                                                n_recent_messages=2))
-
-     Nice!
-    John: What is your favourite baseball team?
-    Taylor:
     
     """
     
@@ -101,23 +70,24 @@ class SimpleConversationTemplate(ChatTemplate):
             'user': user_name,
             'assistant': asst_name
         }
-        
         self.system_message = system_message.format(user_name=user_name, asst_name=asst_name)
         
         
-    def _apply_chat_template(self,
-                             messages: List[Tuple[str, str]],
-                             add_generation_prompt: bool):
-        chat = self.system_message + '\n'
-
+    def apply_chat_template(self,
+                            messages: List[Tuple[str, str]],
+                            add_generation_prompt: bool):
+        chat = ''
         for message in messages:
-            chat += f'\n{self.name_by_role[message["role"]]}: {message["content"]}'
-            
+            if message['role'] == 'system':
+                chat += message['content'] + '\n'
+            else:
+                chat += f'\n{self.name_by_role[message["role"]]}: {message["content"]}'
+
         if add_generation_prompt:
             chat += f'\n{self.name_by_role["assistant"]}:'
-
+            
         return chat
-    
+
 
 class ChatML(ChatTemplate):
     """OpenAI's Chat Markup Language (*I think... I haven't found that much documentation online)
@@ -125,6 +95,7 @@ class ChatML(ChatTemplate):
     Examples
     --------
     >>> messages = [
+    ...     {'role': 'system', 'content': self.system_message},
     ...     {'role': 'user', 'content': 'Hi, how are you?'},
     ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
     ...     {'role': 'user', 'content': 'Great thanks!'},
@@ -132,7 +103,7 @@ class ChatML(ChatTemplate):
     ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
     ... ]
 
-    >>> chat_template = chat_template = ChatML(system_message='You are a helpful assistant.')
+    >>> chat_template = ChatML(system_message='You are a helpful assistant.')
     >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
 
     <|im_start|>system
@@ -149,14 +120,6 @@ class ChatML(ChatTemplate):
     What is your favourite baseball team?
     <|im_start|>assistant
 
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
-                                                n_recent_messages=2))
-
-    Nice!
-    <|im_start|>user
-    What is your favourite baseball team?
-    <|im_start|>assistant
-    
     """
     
     def __init__(self,
@@ -165,9 +128,9 @@ class ChatML(ChatTemplate):
         self.system_message = system_message
         
         
-    def _apply_chat_template(self,
-                             messages: List[Tuple[str, str]],
-                             add_generation_prompt: bool):
+    def apply_chat_template(self,
+                            messages: List[Tuple[str, str]],
+                            add_generation_prompt: bool):
         chat = '<|im_start|>system'
         chat += f'\n{self.system_message}'
 
@@ -199,7 +162,7 @@ class LlamaChatTemplate(ChatTemplate):
     ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
     ... ]
 
-    >>> chat_template = chat_template = ChatML(system_message='You are a helpful assistant.')
+    >>> chat_template = LlamaChatTemplate()
     >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
 
     <s>[/INST] <<SYS>>
@@ -216,11 +179,6 @@ class LlamaChatTemplate(ChatTemplate):
     Hi, how are you? [/INST] I am doing well. How about you? </s><s>[/INST] Great
     thanks! [/INST] Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
 
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True,
-                                                n_recent_messages=2))
-
-     Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
-    
     """
     
     DEFAULT_SYSTEM_MESSAGE = (
@@ -245,19 +203,19 @@ class LlamaChatTemplate(ChatTemplate):
         
         
     def get_system_message(self):
-        return {'role': 'system', 'content': self.DEFAULT_SYSTEM_MESSAGE}
+        return {'role': 'system', 'content': self.system_message}
         
         
-    def _apply_chat_template(self,
-                             messages: List[Tuple[str, str]],
-                             add_generation_prompt: bool):
-        # If messages[0] is a system message, merge it with first user message messages[01] 
+    def apply_chat_template(self,
+                            messages: List[Tuple[str, str]],
+                            add_generation_prompt: bool):
+        # If messages[0] is a system message, merge it with first user message messages[1] 
         if messages[0]['role'] == 'system':
             messages = [
                 {'role': messages[1]['role'],  # This is a user message
                  'content': self.B_SYS + messages[0]['content'] + self.E_SYS + messages[1]['content']}
             ] + messages[2:]
-
+            
         chat = ''
         for (prompt, answer) in zip(messages[::2], messages[1::2]):
             chat += (f'<s>{self.B_INST} {(prompt["content"]).strip()} '

@@ -3,6 +3,8 @@
 import numpy as np
 import re
 from typing import Dict
+import pygments
+from IPython.display import clear_output
 
 import candle
 
@@ -18,7 +20,8 @@ def generate_text(model,
                   stop_gen_token_idx: int = None,
                   stop_strings: Dict[str, int] = None,
                   print_stream: bool = True,
-                  use_kv_cache: bool = True):
+                  use_kv_cache: bool = True,
+                  stdout = None):
     """Given a conditioning prompt, generates N tokens using beam search.
     
     Parameters
@@ -52,6 +55,8 @@ def generate_text(model,
         If True, then prints tokens as they are generated.
     use_kv_cache
         If True, uses KV caching to speed up inference.
+    stdout
+        Object implementing stdout.print(...). If None, prints to sys.stdout.
     
     """
     if stop_strings is None:
@@ -82,6 +87,9 @@ def generate_text(model,
             indices_to_decode = []
             token = ''.join(token)
 
+            if tokens_generated == 0:
+                token = token.lstrip()
+            
             # If we see any regex `s` at least `stop_strings[s]` times, end generation
             for s in stop_strings:
                 matches = list(re.finditer(s, response + token))
@@ -93,7 +101,10 @@ def generate_text(model,
             
             response += token
             if print_stream:
-                print(token, end='')
+                if stdout is None:
+                    print(token, end='')
+                else:
+                    stdout.print(token, end='')
             
             if stop_gen:
                 generator.close()  # Close generator to do any required KV cache cleanup
@@ -192,3 +203,61 @@ def ansi_color(text: str,
             text = ANSI_CODES[setting_str][setting] + text
 
     return text + RESET_CODE
+
+
+
+class StdoutWithSyntaxHighlighting:
+    """Emulates stdout printing, but with syntax highlighting.
+    
+    Example
+    -------
+    stdout = StdoutWithSyntaxHighlighting()
+    stdout.print('Hi this is code: ```def f(x): return x```')
+
+
+    Notes
+    -----
+    Warning: clears entire output of cell every time .print() is called.
+    
+    """
+    
+    def __init__(self, code_delim: str = '```'):
+        self.code_delim = code_delim
+        self.buffer = ''
+        
+        
+    def print(self, *args, sep: str = ' ', end: str = '\n'):
+        self.buffer += sep.join(args) + end
+        clear_output(wait=True)
+        print(self.highlight(self.buffer), end='')
+        
+    
+    def highlight(self, text: str):
+        """Returns `text` with syntax highlighted code blocks."""
+        matches = list(re.finditer(self.code_delim, text))
+        while len(matches) > 0:
+            span0 = matches[0].span()
+            if len(matches) >= 2:
+                span1 = matches[1].span()
+                code_block_end = ansi_color('</code>', color='white')
+            else:  # text ends in code block
+                span1 = (len(text) - 1, len(text))
+                code_block_end = ''
+                
+            before_code = text[:span0[0]] + ansi_color('<code>', color='white')
+            code = self.highlight_code_block(text[span0[1]:span1[0]])
+            after_code = code_block_end + text[span1[1]:]
+
+            text = before_code + code + after_code
+            matches = list(re.finditer(self.code_delim, text))
+            
+        return text
+    
+    
+    def highlight_code_block(self, code_block):
+        return pygments.highlight(
+            code_block,
+            lexer=pygments.lexers.get_lexer_by_name('python', stripnl=False, ensurenl=False),
+            formatter=pygments.formatters.Terminal256Formatter(style='default')
+        )
+    
