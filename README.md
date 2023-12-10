@@ -13,10 +13,11 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 ## Demos & Experiments
 
 #### Language Modelling
-* Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/1.2%20Get%20assistance%20from%20LLaMA%2C%20your%20fined%20tuned%20assistant.ipynb)
-* Chat with Fleecy 🐑 (base LLaMA) [(notebook)](experiments/nlp_experiments/1.1%20Converse%20with%20Fleecy%2C%20your%20base%20model%20LLaMA%20friend.ipynb)
-* Chat with Taylor <span style="background-color:blue">⚪</span> (GPT2) [(notebook)](experiments/nlp_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
-  <p align="center"><img src="experiments/nlp_experiments/example_gpt2_conversation.png" width="600" height="350" /></p>
+* Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/1.2%20Chat%20with%20LLaMA%20(fine-tuned%20LLaMA).ipynb)
+  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" /></p>
+* Chat with Fleecy 🐑 (base LLaMA) [(notebook)](experiments/nlp_experiments/1.1%20Chat%20with%20Fleecy%20(base%20LLaMA).ipynb)
+* Chat with Taylor <span style="background-color:blue">⚪</span> (GPT2) [(notebook)](experiments/nlp_experiments/1.0%20Chat%20with%20Taylor%20(GPT2).ipynb)
+  <p align="center"><img src="experiments/nlp_experiments/gpt2_chat_example.png" width="600" height="350" /></p>
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/nlp_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
