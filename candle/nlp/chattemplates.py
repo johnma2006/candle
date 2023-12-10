@@ -201,11 +201,7 @@ class LlamaChatTemplate(ChatTemplate):
         
         self.system_message = system_message
         
-        
-    def get_system_message(self):
-        return {'role': 'system', 'content': self.system_message}
-        
-        
+
     def apply_chat_template(self,
                             messages: List[Tuple[str, str]],
                             add_generation_prompt: bool):

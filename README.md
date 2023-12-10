@@ -3,9 +3,8 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 #### Features:
 * Tensor-based reverse-mode automatic differentiation
 * Object-oriented PyTorch-like API
-* [Tensor operations](candle/operations): slicing and reshaping, broadcasted arithmetic, tensor contractions, batch matmul
 * [Layers](candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
-* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/doc, beam search with top-k/nucleus, speculative sampling (todo), chat templates (ChatML)
+* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/dec, beam searddch with top-k/nucleus, speculative sampling (todo), chat templates (ChatML)
 * Models: [LLaMA](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
 * Focus on readable, understandable, idiomatic code
@@ -14,16 +13,16 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 ## Demos & Experiments
 
 #### Language Modelling
-* Get assistance from LLaMA, your fined tuned assistant [(notebook)](experiments/nlp_experiments/1.2%20Get%20assistance%20from%20LLaMA%2C%20your%20fined%20tuned%20assistant.ipynb)
-* Converse with Fleecy, your base model LLaMA friend [(notebook)](experiments/nlp_experiments/1.1%20Converse%20with%20Fleecy%2C%20your%20base%20model%20LLaMA%20friend.ipynb)
-* Converse with Taylor, your GPT2 friend [(notebook)](experiments/nlp_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)                 
-  <img src="experiments/nlp_experiments/example_gpt2_conversation.png" width="600" height="350" />
-* KV-caching speedup and memory consumption [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
+* Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/1.2%20Get%20assistance%20from%20LLaMA%2C%20your%20fined%20tuned%20assistant.ipynb)
+* Chat with Fleecy 🐑 (base LLaMA) [(notebook)](experiments/nlp_experiments/1.1%20Converse%20with%20Fleecy%2C%20your%20base%20model%20LLaMA%20friend.ipynb)
+* Chat with Taylor <span style="background-color:blue">⚪</span> (GPT2) [(notebook)](experiments/nlp_experiments/1.0%20Converse%20with%20Taylor%2C%20your%20Large%20GPT2%20friend.ipynb)
+  <p align="center"><img src="experiments/nlp_experiments/example_gpt2_conversation.png" width="600" height="350" /></p>
+* KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/nlp_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
-  <img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" height="350" />
+  <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" height="350" /></p>
 * Training ResNet14 on MNIST [(notebook)](experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
 * Training MLP on MNIST [(notebook)](experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 

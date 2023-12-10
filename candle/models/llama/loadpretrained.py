@@ -65,12 +65,26 @@ def load_pretrained_llama(model_name: str,
     # Load Meta's weights
     # -------------------
 
-    state_dict_paths = [i for i in (model_dir / f'llama-2-{model_name}').iterdir() if 'consolidated' in str(i)]
+    state_dict_paths = sorted([i for i in (model_dir / f'llama-2-{model_name}').iterdir() if 'consolidated' in str(i)])
 
     state_dict = {}
     for state_dict_path in state_dict_paths:
         state_dict_shard = torch.load(str(state_dict_path), map_location='cpu', mmap=True, weights_only=True)
-        state_dict.update(state_dict_shard)
+
+        # Weight for one param may be in multiple shards for some reason; concat them
+        for param_name in state_dict_shard:
+            if param_name not in state_dict:
+                state_dict[param_name] = state_dict_shard[param_name]
+            elif not param_name.endswith('norm.weight'):
+                if (param_name == 'tok_embeddings.weight'
+                    or param_name.endswith('attention.wo.weight')
+                    or param_name.endswith('feed_forward.w2.weight')):
+                    dim = 1
+                else:
+                    dim = 0
+                state_dict[param_name] = torch.cat([state_dict[param_name],
+                                                    state_dict_shard[param_name]],
+                                                   dim=dim)
         del state_dict_shard
 
     # -----------------------------

@@ -1,12 +1,83 @@
 """Utils for generating text from a language model."""
 
-import numpy as np
+import time
 import re
-from typing import Dict
 import pygments
+import numpy as np
+from typing import Dict
 from IPython.display import clear_output
 
 import candle
+
+
+def interactive_conversation(model,
+                             chat_template,
+                             tokenizer,
+                             user_name: str,
+                             profile_pic: str = '🙂',
+                             user_bg_color: str = 'yellow',
+                             asst_name: str = 'LLM',
+                             asst_profile_pic: str = '🤖',
+                             asst_bg_color: str = 'black',
+                             max_response_length: int = 100,
+                             top_k: int = 100,
+                             top_p: float = 0.98,
+                             temperature: float = 0.8,
+                             stop_token_idx: int = None,
+                             stop_strings: dict = None):
+    """Starts an interactive conversation in Jupyter notebook.
+    
+    Note: if cells start auto-collapsing, this is an issue in Jupyter 7. Use nbclassic to fix.
+    """
+    stdout = StdoutWithSyntaxHighlighting()
+    
+    user_pic = ansi_color(profile_pic, 'bright', bg_color=user_bg_color) + ansi_color(f' {user_name}:', 'bright')
+    asst_pic = ansi_color(asst_profile_pic, 'bright', bg_color=asst_bg_color) + ansi_color(f' {asst_name}:', 'bright')
+
+    stdout.print(ansi_color(
+        f'< You are now talking with {asst_name}. Send \'bye\' to exit, \'clear\' to reset cache. >',
+        style='bright'
+    ), end='')
+
+    model.clear_kv_cache()
+    messages = [{'role': 'system', 'content': chat_template.system_message}]
+    last_chat = ''
+    while True:
+        stdout.print('\n\n' + user_pic, end=' ')
+        time.sleep(0.1)  # Sometimes the input() doesn't show if we don't add a delay
+        prompt = input()
+        stdout.print(prompt)
+
+        if prompt.lower().strip() == 'bye':
+            stdout.print(ansi_color(f'\n< / end of conversation. >', style='bright'))
+            return
+        elif prompt.lower().strip() == 'clear':
+            stdout.print(ansi_color(f'< Cache cleared >', style='bright', color='white'), end='')
+            model.clear_kv_cache()
+            messages = [{'role': 'system', 'content': chat_template.system_message}]
+            last_chat = ''
+            continue
+
+        messages.append({'role': 'user', 'content': prompt})
+        chat = chat_template.apply_chat_template(messages, add_generation_prompt=True)
+        chat_update = chat[len(last_chat):]  # Feed only chat update into model because we use KV caching
+        
+        stdout.print('\n' + asst_pic, end=' ')
+        response = generate_text(
+            model,
+            tokenizer,
+            prompt=chat_update,
+            n_tokens_to_gen=max_response_length,
+            top_k=top_k,
+            top_p=top_p,
+            temperature=temperature,
+            stop_token_idx=stop_token_idx,
+            stop_strings=stop_strings,
+            use_kv_cache=True,
+            stdout=stdout,
+        )
+        messages.append({'role': 'assistant', 'content': response})
+        last_chat = chat + response
 
 
 def generate_text(model,
@@ -17,7 +88,7 @@ def generate_text(model,
                   top_p: int = 0.95,
                   temperature: float = 1.0,
                   sample: bool = True,
-                  stop_gen_token_idx: int = None,
+                  stop_token_idx: int = None,
                   stop_strings: Dict[str, int] = None,
                   print_stream: bool = True,
                   use_kv_cache: bool = True,
@@ -37,8 +108,8 @@ def generate_text(model,
     sample
         True to randomly sample sequences from the distribution of probabilities
         False to take argmax.
-    stop_gen_token_idx
-        If provided, terminates generation upon seeing `stop_gen_token_id`.
+    stop_token_idx
+        If provided, terminates generation upon seeing `stop_token_id`.
     stop_strings
         Dict mapping string to how many times we can see the string before
         we stop generation. Accepts regexes.
@@ -79,16 +150,13 @@ def generate_text(model,
         indices_to_decode = indices_to_decode + next_indices
         
         try:
-            if stop_gen_token_idx in indices_to_decode:
+            if stop_token_idx in indices_to_decode:
                 stop_gen = True
-                indices_to_decode = indices_to_decode[:indices_to_decode.index(stop_gen_token_idx)]
+                indices_to_decode = indices_to_decode[:indices_to_decode.index(stop_token_idx)]
         
             token = tokenizer.decode(indices_to_decode)
             indices_to_decode = []
             token = ''.join(token)
-
-            if tokens_generated == 0:
-                token = token.lstrip()
             
             # If we see any regex `s` at least `stop_strings[s]` times, end generation
             for s in stop_strings:
@@ -98,7 +166,9 @@ def generate_text(model,
 
                     token = (response + token)[len(response):left_index]
                     stop_gen = True
-            
+                    
+            if response == '':
+                token = token.lstrip()
             response += token
             if print_stream:
                 if stdout is None:
@@ -218,10 +288,11 @@ class StdoutWithSyntaxHighlighting:
     Notes
     -----
     Warning: clears entire output of cell every time .print() is called.
+    Weird cell collapsing happens in the latest version of Jupyter. Use nbclassic to fix.
     
     """
     
-    def __init__(self, code_delim: str = '```'):
+    def __init__(self, code_delim: str = '```python|```'):
         self.code_delim = code_delim
         self.buffer = ''
         

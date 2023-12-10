@@ -1,7 +1,7 @@
 """Lightweight Python implementation of SentencePiece encoding/decoding.
 
 Should be similar to using Google's sentencepiece.SentencePieceProcessor, but with a lot
-fewer features; just enough to encode/decode LLaMA's vocabulary.
+fewer features (just enough to encode/decode LLaMA's vocabulary).
 
 References
 ----------
