@@ -14,16 +14,16 @@ Deep learning library, implemented from scratch in numpy for educational purpose
 
 #### Language Modelling
 * Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/1.2%20Chat%20with%20LLaMA%20(fine-tuned%20LLaMA).ipynb)
-  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" /></p>
+  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" /><sup>(video sped up 30x)</sup></p>
 * Chat with Fleecy 🐑 (base LLaMA) [(notebook)](experiments/nlp_experiments/1.1%20Chat%20with%20Fleecy%20(base%20LLaMA).ipynb)
 * Chat with Taylor <span style="background-color:blue">⚪</span> (GPT2) [(notebook)](experiments/nlp_experiments/1.0%20Chat%20with%20Taylor%20(GPT2).ipynb)
-  <p align="center"><img src="experiments/nlp_experiments/gpt2_chat_example.png" width="600" height="350" /></p>
+  <p align="center"><img src="experiments/nlp_experiments/gpt2_chat_example.png" width="800" /></p>
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
-* Beam search vs top-p vs top-k sampling quality [(notebook)](experiments/nlp_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
+* Beam search, top-p, top-k sampling quality [(notebook)](experiments/nlp_experiments/3.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
-  <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" height="350" /></p>
+  <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" /></p>
 * Training ResNet14 on MNIST [(notebook)](experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
 * Training MLP on MNIST [(notebook)](experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 
