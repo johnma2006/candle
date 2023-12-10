@@ -264,7 +264,7 @@ class Tensor:
     
     
     def __matmul__(self, other):
-        return functions.tensordot(self, other, axes=1)
+        return functions.matmul(self, other)
     
     
 class Parameter(Tensor):

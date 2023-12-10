@@ -35,6 +35,10 @@ def tensordot(a, b, axes: int):
     return operations.TensorContraction([a, b], axes=axes).forward()
 
 
+def matmul(a, b):
+    return operations.MatrixMultiply([a, b]).forward()
+
+
 def bmm(a, b):
     """Multiplies two tensors of shape (A, B, C, ..., M, N) and (A, B, C, ..., N, P).
     

@@ -230,6 +230,30 @@ class TensorSwapaxes(Operation):
         return (input_grad,)
     
     
+class MatrixMultiply(Operation):
+    """Broadcasted matrix multiplication."""
+    
+    def __init__(self,
+                 inputs: List[Tensor]):
+        super().__init__(inputs)
+        
+        
+    def _forward(self):
+        assert len(self.inputs) == 2
+        (a, b) = self.inputs
+
+        return tensor.Tensor(a.data @ b.data)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        (a, b) = self.inputs
+        input_grad_a = output_grad @ b.data.swapaxes(-1, -2)
+        input_grad_b = a.data.swapaxes(-1, -2) @ output_grad
+        
+        return (input_grad_a, input_grad_b)
+    
+    
 class BatchMatrixMultiply(Operation):
     """Multiplies two tensors of shape (A, B, C, ..., M, N) and (A, B, C, ..., N, P).
 
