@@ -22,7 +22,6 @@ from .tensorops import (
     TensorMaskedFill,
     TensorRepeatInterleave,
     BatchMatrixMultiply,
-    MatrixMultiply,
     TensorClone,
     TensorFlip,
 )

@@ -38,6 +38,7 @@ class Tensor:
         self.grad: np.array = None
         self.operation: Operation = None  # Operation edge whose result is this Tensor node
         self.requires_grad = False
+        self._retain_grad = False
         
     # ---------------
     # Backpropagation
@@ -62,12 +63,10 @@ class Tensor:
         
         def topological_sort(node):
             seen.add(node)
-
             if node.operation is not None:
                 for child_node in node.operation.inputs:
                     if child_node.is_in_computation_graph() and child_node not in seen:
                         topological_sort(child_node)
-            
             topologically_sorted_graph.append(node)
 
         seen = set()
@@ -86,7 +85,8 @@ class Tensor:
 
             assert not node.requires_grad
             input_grads = node.operation.backward(node.grad)
-            node.grad = None  # Free memory
+            if not node._retain_grad:
+                node.grad = None  # Free memory
 
             for (child_node, input_grad) in zip(node.operation.inputs, input_grads):
                 if child_node.is_in_computation_graph():
@@ -100,6 +100,11 @@ class Tensor:
     # ---------------------
     # General functionality
     # ---------------------
+
+    def retain_grad(self):
+        """Allows the tensor to have its grad populated during backward()."""
+        self._retain_grad = True
+
     
     @property
     def shape(self):
@@ -264,7 +269,7 @@ class Tensor:
     
     
     def __matmul__(self, other):
-        return functions.matmul(self, other)
+        return functions.tensordot(self, other, axes=1)
     
     
 class Parameter(Tensor):
