@@ -315,4 +315,30 @@ class Parameter(Tensor):
             return self.data.__repr__().replace('array', 'Parameter')
         else:
             return f'Parameter({self.shape})-shape {str(self.data.dtype)} array)'
-        
+
+
+def rand(*size: Tuple[int]):
+    if type(size[0]) in [tuple, list]:
+        assert len(size) == 1
+        size = size[0]
+    return Tensor(np.random.random(size=size))
+
+
+def randn(*size: Tuple[int]):
+    if type(size[0]) in [tuple, list]:
+        assert len(size) == 1
+        size = size[0]
+    return Tensor(np.random.normal(size=size))
+
+
+def zeros_like(tensor: Tensor):
+    return Tensor(np.zeros(tensor.shape))
+
+
+def ones_like(tensor: Tensor):
+    return Tensor(np.ones(tensor.shape))
+
+
+def empty_like(tensor: Tensor):
+    return Tensor(np.empty(tensor.shape))
+    

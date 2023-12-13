@@ -2,7 +2,15 @@ import os
 # Workaround for OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'  
 
-from .tensor import Tensor, Parameter
+from .tensor import (
+    Tensor,
+    Parameter,
+    rand,
+    randn,
+    zeros_like,
+    ones_like,
+    empty_like,
+)
 from .dataloader import DataLoader
 from .tensorboard import Dashboard
 
