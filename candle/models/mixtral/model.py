@@ -210,7 +210,7 @@ class MOE(Module):
             mask = (selected_experts == i)
             output[mask] = expert(x_repeat[mask]) * weights[mask].unsqueeze(1)
         
-        output = output.sum(axis=2)  # Aggregate along n_experts axis
+        output = output.sum(axis=2)  # Aggregate along `n_exp_per_tok` axis
         
         return output
     
