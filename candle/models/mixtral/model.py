@@ -1,7 +1,7 @@
-"""Llama implementation.
+"""Mixtral mixture of experts implementation.
 
 References:
-[1] Meta's LLaMA 2: https://github.com/facebookresearch/llama/blob/main/llama/
+[1] Mistral implementation: https://github.com/mistralai/mistral-src/blob/main/mistral/
 
 """
 
@@ -14,12 +14,14 @@ from candle.tensor import Tensor
 from candle.layers.module import Module
 
 
-class Llama(Module):
+class Mixtral(Module):
     
     def __init__(self,
                  n_layers: int,
                  n_heads: int,
                  embed_dim: int,
+                 n_experts: int,
+                 n_experts_per_tok: int,
                  vocab_size: int,
                  block_size: int,
                  n_kv_heads: int = None,
@@ -33,7 +35,7 @@ class Llama(Module):
             
         if ffn_hidden_dim is None:
             # Conventionally, ffn_hidden_dim = 4 * embed_dim
-            # Since LLaMA uses the SwiGLU "activation", ffn_hidden_dim is set to 4 * embed_dim * 2/3
+            # Since Mixtral uses the SwiGLU "activation", ffn_hidden_dim is set to 4 * embed_dim * 2/3
             # to keep the number of parameters the same.
             ffn_hidden_dim = int(4 * embed_dim  * (2 / 3))
 
@@ -54,12 +56,13 @@ class Llama(Module):
         self.word_embeddings = candle.Embedding(vocab_size, embed_dim)
         self.decoder_blocks = candle.ParameterList([
             DecoderBlock(embed_dim, ffn_hidden_dim, n_heads, n_kv_heads,
+                         n_experts, n_experts_per_tok,
                          block_size, rotary_base, norm_eps)
             for _ in range(n_layers)
         ])
         self.rms_norm = candle.RMSNorm(axis=2, eps=norm_eps)
-        
-        # Unlike GPT, LLaMA output layer is not tied to word embeddings
+                
+        # Unlike GPT, Mixtral/LLaMA output layer is not tied to word embeddings
         self.output_projection = candle.Linear(embed_dim, vocab_size, bias=False)
         
         # Precompute rotation matrix
@@ -98,44 +101,21 @@ class Llama(Module):
     
     def from_pretrained(model_name: str,
                         model_dir: str):
-        """Returns LLaMA2 with pretrained weights.
+        """Returns Mixtral with pretrained weights.
 
         Parameters
         -----------
         model_name
-            One of ['7b', '7b-chat', '13b', '13b-chat', '70b', '70b-chat'].
-        model_dir
-            Directory with LLaMA weights. To download, go to https://ai.meta.com/llama/.
-            E.g. if model_dir = '/path/to/llama', the directory should look like this:
-
-                /path/to/llama
-                ├── tokenizer.model
-                ├── tokenizer_checklist.chk
-                ├── 7b
-                │   ├── checklist.chk
-                │   ├── consolidated.00.pth
-                │   └── params.json
-                ├── 7b-chat
-                │   ├── checklist.chk
-                │   ├── consolidated.00.pth
-                │   └── params.json
-                ├── 13b
-                │   ├── checklist.chk
-                │   ├── consolidated.00.pth
-                │   ├── consolidated.01.pth
-                │   └── params.json
-                ├── 13b-chat
-                │   ├─ ...
-                │   ...
+            One of ['todo']
 
         Returns
         -------
         model
-            LLaMA2 instance with Meta's weights initialized.
+            Mixtral instance with Mistral's weights initialized.
 
         """
-        from .loadpretrained import load_pretrained_llama
-        return load_pretrained_llama(model_name, model_dir)
+        from .loadpretrained import load_pretrained_mixtral
+        return load_pretrained_mixtral(model_name)
     
     
     def clear_kv_cache(self):
@@ -156,6 +136,8 @@ class DecoderBlock(Module):
                  ffn_hidden_dim: int,
                  n_heads: int,
                  n_kv_heads: int,
+                 n_experts: int,
+                 n_experts_per_tok: int,
                  block_size: int,
                  rotary_base: int,
                  norm_eps: float):
@@ -168,7 +150,7 @@ class DecoderBlock(Module):
                                                        max_seqlen=block_size,
                                                        bias=False)
         self.norm2 = candle.RMSNorm(axis=2, eps=norm_eps)
-        self.ffn = FeedForwardBlock(input_dim=embed_dim, ffn_hidden_dim=ffn_hidden_dim)
+        self.moe = MOE(embed_dim, ffn_hidden_dim, n_experts, n_experts_per_tok)
 
         
     def forward(self,
@@ -177,7 +159,7 @@ class DecoderBlock(Module):
                 rotation_matr: Tuple[Tensor, Tensor] = None):
         # x: Tensor with shape (batch, seqlen, embed_dim)
         x = x + self.self_attn(self.norm1(x), use_kv_cache, rotation_matr)
-        x = x + self.ffn(self.norm2(x))
+        x = x + self.moe(self.norm2(x))
 
         return x
 
@@ -195,6 +177,42 @@ class DecoderBlock(Module):
                                                use_kv_cache, rotation_matr)
 
         return attn_output
+
+
+class MOE(Module):
+    """Mixture of Experts layer."""
+    
+    def __init__(self,
+                 input_dim: int,
+                 ffn_hidden_dim: int,
+                 n_experts: int,
+                 n_experts_per_tok: int):
+        super().__init__()
+
+        self.experts = candle.ParameterList([
+            FeedForwardBlock(input_dim, ffn_hidden_dim) for _ in range(n_experts)
+        ])
+        self.gate = candle.Linear(input_dim, n_experts, bias=False)
+        self.n_experts_per_tok = n_experts_per_tok
+
+
+    def forward(self, x):
+        logits = self.gate(x)
+        
+        # weights, selected experts: (batch, seqlen, n_exp_per_tok)
+        (weights, selected_experts) = F.topk(logits, self.n_experts_per_tok)
+        weights = F.softmax(weights)
+        
+        # x_repeat: (batch, seqlen, n_exp_per_tok, input_dim)
+        x_repeat = x.unsqueeze(2).repeat_interleave(self.n_experts_per_tok, axis=2)
+        output = candle.empty_like(x_repeat)
+        for (i, expert) in enumerate(self.experts):
+            mask = (selected_experts == i)
+            output[mask] = expert(x_repeat[mask]) * weights[mask].unsqueeze(1)
+        
+        output = output.sum(axis=2)  # Aggregate along n_experts axis
+        
+        return output
     
     
 class FeedForwardBlock(Module):

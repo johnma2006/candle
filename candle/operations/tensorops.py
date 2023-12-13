@@ -185,7 +185,9 @@ class TensorSlice(Operation):
         
 
     def _is_valid_slice(self, s):
-        """Slice is valid if int, slice, or boolean mask."""
+        """Slice is valid if None, int, slice, or boolean mask."""
+        if s is None:
+            return True
         if type(s) in [int, slice]:
             return True
         if np.array(s).dtype == bool:
