@@ -218,8 +218,26 @@ class Tensor:
     
     def __getitem__(self, key):
         return functions.tensorslice(self, key)
-    
-    
+
+
+    def __setitem__(self, key, value):
+        # Modify computation graph from other->self to other->old_self->new_self
+        # TODO: implement _version, disallow grads + inplace modification
+        #       also, this implementation is a bit hacky feeling.
+        new_self = functions.tensorset(self, key, value)
+
+        old_self = Tensor(self.data)
+        old_self._retain_grad = self._retain_grad
+        if self.operation is not None:
+            old_self.operation = self.operation
+            old_self.operation.output = old_self
+        
+        self.data = new_self.data
+        self.operation = new_self.operation
+        self.operation.output = self
+        self.operation.inputs[0] = old_self
+
+
     def __add__(self, other):
         return functions.add(self, other)
     

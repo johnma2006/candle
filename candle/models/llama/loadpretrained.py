@@ -33,20 +33,20 @@ def load_pretrained_llama(model_name: str,
         /path/to/llama
         ├── tokenizer.model
         ├── tokenizer_checklist.chk
-        ├── 7b
+        ├── llama-2-7b
         │   ├── checklist.chk
         │   ├── consolidated.00.pth
         │   └── params.json
-        ├── 7b-chat
+        ├── llama-2-7b-chat
         │   ├── checklist.chk
         │   ├── consolidated.00.pth
         │   └── params.json
-        ├── 13b
+        ├── llama-2-13b
         │   ├── checklist.chk
         │   ├── consolidated.00.pth
         │   ├── consolidated.01.pth
         │   └── params.json
-        ├── 13b-chat
+        ├── llama-2-13b-chat
         │   ...
         ...
 

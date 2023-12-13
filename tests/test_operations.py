@@ -206,43 +206,177 @@ class TestOperations(unittest.TestCase):
                              kwargs={'axis': None, 'keepdims': False})
 
         
-    def test_tensor_slice_and_reshape(self):
+    def test_tensor_slice(self):
         numerical_grad_check(operation_class=TensorSlice,
-                             test_inputs=[Parameter(np.random.normal(size=(7, 11, 13, 17, 1, 1)))],
-                             kwargs={'key': ([0, 1, 2, 3], 0, slice(None))})
-
+                                     test_inputs=[Parameter(np.random.normal(size=(7, 11, 13, 17, 1, 1)))],
+                                     kwargs={'key': ([0, 1, 2, 3], 0, slice(None))})
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 11, 13, 17, 1, 1)))],
                              kwargs={'key': ([[0, 1, 2, 3]], 0, slice(None))})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': (slice(None, 3, None), 1, 2, slice(None, None, None))})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': [0, 1, 2, 5]})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': [[0, 1, 2, 5]]})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': [[0, 1, 2, 5], [6, 2, 3, 4]]})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': ([[0, 1, 2, 3]], slice(None, 3, None), 1, 2, slice(None, None, None))})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': [[0, 1, 2, 5], [6, 2, 3, 4]]})
-
+        
         numerical_grad_check(operation_class=TensorSlice,
                              test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1)))],
                              kwargs={'key': ([[0, 1, 2, 5], [6, 2, 3, 4]], slice(2, 3, 1), slice(None))})
+        
+        # Boolean slicing
+        
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5)))],
+                             kwargs={'key': ([[True, False], [True, True], [False, True]], slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5)))],
+                             kwargs={'key': (np.array([[True, False], [True, True], [False, True]]), slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5)))],
+                             kwargs={'key': (np.array([True, False, False]), slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 11, 17, 1, 1)))],
+                             kwargs={'key': ([True, False, True], 1, slice(None))})
 
+
+    def test_tensor_set_slice(self):
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 11, 13, 1, 1))),
+                                          Parameter(np.random.normal(size=(7, 11, 13, 1, 1)))],
+                             kwargs={'key': (slice(None))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 11, 13, 17, 1, 1))),
+                                          Parameter(np.random.normal(size=(1, 4, 13, 17, 1, 1)))],
+                             kwargs={'key': ([[0, 1, 2, 3]], 0, slice(None))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(3, 5, 1, 1, 1)))],
+                             kwargs={'key': (slice(None, 3, None), 1, 2, slice(None, None, None))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(4, 2, 3, 5, 1, 1, 1)))],
+                             kwargs={'key': [0, 1, 2, 5]})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(1, 4, 2, 3, 5, 1, 1, 1)))],
+                             kwargs={'key': [[0, 1, 2, 5]]})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(2, 4, 2, 3, 5, 1, 1, 1)))],
+                             kwargs={'key': [[0, 1, 2, 5], [6, 2, 3, 4]]})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(1, 4, 2, 1, 1, 1)))],
+                             kwargs={'key': ([[0, 1, 2, 3]], slice(None, 3, None), 1, 2, slice(None, None, None))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 2, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(2, 4, 2, 3, 5, 1, 1, 1)))],
+                             kwargs={'key': [[0, 1, 2, 5], [6, 2, 3, 4]]})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(7, 5, 3, 5, 1, 1, 1))),
+                                          Parameter(np.random.normal(size=(2, 4, 2, 3, 5, 1, 1, 1)))],
+                             kwargs={'key': ([[0, 1, 2, 5], [6, 2, 3, 4]], slice(2, 4, 1), slice(None))})
+        
+        # Boolean slicing
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5))),
+                                          Parameter(np.random.normal(size=(4, 2)))],
+                             kwargs={'key': ([[True, False], [True, True], [False, True]], slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5))),
+                                          Parameter(np.random.normal(size=(4, 2)))],
+                             kwargs={'key': (np.array([[True, False], [True, True], [False, True]]), slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 2, 5))),
+                                          Parameter(np.random.normal(size=(1, 1, 5)))],
+                             kwargs={'key': (np.array([True, False, False]), slice(1, 3, 1))})
+        
+        numerical_grad_check(operation_class=TensorSetSlice,
+                             test_inputs=[Parameter(np.random.normal(size=(3, 11, 17, 1, 1))),
+                                          Parameter(np.random.normal(size=(2, 17, 1, 1)))],
+                             kwargs={'key': ([True, False, True], 1, slice(None))})
+
+
+    def test_slice_grad(self):
+        x = candle.Parameter(np.random.normal(size=(2, 3, 5)))
+        y = x ** 2
+        y.retain_grad()
+        z = candle.Parameter(np.random.normal(size=(2, 4)))
+        y[:, 0, 1:] = z
+        (y ** 2).sum().backward()
+        
+        assert np.all((z.grad != 0) == np.array([[True, True, True, True], 
+                                                 [True, True, True, True]]))
+        
+        assert np.all((x.grad != 0) == np.array([[[ True, False, False, False, False],
+                                                  [ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True]],
+                                        
+                                                 [[ True, False, False, False, False],
+                                                  [ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True]]]))
+        
+        assert np.all((y.grad != 0) == np.array([[[ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True]],
+                                        
+                                                 [[ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True],
+                                                  [ True,  True,  True,  True,  True]]]))
+    
+    def test_overlapping_slice(self):
+        x = candle.Parameter([0, 1, 2, 3, 4, 5])
+        y = x ** 2
+        a = candle.Parameter([1, 2])
+        b = candle.Parameter([1, 2, 3, 4])
+        c = candle.Parameter([2, 3, 4])
+        
+        y[2:4] = a
+        y[1:5] = b
+        y[3:6] = c
+        
+        y.sum().backward()
+        
+        assert np.all(a.grad == np.array([0, 0]))
+        assert np.all(b.grad == np.array([1, 1, 0, 0]))
+        assert np.all(c.grad == np.array([1, 1, 1]))
+
+    
+    def test_tensor_reshape(self):
         numerical_grad_check(operation_class=TensorReshape,
                              test_inputs=[Parameter(np.random.normal(size=(3, 4, 5, 7, 11)))],
                              kwargs={'new_shape': (-1,)})

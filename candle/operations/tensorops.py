@@ -151,20 +151,17 @@ class TensorSlice(Operation):
             key = (key,)
             
         # Numpy slicing is quite involved and it's hard to cover every edge case
-        # For now, we can guarantee backprop supports slicing with ints, slices, and a single leading 2D list,
-        # e.g. x[[[0, 1, 2], [5, 2, 3]], 2, :, 2:5:-1]. This covers most practical cases.
+        # For now, we guarantee backprop supports slicing with ints, slices, boolean mask,
+        # and a single leading 2D list, e.g. x[[[0, 1, 2], [5, 2, 3]], 2, :, 2:5:-1].
+        # This covers most practical cases.
         for key_i in key[1:]:
-            assert type(key_i) in [int, slice]
-        
-        if type(key[0]) is list:
-            self.list_ndim = np.array(key[0]).ndim  # Check that leading list is at most 2D
-        else:
-            self.list_ndim = 0
-        assert self.list_ndim <= 2
-        
+            assert self._is_valid_slice(key_i)
+
         self.key = key
-        
-        
+        self.key0_ndim = self._1d_or_2d_int_list(key[0])
+        assert self._is_valid_slice(key[0]) or self.key0_ndim != -1 
+
+    
     def _forward(self):
         assert len(self.inputs) == 1
         return tensor.Tensor(self.inputs[0].data[self.key])
@@ -174,14 +171,59 @@ class TensorSlice(Operation):
                   output_grad: np.array):
         input_grad = np.zeros(self.inputs[0].shape, dtype=tensor.Tensor.DEFAULT_DTYPE)
 
-        if self.list_ndim <= 1:
+        if self.key0_ndim == -1:
             input_grad[self.key] = output_grad
 
-        else:  # list_ndim == 2
+        else:
             for (i, subarray) in enumerate(self.key[0]):
                 input_grad[(subarray,) + self.key[1:]] += output_grad[i]
 
         return (input_grad,)
+        
+
+    def _is_valid_slice(self, s):
+        """Slice is valid if int, slice, or boolean mask."""
+        if type(s) in [int, slice]:
+            return True
+        if np.array(s).dtype == bool:
+            return True
+        return False
+
+    
+    def _1d_or_2d_int_list(self, s):
+        """Returns 2 if 2d int list, 1 if 1d int list, -1 if neither."""
+        s = np.array(s)
+        if s.dtype == int and s.ndim in [1, 2]:
+            return s.ndim
+        else:
+            return -1
+
+
+class TensorSetSlice(Operation):
+    """output = inputs[0]; output[key] = inputs[1]; f(inputs) = output"""
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 key):
+        super().__init__(inputs)
+        if type(key) is not tuple:
+            key = (key,)
+        self.key = key
+            
+    
+    def _forward(self):
+        (a, b) = [i.data for i in self.inputs]
+        a = a.copy()  # Todo: make this operation in-place
+        a[self.key] = b
+        return tensor.Tensor(a)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        input_grad_a = output_grad.copy()
+        input_grad_a[self.key] = 0
+        input_grad_b = output_grad[self.key]
+        return (input_grad_a, input_grad_b)
     
     
 class TensorReshape(Operation):

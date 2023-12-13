@@ -50,6 +50,10 @@ def tensorslice(a, key):
     return operations.TensorSlice([a], key=key).forward()
 
 
+def tensorset(a, key, value):
+    return operations.TensorSetSlice([a, value], key=key).forward()
+
+
 def clone(a):
     return operations.TensorClone([a]).forward()
 
