@@ -25,6 +25,7 @@ from .tensorops import (
     BatchMatrixMultiply,
     TensorClone,
     TensorFlip,
+    TopKOperation,
 )
 from .activations import (
     ReLUActivation,

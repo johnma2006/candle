@@ -149,6 +149,9 @@ class TensorSlice(Operation):
         super().__init__(inputs)
         if type(key) is not tuple:
             key = (key,)
+
+        # If any elements in key are Tensor, convert to np.array
+        key = tuple(k.data if isinstance(k, tensor.Tensor) else k for k in key)
             
         # Numpy slicing is quite involved and it's hard to cover every edge case
         # For now, we guarantee backprop supports slicing with ints, slices, boolean mask,
@@ -208,6 +211,10 @@ class TensorSetSlice(Operation):
         super().__init__(inputs)
         if type(key) is not tuple:
             key = (key,)
+
+        # If any elements in key are Tensor, convert to np.array
+        key = tuple(k.data if isinstance(k, tensor.Tensor) else k for k in key)
+        
         self.key = key
             
     
@@ -455,3 +462,58 @@ class TensorFlip(Operation):
     def _backward(self,
                   output_grad: np.array):
         return (np.flip(output_grad, axis=self.axis),)
+
+
+class TopKOperation(Operation):
+    """(weights, indices) = topk(inputs[0], k, axis)"""
+    
+    def __init__(self,
+                 inputs: List[Tensor],
+                 k: int,
+                 axis: int = -1):
+        super().__init__(inputs)
+        assert k >= 1
+        self.k = k
+        self.axis = axis
+        self._indices = None  # Populated during forward()
+
+    
+    def _forward(self):
+        assert len(self.inputs) == 1
+        x = self.inputs[0].data
+        x = x.swapaxes(self.axis, -1)
+        
+        argsort = np.argsort(-x, axis=-1)
+        indices = argsort.take(range(self.k), axis=-1)
+        
+        onehot_bool = np.eye(x.shape[-1]).astype(bool)
+        
+        weights = []
+        for i in range(self.k):
+            idx = indices.take(i, axis=-1)
+            bool_mask = onehot_bool[idx]
+            top_i = x[bool_mask].reshape(idx.shape)
+            weights.append(np.expand_dims(top_i, axis=-1))
+        
+        weights = np.concatenate(weights, axis=-1).swapaxes(-1, self.axis)
+        
+        self._indices = tensor.Tensor(indices.swapaxes(-1, self.axis)).astype(int)
+        
+        return tensor.Tensor(weights)
+        
+            
+    def _backward(self,
+                  output_grad: np.array):
+        input_grad = np.zeros_like(self.inputs[0].data)
+        input_grad = np.moveaxis(input_grad, self.axis, -1)
+        output_grad = np.moveaxis(output_grad, self.axis, 0)
+        indices = np.moveaxis(self._indices.data, self.axis, 0)
+        
+        onehot_bool = np.eye(input_grad.shape[-1]).astype(bool)
+        for i in range(self.k):
+            bool_mask = onehot_bool[indices[i]]
+            input_grad[bool_mask] = output_grad[i].flatten()
+        
+        input_grad = np.moveaxis(input_grad, -1, self.axis)
+        
+        return (input_grad,)

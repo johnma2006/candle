@@ -11,9 +11,6 @@ from .tensor import (
     ones_like,
     empty_like,
 )
-from .dataloader import DataLoader
-from .tensorboard import Dashboard
-
 from .layers import (
     Module,
     ParameterList,
@@ -31,6 +28,8 @@ from .layers import (
     MaxPool2d,
     AvgPool2d,
 )
+from .dataloader import DataLoader
+from .tensorboard import Dashboard
 
 from . import optimizer
 from . import scheduler

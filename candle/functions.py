@@ -184,4 +184,32 @@ def masked_fill(a,
 
     """
     return operations.TensorMaskedFill([a], mask=mask, fill_value=fill_value).forward()
+
+
+def topk(a,
+         k: int,
+         axis: int = -1):
+    """Returns the largest k values along a given axis.
+
+    Parameters
+    ----------
+    a
+        Input tensor
+    k
+        Grabs top `k` elements
+    axis
+        Axis to sort.
+
+    Returns
+    -------
+    (values, indices)
+        Values and indices of the largest k elements of the input in the given axis.
+
+    """
+    op = operations.TopKOperation([a], k, axis)
+    values = op.forward()
+    indices = op._indices
+    
+    return (values, indices)
+
             
