@@ -74,6 +74,10 @@ def concat(tensors, axis: int = 0):
     return operations.TensorConcatenation(tensors, axis).forward()
 
 
+def unsqueeze(a, axis: int):
+    return a[(slice(None),) * axis + (None,)]
+
+
 def repeat_interleave(a, repeats: int, axis: int):
     return operations.TensorRepeatInterleave([a], repeats, axis).forward()
 

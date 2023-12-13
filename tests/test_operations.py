@@ -245,6 +245,14 @@ class TestOperations(unittest.TestCase):
                              test_inputs=[Parameter(randn(7, 2, 3, 5, 1, 1, 1))],
                              kwargs={'key': ([[0, 1, 2, 5], [6, 2, 3, 4]], slice(2, 3, 1), slice(None))})
         
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(randn(7, 2, 3, 5, 1, 1, 1))],
+                             kwargs={'key': (None, slice(None))})
+        
+        numerical_grad_check(operation_class=TensorSlice,
+                             test_inputs=[Parameter(randn(7, 2, 3, 5, 1, 1, 1))],
+                             kwargs={'key': (None, None, slice(2, 4, 1), None, slice(None))})
+        
         # Boolean slicing
         
         numerical_grad_check(operation_class=TensorSlice,
@@ -368,11 +376,11 @@ class TestOperations(unittest.TestCase):
                                                   [ True,  True,  True,  True,  True]]]))
     
     def test_overlapping_slice(self):
-        x = candle.Parameter([0, 1, 2, 3, 4, 5])
+        x = Parameter([0, 1, 2, 3, 4, 5])
         y = x ** 2
-        a = candle.Parameter([1, 2])
-        b = candle.Parameter([1, 2, 3, 4])
-        c = candle.Parameter([2, 3, 4])
+        a = Parameter([1, 2])
+        b = Parameter([1, 2, 3, 4])
+        c = Parameter([2, 3, 4])
         
         y[2:4] = a
         y[1:5] = b
@@ -391,7 +399,7 @@ class TestOperations(unittest.TestCase):
         y.retain_grad()
         z = Parameter([1, 2, 3])
         
-        mask = candle.Tensor([[True, True, False], [False, True, False]]).astype(bool)
+        mask = Tensor([[True, True, False], [False, True, False]]).astype(bool)
         y[mask] = z
         y.sum().backward()
         assert np.all(y[mask].data == np.array([1, 2, 3]))

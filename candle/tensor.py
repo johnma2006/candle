@@ -197,6 +197,11 @@ class Tensor:
     def reshape(self,
                 new_shape: Tuple[int]):
         return functions.reshape(self, new_shape=new_shape)
+
+    
+    def unsqueeze(self,
+                  axis: int):
+        return functions.unsqueeze(self, axis=axis)
     
     
     def flatten(self):
@@ -288,7 +293,13 @@ class Tensor:
     
     def __matmul__(self, other):
         return functions.tensordot(self, other, axes=1)
-    
+
+
+    def __eq__(self, other):
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return Tensor(self.data == other.data).astype(bool)
+            
     
 class Parameter(Tensor):
     """Wrapper around Tensors that indicates that it should be updated during backprop."""
