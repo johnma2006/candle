@@ -13,12 +13,11 @@ Deep learning library, implemented from scratch in numpy for fun.
 ## Demos & Experiments
 
 #### Language Modelling
-* Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned%20Mixtral).ipynb)
+* Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned%20Mixtral).ipynb) [(model)](candle/models/mixtral/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
-* Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20LLaMA%20(fine-tuned%20LLaMA).ipynb)
+* Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20LLaMA%20(fine-tuned%20LLaMA).ipynb) [(model)](candle/models/llama/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" /><sup>(LLaMA 13B fine-tuned, video sped up 30x)</sup></p>
-* Chat with Fleecy 🐑 (base LLaMA) [(notebook)](experiments/nlp_experiments/3.1%20Chat%20with%20Fleecy%20(base%20LLaMA).ipynb)
-* Chat with Taylor ⚪ (GPT2) [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20Taylor%20(GPT2).ipynb)
+* Chat with Taylor ⚪ (GPT2) [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20Taylor%20(GPT2).ipynb) [(model)](candle/models/llama/model.py) 
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search, top-p, top-k sampling quality [(notebook)](experiments/nlp_experiments/1.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
