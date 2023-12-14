@@ -62,10 +62,10 @@ class Tensor:
                                'activations have already been freed.')
         
         def topological_sort(node):
-            seen.add(node)
+            seen.add(id(node))
             if node.operation is not None:
                 for child_node in node.operation.inputs:
-                    if child_node.is_in_computation_graph() and child_node not in seen:
+                    if child_node.is_in_computation_graph() and id(child_node) not in seen:
                         topological_sort(child_node)
             topologically_sorted_graph.append(node)
 

@@ -305,6 +305,11 @@ def beam_search_generation(model,
             next_index = beam_index // indices.shape[0]
             indices_i = beam_index % indices.shape[0]
 
+            print(indices)
+            print(type(indices_i))
+            print(repr(indices_i))
+            print(indices_i)
+            print(indices_i.shape)
             new_indices[i] = np.append(indices[indices_i].data, next_index)
             reindex_kv_indices.append(indices_i)
         indices = Tensor(new_indices)
