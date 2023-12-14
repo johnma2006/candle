@@ -95,7 +95,7 @@ class Llama(Module):
         
         return logits
     
-    
+    @staticmethod
     def from_pretrained(model_name: str,
                         model_dir: str):
         """Returns LLaMA2 with pretrained weights.

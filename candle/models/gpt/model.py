@@ -75,7 +75,8 @@ class GPT(Module):
         
         return x @ self.output_projection.T
     
-    
+
+    @staticmethod
     def from_pretrained(model_name: str):
         """Returns GPT2 with pretrained weights.
 

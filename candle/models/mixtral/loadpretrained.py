@@ -1,92 +1,97 @@
-"""Functionality to load Mixtral's pretrained weights"""
-
-import json
-from pathlib import Path
+import candle
 
 
-MIXTRAL_CONFIG_BY_SIZE = {
-    'small': dict(n_layers=32, n_heads=32, n_kv_heads=None, embed_dim=4096, vocab_size=32000, block_size=2048),
-}
-
-
-def load_pretrained_mixtral(model_name: str,
-                            model_dir: str):
+def load_pretrained_mixtral(model_name: str):
     """Loads a pre-trained Mixtral model with Mistral's pre-trained weights.
+    
+    Note: currently the implementation is SUPER memory inefficient requiring peak 2x the model param size.
+    Todo is to implement load_state_dicts to optimize speed/memory.
 
     Parameters
     ----------
     model_name : str
         Name of the pre-trained model. Valid options are:
-        * '70b-chat'
-
+        * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+        * 'mistralai/Mixtral-8x7B-v0.1'
+        
     Returns
     -------
     model : Mixtral
-        A Mixtralmodel instance with Mistral's pre-trained weights loaded.
+        A Mixtral model instance with Mistral's pre-trained weights loaded.
 
     """
-    from .model import GPT
+    from .model import Mixtral
     import transformers
     
-    model_names = ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl']
+    model_names = ['mistralai/Mixtral-8x7B-Instruct-v0.1', 'mistralai/Mixtral-8x7B-v0.1']
     if model_name not in model_names:
-        raise ValueError(f'Invalid model name \'{model_names}\', must be one of {model_names}.')
-
-    model_hf = transformers.GPT2LMHeadModel.from_pretrained(model_name)
-
+        raise ValueError(f'Invalid model name \'{model_names}\' must be one of {model_names}.')
+    
+    model_hf = transformers.AutoModelForCausalLM.from_pretrained(model_name)
+    
     config = {
-        'n_layers': len(model_hf.transformer.h),
-        'n_heads': model_hf.transformer.h[0].attn.num_heads,
-        'embed_dim': model_hf.transformer.h[0].attn.embed_dim,
-        'vocab_size': model_hf.lm_head.out_features,
-        'block_size': model_hf.transformer.wpe.num_embeddings,
-        'dropout_p': model_hf.transformer.drop.p
+        'n_layers': len(model_hf.model.layers),
+        'n_heads': model_hf.model.layers[0].self_attn.num_heads,
+        'embed_dim': model_hf.model.layers[0].hidden_size,
+        'n_experts': model_hf.num_experts,
+        'n_experts_per_tok': model_hf.num_experts_per_tok,
+        'vocab_size': model_hf.vocab_size,
+        'block_size': model_hf.model.layers[0].self_attn.max_position_embeddings,
+        'n_kv_heads': model_hf.model.layers[0].self_attn.num_key_value_heads,
+        'ffn_hidden_dim': model_hf.model.layers[0].block_sparse_moe.ffn_dim,
+        'rotary_base': model_hf.model.layers[0].self_attn.rope_theta,
+        'norm_eps': model_hf.model.norm.variance_epsilon,
     }
-
-    model = GPT(**config)
-    _ = model.summary((1, 32))  # To initialize deferred params
-
-    # -----------------------
-    # Transfer OpenAI weights
-    # -----------------------
-
-    def openai_param(name):
-        openai_parameters = dict(model_hf.named_parameters())
-        return openai_parameters[f'transformer.{name}'].detach().numpy()
-
+    
+    model = Mixtral(**config)
+    _ = model.summary((1, 2))  # To initialize deferred params
     params = model.parameters()
-
-    # Transfer embedding weights
-
-    params['output_projection'].data[:] = openai_param('wte.weight')  # tied to word_embeddings.embeddings
-    params['position_embeddings.embeddings'].data[:] = openai_param('wpe.weight')
-
-    # Transfer decoder weights
-
-    for i in range(len(model.decoder_blocks)):
-        attn_weight = openai_param(f'h.{i}.attn.c_attn.weight').reshape((-1, 3, config['embed_dim']))
-        attn_bias = openai_param(f'h.{i}.attn.c_attn.bias').reshape((3, config['embed_dim']))
-        for (j, qkv) in enumerate(['q', 'k', 'v']):
-            params[f'decoder_blocks.{i}.attn.W_{qkv}.W'].data[:] = attn_weight[:, j]
-            params[f'decoder_blocks.{i}.attn.W_{qkv}.b'].data[:] = attn_bias[j]
-            
-        params[f'decoder_blocks.{i}.attn.W_o.W'].data[:] = openai_param(f'h.{i}.attn.c_proj.weight')
-        params[f'decoder_blocks.{i}.attn.W_o.b'].data[:] = openai_param(f'h.{i}.attn.c_proj.bias')
-
-        params[f'decoder_blocks.{i}.ffn.linear1.W'].data[:] = openai_param(f'h.{i}.mlp.c_fc.weight')
-        params[f'decoder_blocks.{i}.ffn.linear1.b'].data[:] = openai_param(f'h.{i}.mlp.c_fc.bias')
-        params[f'decoder_blocks.{i}.ffn.linear2.W'].data[:] = openai_param(f'h.{i}.mlp.c_proj.weight')
-        params[f'decoder_blocks.{i}.ffn.linear2.b'].data[:] = openai_param(f'h.{i}.mlp.c_proj.bias')
-
-        params[f'decoder_blocks.{i}.ln1.W'].data[0, 0, :] = openai_param(f'h.{i}.ln_1.weight')
-        params[f'decoder_blocks.{i}.ln1.b'].data[0, 0, :] = openai_param(f'h.{i}.ln_1.bias')
-        params[f'decoder_blocks.{i}.ln2.W'].data[0, 0, :] = openai_param(f'h.{i}.ln_2.weight')
-        params[f'decoder_blocks.{i}.ln2.b'].data[0, 0, :] = openai_param(f'h.{i}.ln_2.bias')
-
-    # Transfer final layer norm weights
-
-    params['layer_norm.W'].data[0, 0, :] = openai_param('ln_f.weight')
-    params['layer_norm.b'].data[0, 0, :] = openai_param('ln_f.bias')
-
+    
+    # ------------------------
+    # Transfer Mistral weights
+    # ------------------------
+    
+    mistral_params = dict(model_hf.named_parameters())
+    del model_hf
+    
+    def mistral_param(name):
+        param = mistral_params.pop(name).detach().numpy()
+        if param.dtype != candle.Tensor.DEFAULT_DTYPE:
+            param = param.astype(candle.Tensor.DEFAULT_DTYPE)
+        return param
+    
+    def permute_query_key_projs(w, n_heads, kv_dim, embed_dim):
+        """HuggingFace implemention of rotary attention uses the bisection impl instead of the interleaved impl.
+        As a result, we need to do some permutations of the query/key projections to get things back to 'normal'."""
+        per_head_dim = kv_dim // n_heads
+        return w.reshape(n_heads, 2, per_head_dim // 2, embed_dim).swapaxes(1, 2).reshape(kv_dim, embed_dim)
+    
+    kv_dim = config['embed_dim'] // config['n_heads'] * config['n_kv_heads']
+    
+    params['word_embeddings.embeddings'].data[:] = mistral_param('model.embed_tokens.weight')
+    params['rms_norm.W'].data[:] = mistral_param('model.norm.weight')
+    params['output_projection.W'].data[:] = mistral_param('lm_head.weight').T
+    
+    for layer_i in range(config['n_layers']):    
+        params[f'decoder_blocks.{layer_i}.attn.W_q.W'].data[:] = permute_query_key_projs(
+            mistral_param(f'model.layers.{layer_i}.self_attn.q_proj.weight'),
+            config['n_heads'], config['embed_dim'], config['embed_dim']
+        ).T
+        params[f'decoder_blocks.{layer_i}.attn.W_k.W'].data[:] = permute_query_key_projs(
+            mistral_param(f'model.layers.{layer_i}.self_attn.k_proj.weight'),
+            config['n_kv_heads'], kv_dim, config['embed_dim']
+        ).T
+        params[f'decoder_blocks.{layer_i}.attn.W_v.W'].data[:] = mistral_param(f'model.layers.{layer_i}.self_attn.v_proj.weight').T
+        params[f'decoder_blocks.{layer_i}.attn.W_o.W'].data[:] = mistral_param(f'model.layers.{layer_i}.self_attn.o_proj.weight').T
+        
+        params[f'decoder_blocks.{layer_i}.moe.gate.W'].data[:] = mistral_param(f'model.layers.{layer_i}.block_sparse_moe.gate.weight').T
+        for expert_i in range(config['n_experts']):
+            params[f'decoder_blocks.{layer_i}.moe.experts.{expert_i}.w1.W'].data[:] = mistral_param(f'model.layers.{layer_i}.block_sparse_moe.experts.{expert_i}.w1.weight').T
+            params[f'decoder_blocks.{layer_i}.moe.experts.{expert_i}.w2.W'].data[:] = mistral_param(f'model.layers.{layer_i}.block_sparse_moe.experts.{expert_i}.w2.weight').T
+            params[f'decoder_blocks.{layer_i}.moe.experts.{expert_i}.w3.W'].data[:] = mistral_param(f'model.layers.{layer_i}.block_sparse_moe.experts.{expert_i}.w3.weight').T    
+        
+        params[f'decoder_blocks.{layer_i}.norm1.W'].data[:] = mistral_param(f'model.layers.{layer_i}.input_layernorm.weight')
+        params[f'decoder_blocks.{layer_i}.norm2.W'].data[:] = mistral_param(f'model.layers.{layer_i}.post_attention_layernorm.weight')
+    
     return model
-                          
+    

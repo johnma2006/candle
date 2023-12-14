@@ -26,7 +26,7 @@ class Mixtral(Module):
                  block_size: int,
                  n_kv_heads: int = None,
                  ffn_hidden_dim: int = None,
-                 rotary_base: int = 10000,
+                 rotary_base: int = 1000000,
                  norm_eps: float = 1e-5):
         super().__init__()
 
@@ -98,20 +98,17 @@ class Mixtral(Module):
         
         return logits
     
-    
-    def from_pretrained(model_name: str,
-                        model_dir: str):
+
+    @staticmethod
+    def from_pretrained(model_name: str):
         """Returns Mixtral with pretrained weights.
 
         Parameters
-        -----------
-        model_name
-            One of ['todo']
-
-        Returns
-        -------
-        model
-            Mixtral instance with Mistral's weights initialized.
+        ----------
+        model_name : str
+            Name of the pre-trained model. Valid options are:
+            * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+            * 'mistralai/Mixtral-8x7B-v0.1'
 
         """
         from .loadpretrained import load_pretrained_mixtral

@@ -238,9 +238,10 @@ class Tensor:
             old_self.operation.output = old_self
         
         self.data = new_self.data
-        self.operation = new_self.operation
-        self.operation.output = self
-        self.operation.inputs[0] = old_self
+        if new_self.operation is not None:
+            self.operation = new_self.operation
+            self.operation.output = self
+            self.operation.inputs[0] = old_self
 
 
     def __add__(self, other):
