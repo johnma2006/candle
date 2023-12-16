@@ -329,18 +329,18 @@ class Parameter(Tensor):
             return f'Parameter({self.shape})-shape {str(self.data.dtype)} array)'
 
 
-def rand(*size: Tuple[int]):
+def rand(*size: Tuple[int], a: float = 0.0, b: float = 1.0):
     if type(size[0]) in [tuple, list]:
         assert len(size) == 1
         size = size[0]
-    return Tensor(np.random.random(size=size))
+    return Tensor(np.random.random(size=size) * (b - a) + a)
 
 
-def randn(*size: Tuple[int]):
+def randn(*size: Tuple[int], mean: float = 0.0, std: float = 1.0):
     if type(size[0]) in [tuple, list]:
         assert len(size) == 1
         size = size[0]
-    return Tensor(np.random.normal(size=size))
+    return Tensor(np.random.normal(size=size, loc=mean, scale=std))
 
 
 def zeros_like(tensor: Tensor):

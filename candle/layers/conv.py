@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 from .module import Module
 from .. import operations
-from ..tensor import Tensor, Parameter
+from ..tensor import Tensor, Parameter, rand
     
     
 class Conv2d(Module):
@@ -26,9 +26,8 @@ class Conv2d(Module):
         self.padding = padding
         
         k = 1 / np.sqrt(in_channels * np.prod(kernel_size))
-        self.kernel = Parameter(Tensor(np.random.uniform(-k, k, size=(in_channels, out_channels,
-                                                                      kernel_size[0], kernel_size[1]))))
-        self.bias = Parameter(Tensor(np.random.uniform(-k, k, size=(1, out_channels, 1, 1))))
+        self.kernel = Parameter(rand((in_channels, out_channels, kernel_size[0], kernel_size[1]), a=-k, b=k))
+        self.bias = Parameter(rand((1, out_channels, 1, 1), a=-k, b=k))
         
         
     def forward(self, x):

@@ -23,18 +23,6 @@ def sum_along_broadcasted_axes(array, old_shape):
     return array_sum
 
 
-def xavier_init(in_shape, out_shape):
-    return np.random.uniform(low=-np.sqrt(6 / (in_shape + out_shape)),
-                             high=np.sqrt(6 / (in_shape + out_shape)),
-                             size=(in_shape, out_shape))
-
-
-def kaiming_init(in_shape, out_shape):
-    return np.random.uniform(low=-np.sqrt(6 / in_shape),
-                             high=np.sqrt(6 / in_shape),
-                             size=(in_shape, out_shape))
-
-
 def softmax(array: np.array):
     """Applies softmax along the last axis of a numpy array."""
     softmax = array - array.max(axis=-1, keepdims=True)  # For numerical stabiility

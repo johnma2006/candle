@@ -68,8 +68,6 @@ class Mixtral(Module):
         # Precompute rotation matrix
         self.rotation_matr = self.decoder_blocks[0].attn.compute_rotation_matrix()
         
-        # TODO: initialize weights properly
-    
     
     def forward(self,
                 indices: Tensor,
@@ -124,6 +122,28 @@ class Mixtral(Module):
     def get_kv_cache_seqlen(self):
         """Gets KV cache seqlen."""
         return self.decoder_blocks[0].attn.get_kv_cache_seqlen()
+
+    
+    def init_weights(self):
+        """Initialize weights for training."""
+        params = self.parameters()
+        for name in params:
+            # Initialize all biases to 0
+            if name.endswith('.b'):
+                candle.init.zeros_(params[name])
+        
+            # Initialize linear layers to N(0.0, 0.02) as per GPT2 paper
+            if name.endswith('.W') and ('attn' in name or 'moe' in name or 'embeddings' in name or 'output_projection' in name):
+                candle.init.normal_(params[name], std=0.02)
+        
+            # Initialize residual outputs as N(0.0, 0.02 / sqrt(2 * n_layers))
+            # The intuition is roughly, following similar reasoning to "Improving Transformer Optimization Through Better 
+            # Initialization, Huang et al. 2020" you want the gradient norm to be independent of depth. There are 2 "updates"
+            # to the residual stream per layer (one from attn and one from FFN), and so you want each update to have variance
+            # proportional to 1/(2*n_layers) to keep total variance independent of depth.
+            if name.endswith('attn.W_o.W') or name.endswith('w3.W'):
+                print(name)
+                candle.init.normal_(params[name], std=0.02 / np.sqrt(2 * self.n_layers))
                 
     
 class DecoderBlock(Module):

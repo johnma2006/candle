@@ -1,8 +1,8 @@
 import numpy as np
 
 from .module import Module
-from .. import utils
-from ..tensor import Tensor, Parameter
+from .. import weightinit as init
+from ..tensor import Tensor, Parameter, rand
     
 
 class Linear(Module):
@@ -16,11 +16,10 @@ class Linear(Module):
         self.output_nodes = output_nodes
         self.bias = bias
         
-        k = 1.0 / np.sqrt(input_nodes)
-        self.W = Parameter(Tensor(utils.kaiming_init(input_nodes, output_nodes)))
+        self.W = Parameter(Tensor(init.kaiming((input_nodes, output_nodes))))
         if bias:
-            self.b = Parameter(Tensor(np.random.uniform(low=-k, high=k, size=output_nodes)))
-        
+            k = 1.0 / np.sqrt(input_nodes)
+            self.b = Parameter(rand(output_nodes, a=-k, b=k))
         
     def forward(self, x):
         if self.bias:

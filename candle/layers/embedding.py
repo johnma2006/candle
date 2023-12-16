@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..tensor import Tensor, Parameter
+from ..tensor import Tensor, Parameter, randn
 from .module import Module
 
     
@@ -10,7 +10,7 @@ class Embedding(Module):
                  num_embed: int,
                  embed_dim: int):
         super().__init__()
-        self.embeddings = Parameter(Tensor(np.random.normal(size=(num_embed, embed_dim))))
+        self.embeddings = Parameter(randn(num_embed, embed_dim))
         
         
     def forward(self, indices):

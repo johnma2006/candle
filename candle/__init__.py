@@ -36,6 +36,7 @@ from . import scheduler
 from . import vision
 from . import nlp
 from . import models
+from . import weightinit as init
 
 
 # ------------------------------------
