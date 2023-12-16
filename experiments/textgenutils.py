@@ -44,7 +44,7 @@ def interactive_conversation(model,
     last_chat = ''
     while True:
         stdout.print('\n\n' + user_pic, end=' ')
-        time.sleep(0.1)  # Sometimes the input() doesn't show if we don't add a delay
+        time.sleep(0.2)  # Sometimes the input() doesn't show if we don't add a delay
         prompt = input()
         stdout.print(prompt)
 
