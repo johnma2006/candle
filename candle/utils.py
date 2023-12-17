@@ -1,8 +1,10 @@
 """Various utils."""
 
+import pandas as pd
 import numpy as np
 import os
 import requests
+from IPython.display import display_html
 
 
 def get_broadcasted_axes(old_shape: tuple,
@@ -106,3 +108,13 @@ def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None
 
     with open(cache_file_path, 'r', encoding=encoding) as f:
         return f.read()
+
+
+def display_sbs(*args, margin: int = 20):
+    html_str = ''
+    for df in args:
+        html_str += '<th style="text-align:center"><td style="vertical-align:top">'
+        html_str += df.to_html().replace('table', f'table style="display:inline;margin-left:{margin}px"')
+        html_str += '</td></th>'
+    display_html(html_str, raw=True)
+    

@@ -87,10 +87,13 @@ class Dashboard:
             x-value to plot. If None, then appends to next step.
             
         """
+        values = np.array(values)
+
         # Compress values into histograms to save memory
         xlim = self.settings.get('xlim', chart_label)
         if xlim is not None:
-            values = [x for x in values if xlim[0] <= x <= xlim[1]]
+            mask = (xlim[0] <= values) & (values <= xlim[1])
+            values = values[mask]
 
         (hist, bins) = np.histogram(values,
                                     bins=self.settings.get('histogram_nbins', chart_label))
@@ -126,6 +129,7 @@ class Dashboard:
 
             xlim = self.settings.get('xlim', chart_label)
             ylim = self.settings.get('ylim', chart_label)
+            title_fontsize = self.settings.get('title_fontsize', chart_label)
 
             (chart_type, chart_data) = self.data[chart_label]
 
@@ -148,15 +152,17 @@ class Dashboard:
                                                       alpha=0.1, label='_nolegend_')
                 
                 xscale = self.settings.get('xscale', chart_label)
+                xscale_logbase = self.settings.get('xscale_logbase', chart_label)
                 yscale = self.settings.get('yscale', chart_label)
+                yscale_logbase = self.settings.get('yscale_logbase', chart_label)
                 if xscale == 'log':
-                    ax.set_xscale(xscale, base=2)
+                    ax.set_xscale(xscale, base=xscale_logbase)
                 else:
                     ax.axvline(0, color='black', linewidth=0.8, zorder=0)
                     ax.set_xscale(xscale)
 
                 if yscale == 'log':
-                    ax.set_yscale(yscale, base=2)
+                    ax.set_yscale(yscale, base=yscale_logbase)
                 else:
                     ax.axhline(0, color='black', linewidth=0.8, zorder=0)
                     ax.set_yscale(yscale)
@@ -173,9 +179,9 @@ class Dashboard:
                 if ylabel is not None:
                     ax.set_ylabel(ylabel)
                 ax.grid(linewidth=0.5)
-                ax.set_title(chart_label)
+                ax.set_title(chart_label, fontsize=title_fontsize)
                 if chart_type == ChartType.MULTI_SCALAR:
-                    ax.legend(loc='lower right')
+                    ax.legend(loc='lower left', prop={'size': 8})
 
             elif chart_type == ChartType.HISTOGRAM:
 
@@ -199,7 +205,7 @@ class Dashboard:
                 ax.zaxis.line.set_color((1.0, 1.0, 1.0, 1.0))
                 ax.set_yticks(steps)
                 ax.set_zticks([])
-                ax.set_title(chart_label)
+                ax.set_title(chart_label, fontsize=title_fontsize)
                 if ylim is not None:
                     ax.set_ylim(*ylim)
 
@@ -265,11 +271,14 @@ class ChartSettings:
             'ncols': 2,
             'xlim': None,
             'ylim': None,
+            'title_fontsize': 10,
             
             # SCALAR and MULTI_SCALAR settings
             
             'xscale': 'linear',
             'yscale': 'linear',
+            'xscale_logbase': 2,
+            'yscale_logbase': 2,
             'smoothness': 50,
             'xlabel': 'Step',
             'ylabel': None,
