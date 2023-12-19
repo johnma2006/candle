@@ -13,19 +13,19 @@ Deep learning library, implemented from scratch in numpy for fun.
 
 #### Language Modelling
 * Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned).ipynb) [(model)](candle/models/mixtral/model.py) 
-  <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" /><br /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
+  <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
 * Chat with LLaMA 🦙 (fine-tuned LLaMA) [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20LLaMA%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
-  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" /><br /><sup>(LLaMA 13B fine-tuned, video sped up 30x)</sup></p>
+  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(LLaMA 13B fine-tuned, video sped up 30x)</sup></p>
 * Chat with GPT2 ⚪ [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20GPT2.ipynb) [(model)](candle/models/gpt/model.py) 
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search, top-p, top-k sampling quality [(notebook)](experiments/nlp_experiments/1.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
 
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
-  <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" /></p>
+  <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="900" /></p>
 
 #### Generalization
-* Grokking: Generalization Beyond Overfitting (Power et al. 2016) reproduction [(notebook)](experiments/generalization_experiments/1.1%20Reproducing%20Grokking%20-%20Generalization%20Beyond%20Overfitting%20-%2031x31%20modular%20division.ipynb) [(arxiv)](https://arxiv.org/pdf/2201.02177.pdf)
+* Grokking: Generalization Beyond Overfitting (Power et al. 2016) reproduction [(notebook)](experiments/generalization_experiments/1.1%20Reproducing%20Grokking%20-%20Generalization%20Beyond%20Overfitting%20-%2031x31%20modular%20division.ipynb)
   <p align="center"><img src="experiments/generalization_experiments/grok_training.gif" width="500" /><br /><sup>(long after overfitting, test accuracy suddenly begins increasing — a fun result that feels surprising at first)</sup></p>
 
 
