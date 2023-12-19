@@ -24,16 +24,10 @@ Deep learning library, implemented from scratch in numpy for fun.
 #### Vision
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
   <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="1020" /></p>
-* Training ResNet14 on MNIST [(notebook)](experiments/vision_experiments/2.0%20ResNet14%20on%20MNIST.ipynb)
-* Training MLP on MNIST [(notebook)](experiments/vision_experiments/1.0%20MLP%20on%20MNIST%20-%20AdamW.ipynb)
 
-#### Initialization
-* Gradient Norm vs. Model {Depth, Norm} under {Xavier, Kaiming} init
-  * Width, Kaiming  [(notebook)](experiments/initialization_experiments/2.0%20Effect%20of%20Model%20Width%20on%20Gradient%20Norm%20-%20MLP%20with%20Kaiming%20Init.ipynb)
-  * Width, Xavier  [(notebook)](experiments/initialization_experiments/2.0%20Effect%20of%20Model%20Width%20on%20Gradient%20Norm%20-%20MLP%20with%20Kaiming%20Init.ipynb)
-  * Depth, Kaiming [(notebook)](experiments/initialization_experiments/2.0%20Effect%20of%20Model%20Depth%20on%20Gradient%20Norm%20-%20MLP%20with%20Xavier%20Init.ipynb)
-  * Depth, Xavier [(notebook)](experiments/initialization_experiments/2.0%20Effect%20of%20Model%20Depth%20on%20Gradient%20Norm%20-%20MLP%20with%20Xavier%20Init.ipynb)
-* Activation Distributions vs Init [(notebook)](experiments/initialization_experiments/1.0%20Activation%20Distribution%20by%20Layer%20w.r.t%20Initialization.ipynb)
+#### Generalization
+* Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets (Power et al. 2016) reproduction [(notebook)](experiments/generalization_experiments/1.1%20Reproducing%20Grokking%20-%20Generalization%20Beyond%20Overfitting%20-%2031x31%20modular%20division.ipynb) [(arxiv)](https://arxiv.org/pdf/2201.02177.pdf)
+  <p align="center"><img src="experiments/generalization_experiments/grok_training.gif" width="600" /></p>
 
 
 ## Example GPT2 Implementation

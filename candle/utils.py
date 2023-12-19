@@ -110,11 +110,15 @@ def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None
         return f.read()
 
 
-def display_sbs(*args, margin: int = 20):
+def display_sbs(*args, margin: int = 20, max_cols: int = None, max_rows: int = None):
     html_str = ''
     for df in args:
         html_str += '<th style="text-align:center"><td style="vertical-align:top">'
-        html_str += df.to_html().replace('table', f'table style="display:inline;margin-left:{margin}px"')
+        if max_cols is not None or max_rows is not None:
+            df_to_html = df.to_html(max_cols=max_cols, max_rows=max_rows)
+        else:
+            df_to_html = df.to_html()
+        html_str += df_to_html.replace('table', f'table style="display:inline;margin-left:{margin}px"')
         html_str += '</td></th>'
     display_html(html_str, raw=True)
     

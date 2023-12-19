@@ -118,8 +118,11 @@ class GPT(Module):
             if name.endswith('.b'):
                 candle.init.zeros_(params[name])
         
-            # Initialize linear layers to N(0.0, 0.02) as per GPT2 paper
-            if name.endswith('.W') and ('attn' in name or 'ffn' in name or 'embeddings' in name):
+            # Initialize layers to N(0.0, 0.02) as per GPT2 paper
+            if (
+                ('attn' in name or 'ffn' in name) and (name.endswith('.W'))  # Attn/FFN layers
+                or ('embeddings' in name) or ('output_projection' in name)
+            ):
                 candle.init.normal_(params[name], std=0.02)
         
             # Initialize residual outputs as N(0.0, 0.02 / sqrt(2 * n_layers))
