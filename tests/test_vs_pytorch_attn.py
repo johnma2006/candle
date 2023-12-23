@@ -69,7 +69,8 @@ class TestAttnModulesVsPytorch(unittest.TestCase):
 
         self = candle.MultiheadAttention(embed_dim=512,
                                          n_heads=8,
-                                         dropout_p=0.0)
+                                         dropout_p=0.0,
+                                         batch_first=True)
 
         # Initialize PyTorch attention and transfer parameters
 

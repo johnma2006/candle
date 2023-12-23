@@ -60,7 +60,7 @@ class Mixtral(Module):
                          block_size, rotary_base, norm_eps)
             for _ in range(n_layers)
         ])
-        self.rms_norm = candle.RMSNorm(axis=2, eps=norm_eps)
+        self.rms_norm = candle.RMSNorm(embed_dim, eps=norm_eps)
                 
         # Unlike GPT, Mixtral/LLaMA output layer is not tied to word embeddings
         self.output_projection = candle.Linear(embed_dim, vocab_size, bias=False)
@@ -162,14 +162,15 @@ class DecoderBlock(Module):
                  rotary_base: int,
                  norm_eps: float):
         super().__init__()
-        self.norm1 = candle.RMSNorm(axis=2, eps=norm_eps)
+        self.norm1 = candle.RMSNorm(embed_dim, eps=norm_eps)
         self.attn = candle.GroupedQueryRotaryAttention(embed_dim, n_heads, n_kv_heads,
                                                        dropout_p=0.0,
                                                        apply_rotary_embedding=True,
                                                        rotary_base=rotary_base,
                                                        max_seqlen=block_size,
-                                                       bias=False)
-        self.norm2 = candle.RMSNorm(axis=2, eps=norm_eps)
+                                                       bias=False,
+                                                       batch_first=True)
+        self.norm2 = candle.RMSNorm(embed_dim, eps=norm_eps)
         self.moe = MOE(embed_dim, ffn_hidden_dim, n_experts, n_experts_per_tok)
 
         

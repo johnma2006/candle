@@ -12,7 +12,7 @@ class TestBatchNormVsPytorch(unittest.TestCase):
             
     def test_batch_norm(self):
         num_features = 100
-        bn1 = candle.BatchNorm(axis=(0, 2, 3))
+        bn1 = candle.BatchNorm(num_features)
         bn2 = nn.BatchNorm2d(num_features)
 
         # Test batch norm under model.eval()

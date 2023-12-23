@@ -169,8 +169,8 @@ class TestAutograd(unittest.TestCase):
                 self.conv1 = candle.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=stride)
                 self.conv2 = candle.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
 
-                self.batch_norm1 = candle.BatchNorm(axis=(0, 2, 3))
-                self.batch_norm2 = candle.BatchNorm(axis=(0, 2, 3))
+                self.batch_norm1 = candle.BatchNorm(out_channels, axis=(0, 2, 3))
+                self.batch_norm2 = candle.BatchNorm(out_channels, axis=(0, 2, 3))
 
                 if in_channels != out_channels:
                     self.res_conv = candle.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
@@ -205,7 +205,7 @@ class TestAutograd(unittest.TestCase):
                 self.n_classes = n_classes
 
                 self.conv = candle.Conv2d(in_channels, resnet_blocks[0][0], kernel_size=7, padding=3, stride=2)
-                self.batch_norm = candle.BatchNorm(axis=(0, 2, 3))
+                self.batch_norm = candle.BatchNorm(resnet_blocks[0][0], axis=(0, 2, 3))
                 self.max_pool = candle.MaxPool2d(kernel_size=2)
 
                 self.residual_blocks = candle.ParameterList([

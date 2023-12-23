@@ -96,7 +96,6 @@ def load_pretrained_llama(model_name: str,
 
     model_size = model_name.split('-')[0]
     model = Llama(**LLAMA_CONFIG_BY_SIZE[model_size], norm_eps=model_config['norm_eps'])
-    _ = model.summary((1, 1))  # To initialize lazy params
 
     # ----------------
     # Transfer weights

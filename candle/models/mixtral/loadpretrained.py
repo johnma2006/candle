@@ -44,7 +44,6 @@ def load_pretrained_mixtral(model_name: str):
     }
     
     model = Mixtral(**config)
-    _ = model.summary((1, 2))  # To initialize deferred params
     params = model.parameters()
     
     # ------------------------

@@ -37,7 +37,7 @@ class GPT(Module):
         self.position_embeddings = candle.Embedding(block_size, embed_dim)
         self.decoder_blocks = candle.ParameterList([DecoderBlock(embed_dim, n_heads, dropout_p)
                                                     for _ in range(n_layers)])
-        self.layer_norm = candle.LayerNorm(axis=2)
+        self.layer_norm = candle.LayerNorm(embed_dim)
         
         # Tie output projection weights to word embeddings. See "Weight Tying" paper.
         self.output_projection = self.word_embeddings.embeddings
@@ -143,9 +143,9 @@ class DecoderBlock(Module):
         super().__init__()
         self.dropout = candle.Dropout(dropout_p)
         
-        self.ln1 = candle.LayerNorm(axis=2)
-        self.attn = candle.MultiheadAttention(embed_dim, n_heads, dropout_p)
-        self.ln2 = candle.LayerNorm(axis=2)
+        self.ln1 = candle.LayerNorm(embed_dim)
+        self.attn = candle.MultiheadAttention(embed_dim, n_heads, dropout_p, batch_first=True)
+        self.ln2 = candle.LayerNorm(embed_dim)
         self.ffn = FeedForwardBlock(input_dim=embed_dim, hidden_dim=4 * embed_dim)
 
         

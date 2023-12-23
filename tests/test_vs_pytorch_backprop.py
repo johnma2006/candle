@@ -83,8 +83,8 @@ class TestBackpropVsPytorch(unittest.TestCase):
                     self.conv1 = candle.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=stride)
                     self.conv2 = candle.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
 
-                    self.batch_norm1 = candle.BatchNorm(axis=(0, 2, 3))
-                    self.batch_norm2 = candle.BatchNorm(axis=(0, 2, 3))
+                    self.batch_norm1 = candle.BatchNorm(out_channels)
+                    self.batch_norm2 = candle.BatchNorm(out_channels)
 
                     if in_channels != out_channels or stride == 1:
                         self.res_conv = candle.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)

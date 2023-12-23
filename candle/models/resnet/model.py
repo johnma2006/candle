@@ -57,7 +57,7 @@ class ResNet(Module):
         self.conv = candle.Conv2d(in_channels,
                                   resnet_blocks[0][0],  # in-channels of the first resnet_block
                                   kernel_size=3, padding=1, stride=1)
-        self.batch_norm = candle.BatchNorm(axis=(0, 2, 3))
+        self.batch_norm = candle.BatchNorm(resnet_blocks[0][0], axis=(0, 2, 3))
         self.max_pool = candle.MaxPool2d(kernel_size=2)
         
         self.residual_blocks = candle.ParameterList([
@@ -101,8 +101,8 @@ class ResNetBlock(Module):
         self.conv1 = candle.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=stride)
         self.conv2 = candle.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
         
-        self.batch_norm1 = candle.BatchNorm(axis=(0, 2, 3))
-        self.batch_norm2 = candle.BatchNorm(axis=(0, 2, 3))
+        self.batch_norm1 = candle.BatchNorm(out_channels, axis=(0, 2, 3))
+        self.batch_norm2 = candle.BatchNorm(out_channels, axis=(0, 2, 3))
         
         # If channels are different or stride > 1, then we need to reshape the input using a 1x1 conv
         if in_channels != out_channels or stride > 1:

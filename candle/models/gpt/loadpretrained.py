@@ -40,7 +40,6 @@ def load_pretrained_gpt(model_name: str):
     }
 
     model = GPT(**config)
-    _ = model.summary((1, 32))  # To initialize deferred params
 
     # -----------------------
     # Transfer OpenAI weights
@@ -74,14 +73,14 @@ def load_pretrained_gpt(model_name: str):
         params[f'decoder_blocks.{i}.ffn.linear2.W'].data[:] = openai_param(f'h.{i}.mlp.c_proj.weight')
         params[f'decoder_blocks.{i}.ffn.linear2.b'].data[:] = openai_param(f'h.{i}.mlp.c_proj.bias')
 
-        params[f'decoder_blocks.{i}.ln1.W'].data[0, 0, :] = openai_param(f'h.{i}.ln_1.weight')
-        params[f'decoder_blocks.{i}.ln1.b'].data[0, 0, :] = openai_param(f'h.{i}.ln_1.bias')
-        params[f'decoder_blocks.{i}.ln2.W'].data[0, 0, :] = openai_param(f'h.{i}.ln_2.weight')
-        params[f'decoder_blocks.{i}.ln2.b'].data[0, 0, :] = openai_param(f'h.{i}.ln_2.bias')
+        params[f'decoder_blocks.{i}.ln1.W'].data[:] = openai_param(f'h.{i}.ln_1.weight')
+        params[f'decoder_blocks.{i}.ln1.b'].data[:] = openai_param(f'h.{i}.ln_1.bias')
+        params[f'decoder_blocks.{i}.ln2.W'].data[:] = openai_param(f'h.{i}.ln_2.weight')
+        params[f'decoder_blocks.{i}.ln2.b'].data[:] = openai_param(f'h.{i}.ln_2.bias')
 
     # Transfer final layer norm weights
 
-    params['layer_norm.W'].data[0, 0, :] = openai_param('ln_f.weight')
-    params['layer_norm.b'].data[0, 0, :] = openai_param('ln_f.bias')
+    params['layer_norm.W'].data[:] = openai_param('ln_f.weight')
+    params['layer_norm.b'].data[:] = openai_param('ln_f.bias')
 
     return model

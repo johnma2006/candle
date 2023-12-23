@@ -4,17 +4,21 @@ from typing import Tuple, Union
 from .module import Module
 from ..tensor import Tensor, Parameter
 
-    
+
 class BatchNorm(Module):
     
     def __init__(self,
-                 axis: Union[int, Tuple[int]] = (0,),
+                 normalized_shape: Union[int, Tuple[int]], 
+                 axis: Union[int, Tuple[int]] = (0, 2, 3),
                  momentum: float = 0.1,
                  eps: float = 1e-5):
-        """Batch normalization (technically LazyLayerNorm).
+        """Batch normalization.
         
         Parameters
         ----------
+        normalized_shape
+            The input shape for all axes not in axis.
+            For example, if input.shape = (2, 3, 5, 7) and axis=(0, 2), then normalized_shape = (3, 7). 
         axis
             Axis to compute mean/std over. Must include the 0, batch axis.
             For example, axis=(0,) for BatchNorm1d. axis=(0, 2, 3) for BatchNorm2d.
@@ -28,32 +32,33 @@ class BatchNorm(Module):
         
         if type(axis) is int:
             axis = (axis,)
-        if type(axis) is not tuple or 0 not in axis:
+        if 0 not in axis:
             raise ValueError(f'axis = {axis} must contain 0, the batch dimension.')
+            
+        if type(normalized_shape) is int:
+            normalized_shape = (normalized_shape,)
+            
+        self.ema_mean = 0.0
+        self.ema_var = 1.0
         
         self.axis = axis
         self.momentum = momentum
         self.eps = eps
         
-        self.ema_mean = 0.0
-        self.ema_var = 1.0
-        
-        # Defer initialization to the first forward pass once we know the shape
-        self.features_shape = None
-        self.W = Parameter(Tensor(np.ones(0)))
-        self.b = Parameter(Tensor(np.zeros(0)))
+        self.normalized_shape = tuple(normalized_shape)
+
+        input_dim = len(self.axis) + len(self.normalized_shape)
+        mask = np.ones(input_dim, dtype=bool)
+        mask[list(self.axis)] = False
+        broadcastable_shape = np.ones(input_dim).astype(int)
+        broadcastable_shape[mask] = self.normalized_shape
+        self.W = Parameter(np.ones(broadcastable_shape))
+        self.b = Parameter(np.zeros(broadcastable_shape))
         
         
     def forward(self, x):
         # input: shape (N, *)
         # output: shape (N, *)
-        if self.features_shape is None:
-            features_shape = np.array(x.shape)
-            features_shape[list(self.axis)] = 1
-            self.features_shape = tuple(features_shape)
-            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
-            self.b.data = np.zeros(self.features_shape, dtype=self.b.dtype)
-
         if self.training:
             batch_mean = x.mean(axis=self.axis, keepdims=True)
             batch_var = x.var(axis=self.axis, keepdims=True)  # The computes biased var
@@ -79,50 +84,56 @@ class BatchNorm(Module):
     
         
     def __repr__(self):
-        return f'BatchNorm(axis={self.axis})'
-    
+        return f'BatchNorm(normalized_shape={self.normalized_shape}, axis={self.axis})'
+
 
 class LayerNorm(Module):
     
     def __init__(self,
-                 axis: Union[int, Tuple[int]],
+                 normalized_shape: Union[int, Tuple[int]], 
+                 axis: Union[int, Tuple[int]] = None,
                  eps: float = 1e-5):
-        """Layer normalization (technically LazyLayerNorm).
+        """Layer normalization.
         
         Parameters
         ----------
+        normalized_shape
+            The input shape for all axes in axis.
+            For example, if input.shape = (2, 3, 5, 7) and axis=(-1, -2), then normalized_shape = (5, 7). 
         axis
             Axes to compute mean/std over. Must not include the 0, batch axis.
+            If None, then normalizes over the last len(normalized_shape) dimensions.
         eps
             Value added to the denominator for numerical stability.
             
         """
         super().__init__()
         
-        if type(axis) is int:
+        if type(normalized_shape) is int:
+            normalized_shape = (normalized_shape,)
+        if axis is None:
+            axis = tuple([-i for i in range(1, 1 + len(normalized_shape))])
+        elif type(axis) is int:
             axis = (axis,)
-        if type(axis) is not tuple or 0 in axis:
+        if 0 in axis:
             raise ValueError(f'axis = {axis} must not contain 0, the batch dimension.')
         
         self.axis = axis
         self.eps = eps
-        
-        # Defer initialization to the first forward pass once we know the shape
-        self.features_shape = None
-        self.W = Parameter(Tensor(np.ones(0)))
-        self.b = Parameter(Tensor(np.zeros(0)))
+        self.normalized_shape = tuple(normalized_shape)
+
+        input_dim = len(self.axis) + len(self.normalized_shape)
+        mask = np.zeros(input_dim, dtype=bool)
+        mask[list(self.axis)] = True
+        broadcastable_shape = np.ones(input_dim).astype(int)
+        broadcastable_shape[mask] = self.normalized_shape
+        self.W = Parameter(np.ones(broadcastable_shape))
+        self.b = Parameter(np.zeros(broadcastable_shape))
         
         
     def forward(self, x):
         # input: shape (N, *)
         # output: shape (N, *)
-        if self.features_shape is None:
-            features_shape = np.array(x.shape)
-            features_shape[[i for i in range(len(x.shape)) if i not in self.axis]] = 1
-            self.features_shape = tuple(features_shape)
-            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
-            self.b.data = np.zeros(self.features_shape, dtype=self.b.dtype)
-
         mean = x.mean(axis=self.axis, keepdims=True)
         var = x.var(axis=self.axis, keepdims=True)
 
@@ -133,48 +144,55 @@ class LayerNorm(Module):
     
         
     def __repr__(self):
-        return f'LayerNorm(axis={self.axis})'
-    
-    
+        return f'LayerNorm(normalized_shape={self.normalized_shape}, axis={self.axis})'
+
+
 class RMSNorm(Module):
     
     def __init__(self,
-                 axis: Union[int, Tuple[int]],
+                 normalized_shape: Union[int, Tuple[int]], 
+                 axis: Union[int, Tuple[int]] = None,
                  eps: float = 1e-5):
-        """RMS normalization (technically, LazyRMSNorm).
+        """RMS normalization.
         
         Parameters
         ----------
+        normalized_shape
+            The input shape for all axes in axis.
+            For example, if input.shape = (2, 3, 5, 7) and axis=(1, 2), then normalized_shape = (3, 5). 
         axis
             Axes to compute RMS over. Must not include the 0, batch axis.
+            If None, then normalizes over the last len(normalized_shape) dimensions.
         eps
             Value added to the denominator for numerical stability.
             
         """
         super().__init__()
         
-        if type(axis) is int:
+        if type(normalized_shape) is int:
+            normalized_shape = (normalized_shape,)
+        if axis is None:
+            axis = tuple([-i for i in range(1, 1 + len(normalized_shape))])
+        elif type(axis) is int:
             axis = (axis,)
-        if type(axis) is not tuple or 0 in axis:
+        if 0 in axis:
             raise ValueError(f'axis = {axis} must not contain 0, the batch dimension.')
         
         self.axis = axis
         self.eps = eps
-        
-        # Defer initialization to the first forward pass once we know the shape
-        self.features_shape = None
-        self.W = Parameter(Tensor(np.ones(0)))
+        self.normalized_shape = tuple(normalized_shape)
+
+        input_dim = len(self.axis) + len(self.normalized_shape)
+        mask = np.zeros(input_dim, dtype=bool)
+        mask[list(self.axis)] = True
+        broadcastable_shape = np.ones(input_dim).astype(int)
+        broadcastable_shape[mask] = self.normalized_shape
+        self.W = Parameter(np.ones(broadcastable_shape))
         
         
     def forward(self, x):
         # input: shape (N, *)
         # output: shape (N, *)
-        if self.features_shape is None:
-            features_shape = np.array(x.shape)
-            features_shape[[i for i in range(len(x.shape)) if i not in self.axis]] = 1
-            self.features_shape = tuple(features_shape)
-            self.W.data = np.ones(self.features_shape, dtype=self.W.dtype)
-
         rms = (x ** 2).mean(axis=self.axis, keepdims=True)
 
         x_normalized = x / (rms + self.eps) ** 0.5
@@ -184,5 +202,5 @@ class RMSNorm(Module):
     
         
     def __repr__(self):
-        return f'RMSNorm(axis={self.axis})'
+        return f'RMSNorm(normalized_shape={self.normalized_shape}, axis={self.axis})'
     

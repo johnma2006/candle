@@ -36,8 +36,11 @@ class GroupedQueryRotaryAttention(Module):
                  apply_rotary_embedding: bool,
                  rotary_base: int = 10000,
                  max_seqlen: int = 4096,
-                 bias: bool = True):
+                 bias: bool = True,
+                 batch_first: bool = True):
         super().__init__()
+        if not batch_first:
+            raise ValueError('We do not support batch_first=False. This param is purely to maintain compatibility with PyTorch.')
         assert embed_dim % n_heads == 0
         assert n_heads % n_kv_heads == 0
         
@@ -234,9 +237,12 @@ class MultiheadAttention(Module):
                  embed_dim: int,
                  n_heads: int,
                  dropout_p: float,
-                 bias: bool = True):
+                 bias: bool = True,
+                 batch_first: bool = True):
         super().__init__()
         assert embed_dim % n_heads == 0
+        if not batch_first:
+            raise ValueError('We do not support batch_first=False. This param is purely to maintain compatibility with PyTorch.')
         self.embed_dim = embed_dim
         self.n_heads = n_heads
         self.per_head_dim = embed_dim // n_heads
