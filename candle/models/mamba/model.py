@@ -1,5 +1,9 @@
 """Mamba model. Adapted from my other repo at github.com/johnma2006/mamba-minimal.
 
+References:
+    [1] Mamba: Linear-Time Sequence Modeling with Selective State Spaces (Albert Gu and Tri Dao)
+        https://arxiv.org/abs/2312.00752
+
 """
 from __future__ import annotations
 import numpy as np
@@ -48,10 +52,11 @@ class Mamba(Module):
                                                   # See "Weight Tying" paper
 
 
-    def forward(self, input_ids):
+    def forward(self, input_ids, use_kv_cache: bool = False):
         """
         Args:
-            input_ids (long tensor): shape (b, l)    (See Glossary at top for definitions of b, l, d_in, n...)
+            input_ids (long tensor): shape (b, l)
+            use_kv_cache (bool): dummy parameter to maintain compatibility with generation scripts.
     
         Returns:
             logits: shape (b, l, vocab_size)
@@ -101,7 +106,7 @@ class ResidualBlock(Module):
     def forward(self, x):
         """
         Args:
-            x: shape (b, l, d)    (See Glossary at top for definitions of b, l, d_in, n...)
+            x: shape (b, l, d)
     
         Returns:
             output: shape (b, l, d)
@@ -139,7 +144,7 @@ class MambaBlock(Module):
         """Mamba block forward. This looks the same as Figure 3 in Section 3.4 in the Mamba paper [1].
     
         Args:
-            x: shape (b, l, d)    (See Glossary at top for definitions of b, l, d_in, n...)
+            x: shape (b, l, d)
     
         Returns:
             output: shape (b, l, d)
@@ -164,12 +169,10 @@ class MambaBlock(Module):
 
     
     def ssm(self, x):
-        """Runs the SSM. See:
-            - Algorithm 2 in Section 3.2 in the Mamba paper [1]
-            - run_SSM(A, B, C, u) in The Annotated S4 [2]
+        """Runs the SSM. See Algorithm 2 in Section 3.2 in the Mamba paper [1]
 
         Args:
-            x: shape (b, l, d_in)    (See Glossary at top for definitions of b, l, d_in, n...)
+            x: shape (b, l, d_in)
     
         Returns:
             output: shape (b, l, d_in)
@@ -191,7 +194,7 @@ class MambaBlock(Module):
         
         delta = F.softplus(self.dt_proj(delta))  # (b, l, d_in)
         
-        y = self.selective_scan(x, delta, A, B, C, D)  # This is similar to run_SSM(A, B, C, u) in The Annotated S4 [2]
+        y = self.selective_scan(x, delta, A, B, C, D)
         
         return y
 

@@ -24,7 +24,8 @@ def interactive_conversation(model,
                              top_p: float = 0.98,
                              temperature: float = 0.8,
                              stop_token_idx: int = None,
-                             stop_strings: dict = None):
+                             stop_strings: dict = None,
+                             use_kv_cache: bool = True):
     """Starts an interactive conversation in Jupyter notebook.
     
     Note: if cells start auto-collapsing, this is an issue in Jupyter 7. Use nbclassic to fix.
@@ -39,7 +40,8 @@ def interactive_conversation(model,
         style='bright'
     ), end='')
 
-    model.clear_kv_cache()
+    if use_kv_cache:
+        model.clear_kv_cache()
     messages = [{'role': 'system', 'content': chat_template.system_message}]
     last_chat = ''
     while True:
@@ -51,7 +53,7 @@ def interactive_conversation(model,
         if prompt.lower().strip() == 'bye':
             stdout.print(ansi_color(f'\n< / end of conversation. >', style='bright'))
             return
-        elif prompt.lower().strip() == 'clear':
+        elif prompt.lower().strip() == 'clear' and use_kv_cache:
             stdout.print(ansi_color(f'< Cache cleared >', style='bright', color='white'), end='')
             model.clear_kv_cache()
             messages = [{'role': 'system', 'content': chat_template.system_message}]
@@ -60,8 +62,11 @@ def interactive_conversation(model,
 
         messages.append({'role': 'user', 'content': prompt})
         chat = chat_template.apply_chat_template(messages, add_generation_prompt=True)
-        chat_update = chat[len(last_chat):]  # Feed only chat update into model because we use KV caching
-        
+        if use_kv_cache:
+            chat_update = chat[len(last_chat):]  # Feed only chat update into model because we use KV caching
+        else:
+            chat_update = chat
+            
         stdout.print('\n' + asst_pic, end=' ')
         response = generate_text(
             model,
@@ -73,7 +78,7 @@ def interactive_conversation(model,
             temperature=temperature,
             stop_token_idx=stop_token_idx,
             stop_strings=stop_strings,
-            use_kv_cache=True,
+            use_kv_cache=use_kv_cache,
             stdout=stdout,
         )
         messages.append({'role': 'assistant', 'content': response})
