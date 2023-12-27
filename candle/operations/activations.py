@@ -1,5 +1,6 @@
 """Operations in a computation graph."""
 
+from __future__ import annotations
 import numpy as np
 
 from .operation import Operation
@@ -75,4 +76,42 @@ class SiLUActivation(Operation):
         input_grad = output_grad * partial_grad
 
         return (input_grad,)
+
+
+class SoftplusActivation(Operation):
+
+    def __init__(self,
+                 inputs: List[Tensor],
+                 beta: float,
+                 threshold: float):
+        super().__init__(inputs)
+        self.beta = beta
+        self.threshold = threshold
+        
     
+    def _forward(self):
+        assert len(self.inputs) == 1
+        x = self.inputs[0].data
+        
+        threshold_mask = x * self.beta > self.threshold
+        
+        softplus_x = np.empty_like(x)
+        softplus_x[threshold_mask] = x[threshold_mask] * self.beta
+        softplus_x[~threshold_mask] = np.log(1 + np.exp(x[~threshold_mask] * self.beta)) / self.beta
+        
+        return tensor.Tensor(softplus_x)
+    
+    
+    def _backward(self,
+                  output_grad: np.array):
+        x = self.inputs[0].data
+        
+        threshold_mask = x * self.beta > self.threshold
+        
+        partial_grad = np.empty_like(x)
+        
+        partial_grad[threshold_mask] = self.beta
+        partial_grad[~threshold_mask] = 1 - 1 / (1 + np.exp(x[~threshold_mask] * self.beta))
+        input_grad = partial_grad * output_grad
+        
+        return (input_grad,)

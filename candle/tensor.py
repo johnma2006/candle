@@ -198,6 +198,12 @@ class Tensor:
                 new_shape: Tuple[int]):
         return functions.reshape(self, new_shape=new_shape)
 
+
+    def split(self,
+              split_size: List[int],
+              axis: int = 0):
+        return functions.split(self, split_size, axis)
+
     
     def unsqueeze(self,
                   axis: int):

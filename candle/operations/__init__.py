@@ -31,6 +31,7 @@ from .activations import (
     ReLUActivation,
     GeLUActivation,
     SiLUActivation,
+    SoftplusActivation,
 )
 from .loss import CrossEntropyLossOperation
 from .conv import (

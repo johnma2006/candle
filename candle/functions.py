@@ -74,6 +74,16 @@ def concat(tensors, axis: int = 0):
     return operations.TensorConcatenation(tensors, axis).forward()
 
 
+def split(a, split_size: List[int], axis: int = 0):
+    assert np.sum(split_size) == a.shape[axis]
+    axis = (len(a.shape) + axis) % len(a.shape)
+    indices = [0] + np.cumsum(split_size).tolist()
+    
+    splits = [a[(slice(None),) * axis + (slice(i, j),)] for (i, j) in zip(indices, indices[1:])]
+    
+    return splits
+
+
 def unsqueeze(a, axis: int):
     return a[(slice(None),) * axis + (None,)]
 
@@ -143,6 +153,10 @@ def gelu(a):
 
 def silu(a):
     return operations.SiLUActivation([a]).forward()
+
+
+def softplus(a, beta: float = 1.0, threshold: float = 20.0):
+    return operations.SoftplusActivation([a], beta, threshold).forward()
 
 
 def softmax(a):

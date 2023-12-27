@@ -30,6 +30,7 @@ from candle.operations import (
     ReLUActivation,
     GeLUActivation,
     SiLUActivation,
+    SoftplusActivation,
 )
 from .utils import numerical_grad_check
 
@@ -117,6 +118,18 @@ class TestOperations(unittest.TestCase):
         numerical_grad_check(operation_class=SiLUActivation,
                              test_inputs=[Parameter(randn(2, 3, 5, 7, 11))])
         
+        numerical_grad_check(operation_class=SoftplusActivation,
+                             test_inputs=[Parameter(randn(2, 3, 5, 7, 11))],
+                             kwargs={'beta': 2, 'threshold': 3})
+        
+        numerical_grad_check(operation_class=SoftplusActivation,
+                             test_inputs=[Parameter(randn(2, 3, 5, 7, 11))],
+                             kwargs={'beta': -1, 'threshold': 1})
+        
+        numerical_grad_check(operation_class=SoftplusActivation,
+                             test_inputs=[Parameter(randn(2, 3, 5, 7, 11))],
+                             kwargs={'beta': 1, 'threshold': 20})
+                
         
     def test_power(self):
         numerical_grad_check(operation_class=Power,
