@@ -50,8 +50,7 @@ def batch_generation(model,
     Returns
     -------
     generator
-        The generator will yield List[int] of tokens as soon as all `beam_size` beams
-        agree on the tokens.
+        The generator will yield tokens as soon as they are sampled.
         
     Examples
     --------
@@ -82,7 +81,7 @@ def batch_generation(model,
 
             next_token_logits = model(indices_to_input, use_kv_cache)[:, -1]
 
-        probs = F.softmax(next_token_logits / temperature).data.T  # shape (vocab_size, batch)
+        probs = F.softmax(next_token_logits / (temperature + 1e-6)).data.T  # shape (vocab_size, batch)
         (vocab_size, batch) = probs.shape
 
         if top_k is not None:

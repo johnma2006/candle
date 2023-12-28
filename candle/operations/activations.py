@@ -54,7 +54,7 @@ class SiLUActivation(Operation):
     """Sigmoid Linear Units activation function.
 
     References:
-    [1] Stefan Elfwing, Eiji Uchibe, Kenji Doya,
+    [1] Stefan Elfwing, Eiji Uchibe, Kenji Doya.
         Sigmoid-Weighted Linear Units for Neural Network Function Approximation in Reinforcement Learning
         arXiv:1702.03118v3, 2017.
     
