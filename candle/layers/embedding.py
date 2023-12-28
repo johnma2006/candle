@@ -16,11 +16,12 @@ class Embedding(Module):
     def forward(self, indices):
         """Returns embeddings associated with indices.
         
-        Parameters
-        ----------
-        indices
-            Shape (batch, seqlen) integer tensor of embedding indices.
-            
+        Args:
+            indices (Tensor): shape (batch, seqlen) integer tensor of embedding indices.
+        
+        Returns:
+            tensor: shape (batch, seqlen, embed_dim)
+
         """
         return self.embeddings[list(indices.data.astype(int))]
     

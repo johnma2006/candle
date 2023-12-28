@@ -1,7 +1,7 @@
 """Mixtral mixture of experts implementation.
 
 References:
-[1] Mistral implementation: https://github.com/mistralai/mistral-src/blob/main/mistral/
+    [1] Mistral implementation: https://github.com/mistralai/mistral-src/blob/main/mistral/
 
 """
 
@@ -73,18 +73,13 @@ class Mixtral(Module):
                 indices: Tensor,
                 use_kv_cache: bool = False):
         """
-        Parameters
-        ----------
-        indices
-            Integer tensor with shape (batch, seq_len).
-        use_kv_cache
-            Whether or not to use kv_cache to speed up inference.
-        
-        Returns
-        -------
-        logits
-            Tensor with shape (batch, seqlen, vocab_size)
+        Args:
+            indices (Tensor): Integer tensor with shape (batch, seq_len).
+            use_kv_cache (bool): Whether or not to use kv_cache to speed up inference.
             
+        Returns:
+            logits (Tensor): shape (batch, seqlen, vocab_size)
+                
         """
         x = self.word_embeddings(indices)  # shape (batch, seqlen, embed_dim)
 
@@ -101,12 +96,10 @@ class Mixtral(Module):
     def from_pretrained(model_name: str):
         """Returns Mixtral with pretrained weights.
 
-        Parameters
-        ----------
-        model_name : str
-            Name of the pre-trained model. Valid options are:
-            * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
-            * 'mistralai/Mixtral-8x7B-v0.1'
+        Args:
+            model_name (str): Name of the pre-trained model. Valid options are:
+                * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+                * 'mistralai/Mixtral-8x7B-v0.1'
 
         """
         from .loadpretrained import load_pretrained_mixtral
@@ -178,7 +171,14 @@ class DecoderBlock(Module):
                 x: Tensor,
                 use_kv_cache: bool,
                 rotation_matr: Tuple[Tensor, Tensor] = None):
-        # x: Tensor with shape (batch, seqlen, embed_dim)
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = x + self.self_attn(self.norm1(x), use_kv_cache, rotation_matr)
         x = x + self.moe(self.norm2(x))
 
@@ -218,6 +218,14 @@ class MOE(Module):
 
 
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         logits = self.gate(x)
         
         # weights, selected experts: (batch, seqlen, n_exp_per_tok)
@@ -248,6 +256,14 @@ class FeedForwardBlock(Module):
         
         
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = F.silu(self.w1(x)) * self.w3(x)  # SwiGLU "activation"
         x = self.w2(x)
         

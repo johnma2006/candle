@@ -190,15 +190,11 @@ def masked_fill(a,
                 fill_value: float):
     """Returns Tensor with masked values replaced with fill_value.
 
-    Parameters
-    ----------
-    a
-        Tensor to fill.
-    mask
-        Tensor of 1s and 0s, must be broadcastable with `a`.
-        1 to fill with fill_value, 0 to leave as-is.
-    fill_value
-        Value to fill.
+    Args:
+        a (Tensor): Tensor to fill.
+        mask (Tensor): Tensor of 1s and 0s, must be broadcastable with `a`.
+            1 to fill with fill_value, 0 to leave as-is.
+        fill_value (float): Value to fill.
 
     """
     return operations.TensorMaskedFill([a], mask=mask, fill_value=fill_value).forward()
@@ -209,19 +205,14 @@ def topk(a,
          axis: int = -1):
     """Returns the largest k values along a given axis.
 
-    Parameters
-    ----------
-    a
-        Input tensor
-    k
-        Grabs top `k` elements
-    axis
-        Axis to sort.
+    Args:
+        a (Tensor): Input tensor
+        k (int): Grabs top `k` elements
+        axis (int): Axis to sort.
 
-    Returns
-    -------
-    (values, indices)
-        Values and indices of the largest k elements of the input in the given axis.
+    Returns:
+        (values, indices)
+            Values and indices of the largest k elements of the input in the given axis.
 
     """
     op = operations.TopKOperation([a], k, axis)

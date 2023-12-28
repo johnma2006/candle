@@ -16,19 +16,13 @@ class DataLoader:
                  transforms: List[Callable] = None):
         """Initialize data loader.
         
-        Parameters
-        ----------
-        tensors
-            List of Tensors.
-        batch_size
-            Size of batches to return.
-        shuffle
-            False to return batches in order.
-        drop_last
-            True to drop the last batch if len(tensors) isn't evenly divisible by batch size.
-        transforms
-            List with same size as tensors. transforms[i] will apply on tensors[i].
-            Each transforms[i] is a Callable functions.
+        Args:
+            tensors (List[Tensor]): Tensors to sample batches from.
+            batch_size (int): Size of batches to return.
+            shuffle (bool): False to return batches in order.
+            drop_last (bool): True to drop the last batch if len(tensors) isn't evenly divisible by batch size.
+            transforms (List[Callable]): List with same size as tensors.
+                Each transforms[i] is a Callable functions. transforms[i] will apply on tensors[i].
         
         """
         if not len(set([len(x) for x in tensors])) == 1:

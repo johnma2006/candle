@@ -3,9 +3,8 @@
 Should be similar to using Google's sentencepiece.SentencePieceProcessor, but with a lot
 fewer features (just enough to encode/decode LLaMA's vocabulary).
 
-References
-----------
-[1] https://github.com/google/sentencepiece/blob/master/src/sentencepiece_processor.cc
+References:
+    [1] https://github.com/google/sentencepiece/blob/master/src/sentencepiece_processor.cc
 
 """
 
@@ -35,12 +34,10 @@ class Processor:
                  model_file: str):
         """Initialize Processor.
         
-        Parameters
-        ----------
-        model_file
-            Path to model file, e.g. /path/llama2/tokenizer.model.
-            This file likely is the output of running Google's SentencePieceTrainer.
-            
+        Args:
+            model_file (str): Path to model file, e.g. /path/llama2/tokenizer.model.
+                This file likely is the output of running Google's SentencePieceTrainer.
+                
         """
         from . import spm_protobuf  # Need to `conda install protobuf`
         self.model_file = model_file
@@ -60,25 +57,19 @@ class Processor:
         
         
     def encode(self,
-               input_str: int,
+               input_str: str,
                out_type: type = int,
                add_bos: bool = False,
                add_eos: bool = False,
                emit_unk_piece: bool = False):
         """O(nlogn) BPE merging algorithm.
 
-        Parameters
-        ---------
-        input_str
-            String to encode.
-        out_type
-            One of [str, int].
-        add_bos
-            Add <s> token to start.
-        add_eos
-            Add </s> token to end.
-        emit_unk_piece
-            Emit the UNK literal string.
+        Args:
+            input_str (str): String to encode.
+            out_type (type): One of [str, int].
+            add_bos (bool): Add <s> token to start.
+            add_eos (bool:  Add </s> token to end.
+            emit_unk_piece (bool): Whether to emit the UNK literal string.
 
         """
         if self.trainer_spec.model_type == self.trainer_spec.BPE:

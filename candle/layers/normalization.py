@@ -12,13 +12,10 @@ class LayerNorm(Module):
                  eps: float = 1e-5):
         """Layer normalization.
         
-        Parameters
-        ----------
-        normalized_shape
-            The input shape for all axes in axis.
-            For example, if input.shape = (2, 3, 5, 7) and axis=(-1, -2), then normalized_shape = (5, 7). 
-        eps
-            Value added to the denominator for numerical stability.
+        Args:
+            normalized_shape (int or Tuple[int]): The input shape for all axes in axis.
+                For example, if input.shape = (2, 3, 5, 7) and axis=(-1, -2), then normalized_shape = (5, 7). 
+            eps (float): Value added to the denominator for numerical stability.
             
         """
         super().__init__()
@@ -56,13 +53,10 @@ class RMSNorm(Module):
                  eps: float = 1e-5):
         """RMS normalization.
         
-        Parameters
-        ----------
-        normalized_shape
-            The input shape for all axes in axis.
-            For example, if input.shape = (2, 3, 5, 7) and axis=(1, 2), then normalized_shape = (3, 5). 
-        eps
-            Value added to the denominator for numerical stability.
+        Args:
+            normalized_shape (int or Tuple[int]): The input shape for all axes in axis.
+                For example, if input.shape = (2, 3, 5, 7) and axis=(1, 2), then normalized_shape = (3, 5). 
+            eps (float): Value added to the denominator for numerical stability.
             
         """
         super().__init__()
@@ -99,18 +93,13 @@ class BatchNorm(Module):
                  eps: float = 1e-5):
         """Batch normalization. This class is a generalization of PyTorch's BatchNorm1d and BatchNorm2d.
         
-        Parameters
-        ----------
-        normalized_shape
-            The input shape for all axes not in axis.
-            For example, if input.shape = (2, 3, 5, 7) and axis=(0, 2), then normalized_shape = (3, 7). 
-        axis
-            Axis to compute mean/std over. Must include the 0, batch axis.
-            For example, axis=(0,) for BatchNorm1d. axis=(0, 2, 3) for BatchNorm2d.
-        momentum
-            How fast to decay the running_mean and running_var estimations.
-        eps
-            Value added to the denominator for numerical stability.
+        Args:
+            normalized_shape (int or Tuple[int]): The input shape for all axes not in axis.
+                For example, if input.shape = (2, 3, 5, 7) and axis=(0, 2), then normalized_shape = (3, 7).
+            axis (int or Tuple[int]): Axis to compute mean/std over. Must include the 0, batch axis.
+                For example, axis=(0,) for BatchNorm1d. axis=(0, 2, 3) for BatchNorm2d.
+            momentum (float): How fast to decay the running_mean and running_var estimations.
+            eps (float): Value added to the denominator for numerical stability.
             
         """
         super().__init__()

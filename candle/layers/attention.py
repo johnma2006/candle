@@ -9,22 +9,22 @@ from .dropout import Dropout
 
 
 class GroupedQueryRotaryAttention(Module):
-    """Grouped-query rotary attention with KV caching.
+    """Grouped-query rotary (RoPE) attention with KV caching.
     
     This is a generalization of MultiheadAttention. In particular, 
         MultiheadAttention = GroupedQueryRotaryAttention(n_kv_heads=n_heads,
                                                          apply_rotary_embedding=False)
 
     Note: our implementation follows the original paper, where query/key are interleaved.
-    This differs from some common HuggingFace implementations, which bisect the query/key.
-    
+    This differs from some HuggingFace implementations, which bisect the query/key.
                                                          
-    References
-    ----------
-    [1] Joshua Ainslie, James Lee-Thorp, Michiel de Jong, Yury Zemlyanskiy, Federico Lebrón, Sumit Sanghai.
-        GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints. arXiv:2305.13245, 2023
-    [2] Jianlin Su, Yu Lu, Shengfeng Pan, Ahmed Murtadha, Bo Wen, Yunfeng Liu
-        RoFormer: Enhanced Transformer with Rotary Position Embedding. arXiv:2104.09864, 2021
+    References:
+        [1] Ainslie, Lee-Thorp, de Jong, Zemlyanskiy, Lebrón, and Sanghai.
+            GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints.
+            arXiv:2305.13245, 2023
+        [2] Su, Lu, Pan, Murtadha, Wen, and Liu.
+            RoFormer: Enhanced Transformer with Rotary Position Embedding.
+            arXiv:2104.09864, 2021
                                                          
     """
     
@@ -40,7 +40,8 @@ class GroupedQueryRotaryAttention(Module):
                  batch_first: bool = True):
         super().__init__()
         if not batch_first:
-            raise ValueError('We do not support batch_first=False. This param is purely to maintain compatibility with PyTorch.')
+            raise ValueError('batch_first=False is not supported. This param is purely '
+                             'to maintain compatibility with PyTorch.')
         assert embed_dim % n_heads == 0
         assert n_heads % n_kv_heads == 0
         
@@ -58,8 +59,8 @@ class GroupedQueryRotaryAttention(Module):
         self.W_v = Linear(embed_dim, n_kv_heads * self.per_head_dim, bias=bias)
         self.W_o = Linear(embed_dim, embed_dim, bias=bias)
         
-        # kv_cache = (key_cache, value_cache), both of shape (batch, n_kv_heads, cache_seqlen, per_head_dim).
-        self.kv_cache: Tuple[Tensor] = None
+        # kv_cache = (key_cache, value_cache), both shape (batch, n_kv_heads, cache_seqlen, per_head_dim).
+        self.kv_cache: Tuple[Tensor, Tensor] = None
             
         
     def forward(self,
@@ -69,33 +70,27 @@ class GroupedQueryRotaryAttention(Module):
                 attn_mask: Tensor = None,
                 use_kv_cache: bool = False,
                 rotation_matr: Tuple[Tensor, Tensor] = None):
-        """Attention aggregation.
-        
-        Parameters
-        ----------
-        query
-            Tensor of shape (batch, query seqlen, embed_dim).
-        key, value
-            Tensors of shape (batch, key seqlen, embed_dim).
-        attn_mask
-            Tensor of shape (query seqlen, key seqlen). attn_mask[i, j] = 0 means that query_i
-                should attend to key_j.
-            If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
+        """
+        Attention aggregation.
+    
+        Args:
+            query (Tensor): shape (batch, query seqlen, embed_dim).
+            key, value (Tensor): shape (batch, key seqlen, embed_dim).
+            attn_mask (Tensor): shape (query seqlen, key seqlen). 
+                attn_mask[i, j] = 0 means that query_i should attend to key_j.
+                If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
                 (query seqlen, cache seqlen + key seqlen), which assumes that the query attends 
                 to all keys/values in the KV cache.
-        use_kv_cache
-            Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
-            before computing attention, and updates self.kv_cache with the new key/value.
-        rotation_matr
-            The result of self.compute_rotation_matrix(). Precompute to save time/memory.
-            
-        Returns
-        -------
-        (attn_output, attn_scores)
-            attn_output is shape (batch, query seqlen, embed_dim)
-            attn_scores is shape (batch, query seqlen, key seqlen)
-                or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True
-            
+            use_kv_cache (bool): Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
+                before computing attention, and updates self.kv_cache with the new key/value.
+            rotation_matr: The result of self.compute_rotation_matrix(). Precompute to save time/memory.
+    
+        Returns:
+            tuple: A tuple containing:
+                - attn_output (Tensor): shape (batch, query seqlen, embed_dim).
+                - attn_scores (Tensor): shape (batch, query seqlen, key seqlen)
+                    or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True.
+                    
         """
         def reshape_and_transpose(tensor, n_heads):
             """Reshapes tensor with shape (batch, seqlen, n_heads * per_head_dim)
@@ -158,15 +153,14 @@ class GroupedQueryRotaryAttention(Module):
     
     
     def compute_rotation_matrix(self):
-        """Precompute the sparse rotation matrix for rotary embedding.
-                
-        Returns
-        -------
-        rotation_matr: Tuple[Tensor, Tensor]
-            rotation_matr = (cos_A, sin_A), both shaped (max_seqlen, per_head_dim/2, 2)
-            See `self.apply_rotation_matrix` for how cos_A, sin_A are defined.
+        """Precomputes the sparse rotation matrix for rotary embedding.
         
+        Returns:
+            Tuple[Tensor, Tensor]: The rotation matrix (cos_A, sin_A), both shaped as 
+            (max_seqlen, per_head_dim/2, 2).
+            Refer to `self.apply_rotation_matrix` for the definition of cos_A and sin_A.
         """
+
         # angle: shape (max_seqlen, per_head_dim/2), angle[i, j] = i / rotary_base^(2j / per_head_dim)
         angle = np.outer(
             np.arange(self.max_seqlen),
@@ -263,31 +257,26 @@ class MultiheadAttention(Module):
                 value: Tensor,
                 attn_mask: Tensor = None,
                 use_kv_cache: bool = False):
-        """Attention aggregation.
-        
-        Parameters
-        ----------
-        query
-            Tensor of shape (batch, query seqlen, embed_dim).
-        key, value
-            Tensors of shape (batch, key seqlen, embed_dim).
-        attn_mask
-            Tensor of shape (query seqlen, key seqlen). attn_mask[i, j] = 0 means that query_i
-                should attend to key_j.
-            If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
+        """
+        Attention aggregation.
+    
+        Args:
+            query (Tensor): shape (batch, query seqlen, embed_dim).
+            key, value (Tensor): shape (batch, key seqlen, embed_dim).
+            attn_mask (Tensor): shape (query seqlen, key seqlen). 
+                attn_mask[i, j] = 0 means that query_i should attend to key_j.
+                If use_kv_cache is True, then attn_mask will be augmented with 0s to shape 
                 (query seqlen, cache seqlen + key seqlen), which assumes that the query attends 
                 to all keys/values in the KV cache.
-        use_kv_cache
-            Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
-            before computing attention, and updates self.kv_cache with the new key/value.
-            
-        Returns
-        -------
-        (attn_output, attn_scores)
-            attn_output is shape (batch, query seqlen, embed_dim)
-            attn_scores is shape (batch, query seqlen, key seqlen)
-                or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True
-            
+            use_kv_cache (bool): Whether or not to use kv_cache. If True, then prepends self.kv_cache to key/value
+                before computing attention, and updates self.kv_cache with the new key/value.
+    
+        Returns:
+            tuple: A tuple containing:
+                - attn_output (Tensor): shape (batch, query seqlen, embed_dim).
+                - attn_scores (Tensor): shape (batch, query seqlen, key seqlen)
+                    or (batch, query seqlen, cache seqlen + key seqlen) if use_kv_cache is True.
+                    
         """
         def reshape_and_transpose(tensor):
             """Reshapes tensor with shape (batch, seqlen, n_heads * per_head_dim)
@@ -370,21 +359,16 @@ class DotProductAttention(Module):
                 attn_mask: Tensor = None):
         """Does attention aggregation.
         
-        Parameters
-        ----------
-        query
-            Tensor of shape (batch, ..., query seqlen, embed_dim)
-        key, value
-            Tensors of shape (batch, ..., key seqlen, embed_dim)
-        attn_mask
-            Tensor of 1s and 0s with shape (query seqlen, key seqlen).
-            1 if not allowed to attend, 0 if allowed to attend.
+        Args:
+            query (Tensor): shape (batch, ..., query seqlen, embed_dim)
+            key, value (Tensor): shape (batch, ..., key seqlen, embed_dim)
+            attn_mask (Tensor): tensor of 1s and 0s with shape (query seqlen, key seqlen).
+                1 if not allowed to attend, 0 if allowed to attend.
             
-        Returns
-        -------
-        (attn_output, attn_scores)
-            attn_output is shape (batch, ..., query seqlen, embed_dim)
-            attn_scores is shape (batch, ..., query seqlen, key seqlen)
+        Returns:
+        tuple: A tuple containing:
+            - attn_output (Tensor): shape (batch, ..., query seqlen, embed_dim)
+            - attn_scores (Tensor): shape (batch, ..., query seqlen, key seqlen)
             
         """
         embed_dim = query.shape[-1]

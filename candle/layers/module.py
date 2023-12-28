@@ -63,15 +63,14 @@ class Module(ABC):
     def register_forward_hook(self, hook_fn):
         """Registers a hook that will be called every time forward() is completed.
 
-        Parameters
-        ----------
-        hook_fn
-            Callable with the following signature:
+        Args:
+            hook_fn (Callable): Callable with the following signature:
                 def hook_fn(module, input, output) -> None or modified output
 
         """
         if not callable(hook_fn):
-            raise ValueError('hook_fn must be Callable function with signature `def hook_fn(module, input, output)`.')
+            raise ValueError('hook_fn must be Callable function with signature '
+                             '`def hook_fn(module, input, output)`.')
             
         self._hooks.append(hook_fn)
     
@@ -95,7 +94,8 @@ class Module(ABC):
         # Apply hooks
         
         if not hasattr(self, '_hooks'):
-            raise Exception(f'Module {type(self).__name__} must call super().__init__() if overriding the constructor.')
+            raise Exception(f'Module {type(self).__name__} must call super().__init__() '
+                            f'if overriding the constructor.')
         
         for hook_fn in self._hooks:
             _output = hook_fn(self, tuple(args), output)
@@ -142,12 +142,10 @@ class Module(ABC):
                 _level: int = 0):
         """Returns DataFrame summarizing the model.
         
-        Parameters
-        ----------
-        input_shape
-            If provided, then the output shape of each module will be computed.
-        expand_submodules_to_level
-            How far recursively into each module to expand. None to expand everything.
+        Args:
+            input_shape ((int, int)): If provided, then the output shape of each module will be computed.
+            expand_submodules_to_level (int): How far recursively into each module to expand. 
+                None to expand everything.
             
         """
         if expand_submodules_to_level is None:

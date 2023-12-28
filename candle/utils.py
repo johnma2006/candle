@@ -51,16 +51,11 @@ def conv2d(image: np.array,
            dtype = None):
     """Computes 2D convolution.
 
-    Parameters
-    ----------
-    image
-        np.array with shape (N, in_channels, height, width).
-    kernel
-        np.array with shape (in_channels, out_channels, kernel_height, kernel_width).
-    padding
-        int, or tuple of ints (padding_height, padding_width).
-    stride
-        int, or tuple of ints (stride_height, stride_width).
+    Args:
+        image (np.array): shape (N, in_channels, height, width).
+        kernel (np.array): shape (in_channels, out_channels, kernel_height, kernel_width).
+        padding (int or (int, int)): int or tuple of ints (padding_height, padding_width).
+        stride (int, or (int, int)): int or tuple of ints (stride_height, stride_width).
 
     """
     if type(padding) is int:

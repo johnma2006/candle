@@ -7,17 +7,13 @@ def load_pretrained_mixtral(model_name: str):
     Note: currently the implementation is SUPER memory inefficient requiring peak 2x the model param size.
     Todo is to implement load_state_dicts to optimize speed/memory.
 
-    Parameters
-    ----------
-    model_name : str
-        Name of the pre-trained model. Valid options are:
-        * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
-        * 'mistralai/Mixtral-8x7B-v0.1'
+    Args:
+        model_name (str): Name of the pre-trained model. Valid options are:
+            * 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+            * 'mistralai/Mixtral-8x7B-v0.1'
         
-    Returns
-    -------
-    model : Mixtral
-        A Mixtral model instance with Mistral's pre-trained weights loaded.
+    Returns:
+        Mixtral model instance with Mistral's pre-trained weights loaded.
 
     """
     from .model import Mixtral

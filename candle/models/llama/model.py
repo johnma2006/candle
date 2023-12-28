@@ -1,7 +1,7 @@
 """Llama implementation.
 
 References:
-[1] Meta's LLaMA 2: https://github.com/facebookresearch/llama/blob/main/llama/
+    [1] Meta's LLaMA 2: https://github.com/facebookresearch/llama/blob/main/llama/
 
 """
 
@@ -70,18 +70,13 @@ class Llama(Module):
                 indices: Tensor,
                 use_kv_cache: bool = False):
         """
-        Parameters
-        ----------
-        indices
-            Integer tensor with shape (batch, seq_len).
-        use_kv_cache
-            Whether or not to use kv_cache to speed up inference.
-        
-        Returns
-        -------
-        logits
-            Tensor with shape (batch, seqlen, vocab_size)
+        Args:
+            indices (Tensor): Integer tensor with shape (batch, seq_len).
+            use_kv_cache (bool): Whether or not to use kv_cache to speed up inference.
             
+        Returns:
+            logits (Tensor): shape (batch, seqlen, vocab_size)
+                
         """
         x = self.word_embeddings(indices)  # shape (batch, seqlen, embed_dim)
 
@@ -96,41 +91,43 @@ class Llama(Module):
     @staticmethod
     def from_pretrained(model_name: str,
                         model_dir: str):
-        """Returns LLaMA2 with pretrained weights.
-
-        Parameters
-        -----------
-        model_name
-            One of ['7b', '7b-chat', '13b', '13b-chat', '70b', '70b-chat'].
-        model_dir
-            Directory with LLaMA weights. To download, go to https://ai.meta.com/llama/.
-            E.g. if model_dir = '/path/to/llama', the directory should look like this:
-
+        """Loads a pre-trained LLaMA2 model with Meta's weights.
+    
+        Args:
+            model_name (str): Name of the pre-trained LLaMA2 model. Valid options are:
+                * '7b'
+                * '7b-chat'
+                * '13b'
+                * '13b-chat'
+                * '70b'
+                * '70b-chat'
+    
+            model_dir (str): Directory containing the pre-trained LLaMA2 model weights.
+                The directory structure should be as follows:
+        
                 /path/to/llama
                 ├── tokenizer.model
                 ├── tokenizer_checklist.chk
-                ├── 7b
+                ├── llama-2-7b
                 │   ├── checklist.chk
                 │   ├── consolidated.00.pth
                 │   └── params.json
-                ├── 7b-chat
+                ├── llama-2-7b-chat
                 │   ├── checklist.chk
                 │   ├── consolidated.00.pth
                 │   └── params.json
-                ├── 13b
+                ├── llama-2-13b
                 │   ├── checklist.chk
                 │   ├── consolidated.00.pth
                 │   ├── consolidated.01.pth
                 │   └── params.json
-                ├── 13b-chat
-                │   ├─ ...
+                ├── llama-2-13b-chat
                 │   ...
-
-        Returns
-        -------
-        model
-            LLaMA2 instance with Meta's weights initialized.
-
+                ...
+    
+        Returns:
+            Llama model instance with Meta's pre-trained weights loaded.
+    
         """
         from .loadpretrained import load_pretrained_llama
         return load_pretrained_llama(model_name, model_dir)
@@ -200,7 +197,14 @@ class DecoderBlock(Module):
                 x: Tensor,
                 use_kv_cache: bool,
                 rotation_matr: Tuple[Tensor, Tensor] = None):
-        # x: Tensor with shape (batch, seqlen, embed_dim)
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = x + self.self_attn(self.norm1(x), use_kv_cache, rotation_matr)
         x = x + self.ffn(self.norm2(x))
 
@@ -234,6 +238,14 @@ class FeedForwardBlock(Module):
         
         
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = F.silu(self.w1(x)) * self.w3(x)  # SwiGLU "activation"
         x = self.w2(x)
         

@@ -31,11 +31,12 @@ class PositionalEncoding(Module):
     def forward(self, x):
         """Adds fixed positional encoding.
         
-        Parameters
-        ----------
-        x
-            Tensor of shape (batch, seqlen, embed_dim)
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
             
+        Returns:
+            tensor: shape (batch, seqlen, embed_dim)
+                
         """
         x = x + self.encoding[:x.shape[1], :]
         x = self.dropout(x)

@@ -1,9 +1,9 @@
 """Speculative sampling decoding.
 
 References:
-[1] Charlie Chen, Sebastian Borgeaud, Geoffrey Irving, Jean-Baptiste Lespiau, Laurent Sifre and John Jumper.
-    Accelerating Large Language Model Decoding with Speculative Sampling
-    arXiv:2302.01318, 2023.
+    [1] Charlie Chen, Sebastian Borgeaud, Geoffrey Irving, Jean-Baptiste Lespiau, Laurent Sifre and John Jumper.
+        Accelerating Large Language Model Decoding with Speculative Sampling
+        arXiv:2302.01318, 2023.
     
 """
 from __future__ import annotations
@@ -25,32 +25,21 @@ def speculative_sample(target_model,
                        modify_kv_cache_func: Callable = None):
     """Generates response using speculative sampling and KV caching.
     
-    Parameters
-    ----------
-    target_model, draft_model
-        Target and draft models. See speculative sample paper [1].
-    K
-        Draft length. See speculative sample paper [1].
-    indices
-        Conditioning sequence. Tensor of shape (1, seqlen).
-    n_tokens_to_gen
-        Number of tokens to generate.
-    top_k
-        Filter probabilities to those in the top k.
-    top_p
-        Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
-    temperature
-        Higher temperature raises the likelihood of lower probability sequences.
-    modify_kv_cache_func
-        Function with signature `modify_kv_cache_func(model, trim_seqlen, reindex_batch_indices),
-        that modifies the model's kv_cache by trimming or reindexing.
-
-        See `default_modify_kv_cache` for example implementation.
+    Args:
+        target_model, draft_model (model): Target and draft models. See speculative sample paper [1].
+        K (int): Draft length. See speculative sample paper [1].
+        indices (Tensor): Conditioning sequence with shape (1, seqlen).
+        n_tokens_to_gen (int): Number of tokens to generate.
+        top_k (int): Filter probabilities to those in the top k.
+        top_p (float): Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
+        temperature (float: Higher temperature raises the likelihood of lower probability sequences.
+        modify_kv_cache_func (Callable): Callable with signature
+            `modify_kv_cache_func(model, trim_seqlen, reindex_batch_indices),
+            that modifies the model's kv_cache by trimming or reindexing.
+            See `default_modify_kv_cache` for example implementation.
         
-    Returns
-    -------
-    generator
-        The generator will yield tokens as soon as they are sampled.
+    Returns:
+        generator. The generator will yield tokens as soon as they are sampled.
 
     """
     target_model.eval()

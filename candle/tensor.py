@@ -18,12 +18,10 @@ class Tensor:
                  dtype: type = None):
         """Initialize Tensor.
 
-        Parameters
-        ----------
-        data
-            Numpy array.
-        dtype
-            dtype of tensor. If None, autocasts to Tensor.DEFAULT_DTYPE (float32).
+        Args:
+            data (np.array):
+            dtype (type): dtype of tensor.
+                If None, autocasts to Tensor.DEFAULT_DTYPE (float32).
             
         """
         if dtype is None:
@@ -121,10 +119,8 @@ class Tensor:
     def astype(self, dtype):
         """Returns cloned Tensor casted to dtype.
         
-        Parameters
-        ----------
-        dtype
-            Numpy dtype.
+        Args:
+            dtype (numpy dtype): Numpy dtype, e.g. np.float32.
             
         """
         cloned = self.clone()
@@ -316,12 +312,10 @@ class Parameter(Tensor):
                  dtype: type = None):
         """Initialize Parameter
         
-        Parameters
-        ----------
-        data
-            Numpy array.
-        dtype
-            dtype of tensor. If None, autocasts to float32.
+        Args:
+            data (np.array)
+            dtype (type): dtype of tensor.
+                If None, autocasts to float32.
             
         """
         super().__init__(data, dtype)

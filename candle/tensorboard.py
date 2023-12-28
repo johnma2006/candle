@@ -32,14 +32,10 @@ class Dashboard:
                    step: int = None):
         """Adds scalar to scalar plot.
         
-        Parameters
-        ----------
-        chart_label
-            Identifier of chart.
-        scalar
-            y-value to plot.
-        step
-            x-value to plot. If None, then appends to next step.
+        Args:
+            chart_label (str): Identifier of chart.
+            scalar (float): y-value to plot.
+            step (int): x-value to plot. If None, then appends to next step.
             
         """
         self._add_data_for_chart_type(ChartType.SCALAR, chart_label, scalar, step)
@@ -51,14 +47,10 @@ class Dashboard:
                     step: int = None):
         """Adds scalars to multi-scalar plot.
         
-        Parameters
-        ----------
-        chart_label
-            Identifier of chart.
-        scalar
-            Dict mapping legend label to scalar.
-        step
-            x-value to plot. If None, then appends to next step.
+        Args:
+            chart_label (str): Identifier of chart.
+            scalar: Dict mapping legend label to scalar.
+            step (int): x-value to plot. If None, then appends to next step.
             
         """
         if chart_label in self.data:
@@ -77,14 +69,10 @@ class Dashboard:
                       step: int = None):
         """Adds histogram to histogram plot.
         
-        Parameters
-        ----------
-        chart_label
-            Identifier of chart.
-        values
-            Values to histogram.
-        step
-            x-value to plot. If None, then appends to next step.
+        Args:
+            chart_label (str): Identifier of chart.
+            values (np.array): Values to histogram.
+            step (int): x-value to plot. If None, then appends to next step.
             
         """
         values = np.array(values)
@@ -106,13 +94,10 @@ class Dashboard:
              clear_output: bool = True):
         """Plots all charts.
         
-        Parameters
-        ----------
-        chart_label
-            Label of chart to plot.
-            If None, plots all charts.
-        clear_output
-            Clears output of cells before plotting. Useful for live dashboards.
+        Args:
+            chart_label (str): Label of chart to plot.
+                If None, plots all charts.
+            clear_output (bool): Clears output of cells before plotting. Useful for live dashboards.
             
         """
         plt.style.use('seaborn-v0_8-white')
@@ -302,12 +287,10 @@ class ChartSettings:
             chart_label: str = None):
         """Set setting.
         
-        Parameters
-        ----------
-        setting_name
-            Name of setting.
-        chart_label
-            Chart to set for. If None, then sets global setting.
+        Args:
+            setting_name (str): Name of setting.
+            value: Value to set setting to.
+            chart_label (str): Chart to set for. If None, then sets global setting.
             
         """
         if setting_name not in self.global_settings:
@@ -327,10 +310,8 @@ class ChartSettings:
             chart_label: str):
         """Get setting.
         
-        Parameters
-        ----------
-        setting_name
-            Name of setting.
+        Args:
+            setting_name (str): Name of setting.
 
         """
         if chart_label in self.chart_settings and setting_name in self.chart_settings[chart_label]:

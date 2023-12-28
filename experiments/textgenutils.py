@@ -100,40 +100,29 @@ def generate_text(model,
                   stdout = None):
     """Given a conditioning prompt, generates N tokens using beam search.
     
-    Parameters
-    ----------
-    n_tokens_to_gen
-        Number of tokens to generate.
-    top_k
-        Filter probabilities to those in the top k.
-    top_p
-        Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
-    temperature
-        Higher temperature raises the likelihood of lower probability sequences.
-    sample
-        True to randomly sample sequences from the distribution of probabilities
-        False to take argmax.
-    stop_token_idx
-        If provided, terminates generation upon seeing `stop_token_id`.
-    stop_strings
-        Dict mapping string to how many times we can see the string before
-        we stop generation. Accepts regexes.
+    Args:
+        n_tokens_to_gen (int): Number of tokens to generate.
+        top_k (float): Filter probabilities to those in the top k.
+        top_p (float): Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
+        temperature (float): Higher temperature raises the likelihood of lower probability sequences.
+        sample (bool): True to randomly sample sequences from the distribution of probabilities
+            False to take argmax.
+        stop_token_idx (int): If provided, terminates generation upon seeing `stop_token_id`.
+        stop_strings: Dict mapping string to how many times we can see the string before
+            we stop generation. Accepts regexes.
+            
+            Example:
+                stop_strings = {
+                    f'John:': 1,
+                    f'Taylor:': 1,
+                    '\n': 1,
+                    '<|endoftext|>': 1,
+                    '\.|\!|\?': 4      # If we see a . or ! or ? more than 4 times total
+                }
+        print_stream (bool): If True, then prints tokens as they are generated.
+        use_kv_cache (bool):            If True, uses KV caching to speed up inference.
+        stdout: Object implementing stdout.print(...). If None, prints to sys.stdout.
         
-        Example:
-            stop_strings = {
-                f'John:': 1,
-                f'Taylor:': 1,
-                '\n': 1,
-                '<|endoftext|>': 1,
-                '\.|\!|\?': 4      # If we see a . or ! or ? more than 4 times total
-            }
-    print_stream
-        If True, then prints tokens as they are generated.
-    use_kv_cache
-        If True, uses KV caching to speed up inference.
-    stdout
-        Object implementing stdout.print(...). If None, prints to sys.stdout.
-    
     """
     if stop_strings is None:
         stop_strings = {}
@@ -200,40 +189,31 @@ def ansi_color(text: str,
                bg_color: str = None):
     """Formats text with ANSI escape codes for adding color and style.
 
-    Parameters
-    ----------
-    text : str
-        The text to be formatted.
-    style : str, optional
-        The desired text style. Valid options are:
-
-        * 'bright'
-        * 'dim'
-        * 'underscore'
-        * 'blink'
-        * 'reverse'
-        * 'hidden'
-    color : str, optional
-        The desired text color. Valid options are:
-
-        * 'black'
-        * 'red'
-        * 'green'
-        * 'yellow'
-        * 'orange'
-        * 'blue'
-        * 'magenta'
-        * 'cyan'
-        * 'white'
-        * 'bluegreen'
-    bg_color : str, optional
-        The desired background color. Valid options are the same as for
-        `color`.
-
-    Returns
-    -------
-    str
-        The formatted text with ANSI escape sequences added.
+    Args:
+        text (str): The text to be formatted.
+        style (str, optional): The desired text style. Valid options are:
+            * 'bright'
+            * 'dim'
+            * 'underscore'
+            * 'blink'
+            * 'reverse'
+            * 'hidden'
+        color (str, optional): The desired text color. Valid options are:
+            * 'black'
+            * 'red'
+            * 'green'
+            * 'yellow'
+            * 'orange'
+            * 'blue'
+            * 'magenta'
+            * 'cyan'
+            * 'white'
+            * 'bluegreen'
+        bg_color (str, optional): The desired background color. Valid options are the same
+            as for `color`.
+    
+    Returns:
+        str. The formatted text with ANSI escape sequences added.
 
     """
     RESET_CODE = "\x1b[0m"
@@ -286,16 +266,15 @@ def ansi_color(text: str,
 class StdoutWithSyntaxHighlighting:
     """Emulates stdout printing, but with syntax highlighting.
     
-    Example
-    -------
-    stdout = StdoutWithSyntaxHighlighting()
-    stdout.print('Hi this is code: ```def f(x): return x```')
+    Example:
+        stdout = StdoutWithSyntaxHighlighting()
+        stdout.print('Hi this is code: ```def f(x): return x```')
 
 
-    Notes
-    -----
-    Warning: clears entire output of cell every time .print() is called.
-    Weird cell collapsing happens in the latest version of Jupyter. Use nbclassic to fix.
+    Warning:
+        Clears entire output of cell every time .print() is called.
+        Weird cell collapsing happens in the latest version of Jupyter Notebook 7.
+        Use nbclassic to fix.
     
     """
     

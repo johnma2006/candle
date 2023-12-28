@@ -14,10 +14,8 @@ class Operation(ABC):
                  inputs: List[Tensor]):
         """Initializes operation.
         
-        Parameters
-        ----------
-        inputs
-            List of Tensor inputs into operation.
+        Args:
+            inputs (List[Tensor]): Tensor inputs into operation.
         
         """
         # If any of the inputs are scalars, cast to Tensor
@@ -44,9 +42,7 @@ class Operation(ABC):
     def forward(self):
         """Computes the result of the operation, and conditionally connects result to computation graph.
         
-        Returns
-        -------
-        output
+        Returns:
             Tensor result of operation.
         
         """
@@ -68,15 +64,12 @@ class Operation(ABC):
     def backward(self, output_grad: np.array):
         """Computes the derivative of the loss node with respect to each Tensor in self.inputs.
         
-        Parameters
-        ----------
-        output_grad
-            Numpy array with shape self.output.shape.
+        Args:
+            output_grad (np.array): Array with shape self.output.shape.
         
-        Returns
-        -------
-        input_grads
-            List of Numpy arrays, one array of shape input.shape for each tensor `input` in self.inputs.
+        Returns:
+            input_grads (List of np.array): one array of shape input.shape for
+                each tensor `input` in self.inputs.
         
         """
         input_grads = self._backward(output_grad)

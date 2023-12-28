@@ -8,14 +8,10 @@ from candle.optimizer import AdamW
 def get_random_batch(*tensors, batch_size: int, transforms: List[Callable] = None):
     """Get random batch of data.
 
-    Parameters
-    ----------
-    tensors
-        List of Tensors.
-    batch_size
-        Size of batches to return.
-    transforms
-        List with same size as tensors. Each element is a Callable functions.
+    Args:
+        tensors (List[Tensor]): List of Tensors to grab batches from.
+        batch_size (int): Size of batches to return.
+        transforms (List[Callable]): List with same size as tensors. Each element is a Callable functions.
 
     """
     assert len(set([len(t) for t in tensors])) == 1
@@ -41,15 +37,11 @@ def get_random_batch(*tensors, batch_size: int, transforms: List[Callable] = Non
 def get_loss_and_accuracy(model, X, y, logits: np.array = None):
     """Gets loss and accuracy for a classification model.
     
-    Parameters
-    ----------
-    model
-        Module that outputs logits.
-    X
-        Features, shape (batch_size, num_features)
-    y
-        Target, int tensor with shape (batch_size,)
-        
+    Args:
+        model: Module that outputs logits of shape (batch, vocab_size).
+        X (Tensor): Features, shape (batchc, num_features)
+        y (Tensor): Target, int tensor with shape (batch,)
+            
     """
     if logits is None:
         logits = []
@@ -70,12 +62,9 @@ def get_loss_and_accuracy(model, X, y, logits: np.array = None):
 def get_predictions(model, X):
     """Gets predictions for a classification model.
     
-    Parameters
-    ----------
-    model
-        Module that outputs logits.
-    X
-        Features, shape (batch_size, num_features)
+    Args:
+        model: Module that outputs logits of shape (batch, vocab_size).
+        X (Tensor): Features, shape (batchc, num_features)
         
     """
     predictions = []

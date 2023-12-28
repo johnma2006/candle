@@ -14,20 +14,13 @@ def numerical_grad_check(operation_class: Type,
                          check_dtype: bool = True):
     """Compares .backward() gradient against numerically computed gradient.
     
-    Parameters
-    ----------
-    operation_class
-        Class, e.g. TensorDot.
-    test_inputs
-        List of Tensor inputs into `operation_class`.
-    eps
-        Perturbation when computing numerical gradient.
-    random_seed
-        Random seed to use when generating randomness.
-    atol
-        Tolerance for errors in assertions.
-    check_dtype
-        If True, then also checks that the dtype of the gradient matches Tensor.DEFAULT_DTYPE
+    Args:
+        operation_class (Class): Class, e.g. TensorDot.
+        test_inputs (List[Parameter]): List of Tensor inputs into `operation_class`.
+        eps (float): Perturbation when computing numerical gradient.
+        random_seed (int): Random seed to use when generating randomness.
+        atol (float): Tolerance for errors in assertions.
+        check_dtype (bool): If True, then also checks that the dtype of the gradient matches Tensor.DEFAULT_DTYPE
         
     """
     # Switch to double precision for grad checks
@@ -119,16 +112,12 @@ def model_numerical_grad_check(model,
                                check_dtype: bool = True):
     """Compares .backward() gradient against numerically computed gradient.
     
-    Parameters
-    ----------
-    model
-        Module that implements .forward()
-    loss_fn
-        Function with signature `def loss_fn(model, random_seed)` that returns loss for some random fixed input.
-    eps
-        Perturbation when computing numerical gradient.
-    random_seed
-        Random seed to use when generating randomness.
+    Args:
+        model (model Module): Module that implements .forward()
+        loss_fn (Callable): Function with signature `def loss_fn(model, random_seed)`
+            that returns loss for some random fixed input.
+        eps (float): Perturbation when computing numerical gradient.
+        random_seed (int): Random seed to use when generating randomness.
         
     """
     # Switch to double precision for grad checks

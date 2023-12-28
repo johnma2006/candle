@@ -6,18 +6,14 @@ import numpy as np
 def load_pretrained_gpt(model_name: str):
     """Returns GPT2 with pretrained weights.
 
-    Parameters
-    -----------
-    model_name
-        One of ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'].
+    Args:
+        model_name (str): One of ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'].
             gpt2:         124M params
             gpt2-medium:  354M params
             gpt2-large:   774M params
             gpt2-xl:    1,557M params
 
-    Returns
-    -------
-    model
+    Returns:
         GPT instance with pre-trained weights initialized.
 
     """

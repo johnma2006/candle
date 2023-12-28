@@ -31,8 +31,14 @@ class Conv2d(Module):
         
         
     def forward(self, x):
-        # input: shape (N, in_channels, height, width)
-        # output: shape (N, out_channels, height, width)
+        """
+        Args:
+            x (Tensor): shape (N, in_channels, height, width).
+        
+        Returns:
+            tensor: shape (N, out_channels, height, width).
+
+        """
         operation = operations.Conv2dOperation(inputs=[x, self.kernel],
                                                stride=self.stride,
                                                padding=self.padding)
@@ -62,8 +68,14 @@ class MaxPool2d(Module):
         
         
     def forward(self, x):
-        # input: shape (N, in_channels, height, width)
-        # output: shape (N, in_channels, height, width)
+        """
+        Args:
+            x (Tensor): shape (N, in_channels, height, width).
+        
+        Returns:
+            tensor: shape (N, out_channels, height, width).
+
+        """
         operation = operations.MaxPool2dOperation(inputs=[x],
                                                   kernel_size=self.kernel_size,
                                                   padding=self.padding)
@@ -89,8 +101,14 @@ class AvgPool2d(Module):
         
         
     def forward(self, x):
-        # input: shape (N, in_channels, height, width)
-        # output: shape (N, in_channels, height, width)
+        """
+        Args:
+            x (Tensor): shape (N, in_channels, height, width).
+        
+        Returns:
+            tensor: shape (N, out_channels, height, width).
+
+        """
         operation = operations.AvgPool2dOperation(inputs=[x],
                                                   kernel_size=self.kernel_size,
                                                   padding=self.padding)

@@ -9,10 +9,8 @@ class ParameterList(Module):
                  parameter_list: List[object]):
         """Initializes list of Parameters.
         
-        Parameters
-        ----------
-        parameter_list
-            List of Parameters or objects that subclass HasParameter.
+        Args:
+            parameter_list (List[Parameter or Module]): List of Parameters or Modules:
             
         """
         super().__init__()

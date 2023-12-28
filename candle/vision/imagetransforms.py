@@ -13,10 +13,8 @@ class ImageTransform(ABC):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images (Tensor): shape (batch, channel, height, width)
 
         """
         pass
@@ -28,10 +26,8 @@ class Compose(ImageTransform):
                  transforms: List[ImageTransform]):
         """Chains together multiple transforms into a single transform.
 
-        Parameters
-        ----------
-        transforms
-            Transforms to chain.
+        Args:
+            transforms (List[ImageTransform]): Transforms to chain.
 
         """
         self.transforms = transforms
@@ -40,10 +36,8 @@ class Compose(ImageTransform):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images (Tensor): shape (batch, channel, height, width)
 
         """
         for transform in self.transforms:
@@ -59,14 +53,11 @@ class RandomCrop(ImageTransform):
                  padding: int = 0):
         """Randomly crop images at random location.
 
-        Parameters
-        ----------
-        size
-            Size of cropped output image.
-            If int, then represents (size, size).
-            If tuple of ints, then represents (height, width).
-        padding
-            Padding to use equally on left/right/top/bottom.
+        Args:
+            size (int or (int, int)): Size of cropped output image.
+                If int, then represents (size, size).
+                If tuple of ints, then represents (height, width).
+            padding (int): Padding to use equally on left/right/top/bottom.
 
         """
         if type(size) is int:
@@ -78,10 +69,8 @@ class RandomCrop(ImageTransform):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images (Tensor): shape (batch, channel, height, width)
 
         """
         images = np.pad(images.data, pad_width=[(0, 0),
@@ -103,10 +92,8 @@ class RandomHorizontalFlip(ImageTransform):
                  p: float = 0.5):
         """Randomly flips image horizontally.
 
-        Parameters
-        ----------
-        p
-            Probability of image being flipped.
+        Args:
+            p (float): Probability of image being flipped.
 
         """
         self.p = p
@@ -115,10 +102,8 @@ class RandomHorizontalFlip(ImageTransform):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images (Tensor): shape (batch, channel, height, width)
 
         """
         if np.random.random() < self.p:
@@ -133,10 +118,8 @@ class RandomVerticalFlip(ImageTransform):
                  p: float = 0.5):
         """Randomly flips image vertically.
 
-        Parameters
-        ----------
-        p
-            Probability of image being flipped.
+        Args:
+            p (float): Probability of image being flipped.
 
         """
         self.p = p
@@ -145,10 +128,8 @@ class RandomVerticalFlip(ImageTransform):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images (List[Tensor]): Tensors of shape (batch, channel, height, width)
 
         """
         if np.random.random() < self.p:
@@ -164,10 +145,8 @@ class Normalize(ImageTransform):
                  stds: List[float]):
         """Normalizes an image using a given mean and std.
 
-        Parameters
-        ----------
-        means, stds
-            Length `channel` list of means/stds per channel.
+        Args:
+            means, stds (List[float]): Length `channel` list of means/stds per channel.
 
         """
         if isinstance(means, (int, float)):
@@ -181,10 +160,8 @@ class Normalize(ImageTransform):
     def __call__(self, images):
         """Apply transform.
 
-        Parameters
-        ----------
-        images
-            Tensor of shape (batch, channel, height, width)
+        Args:
+            images: Tensor of shape (batch, channel, height, width)
 
         """
         if images.shape[1] != self.means.shape[1]:

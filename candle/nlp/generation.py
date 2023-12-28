@@ -22,48 +22,36 @@ def batch_generation(model,
         (kv_cache_seqlen after) == (kv_cache_seqlen before) + len(indices) + len(response)
     This will be true even if the generator terminates early, as long as generator.close() is called
 
-    Parameters
-    ----------
-    model
-        Model instance. model should take in tensors of shape (batch, seqlen) and output logits of
-        shape (batch, seqlen, vocab_size).
-    indices
-        Conditioning sequence. Tensor of shape (batch, seqlen).
-    n_tokens_to_gen
-        Number of tokens to generate.
-    top_k
-        Filter probabilities to those in the top k.
-    top_p
-        Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
-    temperature
-        Higher temperature raises the likelihood of lower probability sequences.
-    sample
-        True to randomly sample sequences from the distribution of probabilities
-        False to take argmax.
-    use_kv_cache
-        If True, uses kv_cache to speed up inference. If generator terminates early, make sure to call
-        generator.close() to properly maintain the KV cache.
-        
-        After generation, we will guarantee that:
-            (kv_cache_seqlen after) == (kv_cache_seqlen before) + len(indices) + len(response)
-        
+    Args:
+        model: Model instance. model should take in tensors of shape (batch, seqlen) and output logits of
+            shape (batch, seqlen, vocab_size).
+        indices (Tensor): Conditioning sequence with shape (batch, seqlen).
+        n_tokens_to_gen (int): Number of tokens to generate.
+        top_k (int): Filter probabilities to those in the top k.
+        top_p (int): Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
+        temperature (float: Higher temperature raises the likelihood of lower probability sequences.
+        sample (bool): True to randomly sample sequences from the distribution of probabilities
+            False to take argmax.
+        use_kv_cache (bool): If True, uses kv_cache to speed up inference.
+            If generator terminates early, make sure to call generator.close() to properly maintain the KV cache.
+            
+            After generation, we will guarantee that:
+                (kv_cache_seqlen after) == (kv_cache_seqlen before) + len(indices) + len(response)
+            
     Returns
-    -------
-    generator
-        The generator will yield tokens as soon as they are sampled.
-        
-    Examples
-    --------
-    (Pseudocode) In the following, response2 == kv_response2 while being faster to generate.
-
-        prompt1 = 'Hi, I am John.'
-        prompt2 = 'That is great.'
-
-        response1 = batch_generation(prompt1, use_kv_cache=False)
-        response2 = batch_generation(prompt1 + response1 + prompt2, use_kv_cache=False)
-
-        response1 = batch_generation(prompt1, use_kv_cache=True)
-        kv_response2 = batch_generation(prompt2, use_kv_cache=True)
+        generator. The generator will yield tokens as soon as they are sampled.
+            
+    Examples:
+        (Pseudocode) In the following, response2 == kv_response2 while being faster to generate.
+    
+            prompt1 = 'Hi, I am John.'
+            prompt2 = 'That is great.'
+    
+            response1 = batch_generation(prompt1, use_kv_cache=False)
+            response2 = batch_generation(prompt1 + response1 + prompt2, use_kv_cache=False)
+    
+            response1 = batch_generation(prompt1, use_kv_cache=True)
+            kv_response2 = batch_generation(prompt2, use_kv_cache=True)
 
     """
     model.eval()
@@ -118,13 +106,10 @@ def top_k_sample(probs: np.array,
                  top_k: int):
     """Top-k sampling.
     
-    Parameters
-    ----------
-    probs
-        Numpy array of probabilities with shape (vocab_size, batch).
-        Modifies probs in place.
-    top_k
-        Top K words to filter to.
+    Args:
+        probs (np.array): Array of probabilities with shape (vocab_size, batch).
+            Modifies probs in place.
+        top_k (int): Top K words to filter to.
     
     """
     # For each row, zero out everything except for top_k probs per row
@@ -141,16 +126,13 @@ def nucleus_sample(probs: np.array,
     """Nucleus sampling. Filter to top probs such that the sum prob is just less than top_p.
     
     References:
-    [1] Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, Yejin Choi.
-        The Curious Case of Neural Text Degeneration. arXiv:1904.09751, 2019
+        [1] Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, Yejin Choi.
+            The Curious Case of Neural Text Degeneration. arXiv:1904.09751, 2019
     
-    Parameters
-    ----------
-    probs
-        Numpy array of probabilities with shape (vocab_size, batch).
-        Modifies probs in place.
-    top_p
-        Filter to the top `k` probs such that the sum probs is <= top_p and k is largest.
+    Args:
+        probs (np.array): Array of probabilities with shape (vocab_size, batch).
+            Modifies probs in place.
+        top_p (int): Filter to the top `k` probs such that the sum probs is <= top_p and k is largest.
     
     """
     sorted_probs = np.sort(probs, axis=0)[::-1]
@@ -185,58 +167,45 @@ def beam_search_generation(model,
     Note this does NOT include the generated sequence.
     This will be true even if the generator terminates early, as long as generator.close() is called
 
-    Parameters
-    ----------
-    model
-        Model instance. model should take in tensors of shape (batch, seqlen) and output logits of
-        shape (batch, seqlen, vocab_size).
-    indices
-        Conditioning sequence. Tensor of shape (seqlen,).
-    n_tokens_to_gen
-        Number of tokens to generate.
-    beam_size
-        Beam size to use in beam search. e.g., beam_size = 1 for greedy search.
-    top_k
-        Filter probabilities to those in the top k.
-    top_p
-        Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
-    temperature
-        Higher temperature raises the likelihood of lower probability sequences.
-    sample
-        True to randomly sample sequences from the distribution of probabilities
-        False to take argmax.
-    use_kv_cache
-        If True, uses kv_cache to speed up inference. If generator terminates early, make sure to call
-        generator.close() to properly maintain the KV cache.
+    Args:
+        model (Model instance). model should take in tensors of shape (batch, seqlen) and output logits of
+            shape (batch, seqlen, vocab_size).
+        indices (Tensor): Conditioning sequence of shape (seqlen,).
+        n_tokens_to_gen (int): Number of tokens to generate.
+        beam_size (int): Beam size to use in beam search. e.g., beam_size = 1 for greedy search.
+        top_k (float): Filter probabilities to those in the top k.
+        top_p (float): Nucleus sampling. Filter to top probs such that the sum is just less than top_p.
+        temperature (float): Higher temperature raises the likelihood of lower probability sequences.
+        sample (bool): True to randomly sample sequences from the distribution of probabilities
+            False to take argmax.
+        use_kv_cache (bool) If True, uses kv_cache to speed up inference. If generator terminates early, make sure to call
+            generator.close() to properly maintain the KV cache.
+            
+            After generation, we will guarantee that:
+                (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + len(indices)
+            
+            If using KV caching, then must pass in `modify_kv_cache_func`.
+        modify_kv_cache_func (Callable): Function with signature
+        `modify_kv_cache_func(model, trim_seqlen, reindex_batch_indices),
+            that modifies the model's kv_cache by trimming or reindexing.
+    
+            See `default_modify_kv_cache` for example implementation.
         
-        After generation, we will guarantee that:
-            (kv_cache_seqlen after decoding) == (kv_cache_seqlen before decoding) + len(indices)
+    Returns:
+        generator. The generator will yield List[int] of tokens as soon as all `beam_size` beams
+            agree on the tokens.
         
-        If using KV caching, then must pass in `modify_kv_cache_func`.
-    modify_kv_cache_func
-        Function with signature `modify_kv_cache_func(model, trim_seqlen, reindex_batch_indices),
-        that modifies the model's kv_cache by trimming or reindexing.
-
-        See `default_modify_kv_cache` for example implementation.
-        
-    Returns
-    -------
-    generator
-        The generator will yield List[int] of tokens as soon as all `beam_size` beams
-        agree on the tokens.
-        
-    Examples
-    --------
-    (Pseudocode) In the following, response2 == kv_response2 while being faster to generate.
-
-        prompt1 = 'Hi, I am John.'
-        prompt2 = 'That is great.'
-
-        response1 = beam_search_generation(prompt1, use_kv_cache=False)
-        response2 = beam_search_generation(prompt1 + response1 + prompt2, use_kv_cache=False)
-
-        response1 = beam_search_generation(prompt1, use_kv_cache=True)
-        kv_response2 = beam_search_generation(response1 + prompt2, use_kv_cache=True)
+    Examples:
+        (Pseudocode) In the following, response2 == kv_response2 while being faster to generate.
+    
+            prompt1 = 'Hi, I am John.'
+            prompt2 = 'That is great.'
+    
+            response1 = beam_search_generation(prompt1, use_kv_cache=False)
+            response2 = beam_search_generation(prompt1 + response1 + prompt2, use_kv_cache=False)
+    
+            response1 = beam_search_generation(prompt1, use_kv_cache=True)
+            kv_response2 = beam_search_generation(response1 + prompt2, use_kv_cache=True)
 
     """
     model.eval()
@@ -362,12 +331,11 @@ def default_modify_kv_cache(model,
                             reindex_batch_indices: List[int] = None):
     """Modifies the kv_cache by trimming or reindexing.
 
-    Parameters
-    ----------
-    trim_seqlen
-        Trims kv_cache along the seqlen dimension to length `new_seqlen`, keeping earlier tokens.
-    batch_indices
-        Reindexes the kv_cache along the batch dimension. Necessary during beam search.
+    Args:
+        trim_seqlen (int): Trims kv_cache along the seqlen dimension to length
+            `new_seqlen`, keeping earlier tokens.
+        batch_indices (List[int]): Reindexes the kv_cache along the batch dimension.
+            Necessary during beam search.
 
     """
     for decoder_block in model.decoder_blocks:

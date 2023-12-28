@@ -80,8 +80,8 @@ class AdamW(Optimizer):
     """Adam with decoupled weight decay.
     
     References:
-    [1] Ilya Loshchilov, Frank Hutter.
-        Decoupled Weight Decay Regularization. arXiv:1711.05101, 2017.
+        [1] Ilya Loshchilov, Frank Hutter.
+            Decoupled Weight Decay Regularization. arXiv:1711.05101, 2017.
 
     """
     

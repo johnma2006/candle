@@ -10,32 +10,25 @@ def tokenize(word: str,
              verbose: bool = False):
     """Given a word, breaks the word up into tokens using the BPE merges.
     
-    Parameters
-    ----------
-    word
-        String to tokenize.
-    merges
-        List of BPE merge pairs, the result of the BPE algorithm. The word will be merged according
-        to the token pairs in `merges`, where earlier indices take priority.
-        
-        Example:
-            merges = [('t', 'a'), ('d', 'o'), ('o', 'b'), ('n', 'o'), ('do', 'o'), ('doo', 'r'), ...]
+    Args:
+        word (str): String to tokenize.
+        merges: List of BPE merge pairs, the result of the BPE algorithm. The word will be merged according
+            to the token pairs in `merges`, where earlier indices take priority.
             
-            If word = 'doorknob', then word_tokens is initialized as ['d', 'o', 'o', 'r', 'k', 'n', 'o', 'b']
-                (1) Merging ('d', 'o') gets us ['do', 'o', 'r', 'k', 'n', 'o', 'b']
-                (2) Merging ('o', 'b') gets us ['do', 'o', 'r', 'k', 'n', 'ob']
-                (3) Merging ('do', 'o') gets us ['doo', 'r', 'k', 'n', 'ob']
-                (4) Merging ('doo', 'r') gets us ['door', 'k', 'n', 'ob']
-                (5) ...
-    merge_order
-        This is equivalent to dict(zip(merges, range(len(merges)))). Pass this in to speed things up a bit.
-    verbose
-        If True, then prints out intermediate `word_tokens` for visualization/debugging.
+            Example:
+                merges = [('t', 'a'), ('d', 'o'), ('o', 'b'), ('n', 'o'), ('do', 'o'), ('doo', 'r'), ...]
+                
+                If word = 'doorknob', then word_tokens is initialized as ['d', 'o', 'o', 'r', 'k', 'n', 'o', 'b']
+                    (1) Merging ('d', 'o') gets us ['do', 'o', 'r', 'k', 'n', 'o', 'b']
+                    (2) Merging ('o', 'b') gets us ['do', 'o', 'r', 'k', 'n', 'ob']
+                    (3) Merging ('do', 'o') gets us ['doo', 'r', 'k', 'n', 'ob']
+                    (4) Merging ('doo', 'r') gets us ['door', 'k', 'n', 'ob']
+                    (5) ...
+        merge_order: This is equivalent to dict(zip(merges, range(len(merges)))). Pass this in to speed things up a bit.
+        verbose (bool): If True, then prints out intermediate `word_tokens` for visualization/debugging.
     
-    Returns
-    -------
-    word_tokens
-        Tokenized word, list of str tokens which satisfies word == ''.join(word_tokens)
+    Returns:
+        List[str], tokenized word, list tokens which satisfies word == ''.join(word_tokens)
     
     """
     # Initialize word_tokens as each individual character
@@ -72,21 +65,17 @@ def generate_byte_pair_encoding(corpus: List[str],
                                 num_merges: int):
     """Generates tokenization scheme using the Byte-Pair Encoding algorithm.
     
-    Parameters
-    ----------
-    corpus
-        List of words representing the full corpus to train the BPE algorithm on.
-        e.g., ['To', ' be', ' or', ' not', ' to', ' be', ',', ' that', ...]
-    num_merges
-        Number of BPE merges to do.
+    Args:
+        corpus (List[str]): List of words representing the full corpus to train the BPE algorithm on.
+            e.g., ['To', ' be', ' or', ' not', ' to', ' be', ',', ' that', ...]
+        num_merges (int): Number of BPE merges to do.
     
-    Returns
-    -------
-    (vocab, merges)
-        `vocab` is a list of strings representing the vocabulary for the generated tokenization scheme.
-        `merges` is the list of pairs of tokens which will be used to tokenize new words.
-            e.g. merges = (('t', 'a'), ('d', 'o'), ('o', 'b'), ('n', 'o'), ('do', 'o'), ('doo', 'r'), ...)
-    
+    Returns:
+        (vocab, merges)
+            `vocab` is a list of strings representing the vocabulary for the generated tokenization scheme.
+            `merges` is the list of pairs of tokens which will be used to tokenize new words.
+                e.g. merges = (('t', 'a'), ('d', 'o'), ('o', 'b'), ('n', 'o'), ('do', 'o'), ('doo', 'r'), ...)
+        
     """
     # Map from word to how many times it appears in the corpus
     word_freqs = {}

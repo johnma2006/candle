@@ -15,45 +15,40 @@ def load_pretrained_llama(model_name: str,
                           model_dir: str):
     """Loads a pre-trained LLaMA2 model with Meta's weights.
 
-    Parameters
-    ----------
-    model_name : str
-        Name of the pre-trained LLaMA2 model. Valid options are:
-        * '7b'
-        * '7b-chat'
-        * '13b'
-        * '13b-chat'
-        * '70b'
-        * '70b-chat'
+    Args:
+        model_name (str): Name of the pre-trained LLaMA2 model. Valid options are:
+            * '7b'
+            * '7b-chat'
+            * '13b'
+            * '13b-chat'
+            * '70b'
+            * '70b-chat'
 
-    model_dir : str
-        Directory containing the pre-trained LLaMA2 model weights.
-        The directory structure should be as follows:
+        model_dir (str): Directory containing the pre-trained LLaMA2 model weights.
+            The directory structure should be as follows:
+    
+            /path/to/llama
+            ├── tokenizer.model
+            ├── tokenizer_checklist.chk
+            ├── llama-2-7b
+            │   ├── checklist.chk
+            │   ├── consolidated.00.pth
+            │   └── params.json
+            ├── llama-2-7b-chat
+            │   ├── checklist.chk
+            │   ├── consolidated.00.pth
+            │   └── params.json
+            ├── llama-2-13b
+            │   ├── checklist.chk
+            │   ├── consolidated.00.pth
+            │   ├── consolidated.01.pth
+            │   └── params.json
+            ├── llama-2-13b-chat
+            │   ...
+            ...
 
-        /path/to/llama
-        ├── tokenizer.model
-        ├── tokenizer_checklist.chk
-        ├── llama-2-7b
-        │   ├── checklist.chk
-        │   ├── consolidated.00.pth
-        │   └── params.json
-        ├── llama-2-7b-chat
-        │   ├── checklist.chk
-        │   ├── consolidated.00.pth
-        │   └── params.json
-        ├── llama-2-13b
-        │   ├── checklist.chk
-        │   ├── consolidated.00.pth
-        │   ├── consolidated.01.pth
-        │   └── params.json
-        ├── llama-2-13b-chat
-        │   ...
-        ...
-
-    Returns
-    -------
-    model : Llama
-        A Llama model instance with Meta's pre-trained weights loaded.
+    Returns:
+        Llama model instance with Meta's pre-trained weights loaded.
 
     """
     from .model import Llama

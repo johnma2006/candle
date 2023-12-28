@@ -1,8 +1,8 @@
 """GPT2 implementation.
 
 References:
-[1] OpenAI's GPT2: https://github.com/openai/gpt-2
-[2] Karpathy's minGPT: https://github.com/karpathy/minGPT
+    [1] OpenAI's GPT2: https://github.com/openai/gpt-2
+    [2] Karpathy's minGPT: https://github.com/karpathy/minGPT
 
 """
 
@@ -47,18 +47,13 @@ class GPT(Module):
                 indices: Tensor,
                 use_kv_cache: bool = False):
         """
-        Parameters
-        ----------
-        indices
-            Integer tensor with shape (batch, seq_len).
-        use_kv_cache
-            Whether or not to use kv_cache to speed up inference.
-        
-        Returns
-        -------
-        logits
-            Tensor with shape (batch, seqlen, vocab_size)
+        Args:
+            indices (Tensor): Integer tensor with shape (batch, seq_len).
+            use_kv_cache (bool): Whether or not to use kv_cache to speed up inference.
             
+        Returns:
+            logits (Tensor): shape (batch, seqlen, vocab_size)
+                
         """
         offset = self.get_kv_cache_seqlen() if use_kv_cache else 0
         position_indices = Tensor(np.arange(indices.shape[1]) + offset)
@@ -78,20 +73,14 @@ class GPT(Module):
     def from_pretrained(model_name: str):
         """Returns GPT2 with pretrained weights.
 
-        Parameters
-        -----------
-        model_name
-            One of ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'].
+        Args:
+            model_name (str): One of ['gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'].
+                gpt2:         124M params
+                gpt2-medium:  354M params
+                gpt2-large:   774M params
+                gpt2-xl:    1,557M params
 
-            Param Count:
-                gpt2:        124,439,808
-                gpt2-medium: 354,823,168
-                gpt2-large:  774,030,080
-                gpt2-xl:   1,557,611,200
-
-        Returns
-        -------
-        model
+        Returns:
             GPT instance with pre-trained weights initialized.
 
         """
@@ -152,7 +141,14 @@ class DecoderBlock(Module):
     def forward(self,
                 x: Tensor,
                 use_kv_cache: bool):
-        # x: Tensor with shape (batch, seqlen, embed_dim)
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = x + self.dropout(self.self_attn(self.ln1(x), use_kv_cache))
         x = x + self.dropout(self.ffn(self.ln2(x)))
 
@@ -185,6 +181,14 @@ class FeedForwardBlock(Module):
         
         
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, seqlen, embed_dim)
+
+        Returns:
+            Tensor with shape (batch, seqlen, embed_dim)
+            
+        """
         x = self.linear1(x)
         x = F.gelu(x)
         x = self.linear2(x)

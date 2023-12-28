@@ -1,7 +1,7 @@
 """OpenAI's GPT2 tokenizer.
 
 References:
-[1] https://github.com/openai/gpt-2/blob/master/src/encoder.py
+    [1] https://github.com/openai/gpt-2/blob/master/src/encoder.py
 
 """
 
@@ -36,15 +36,11 @@ class GPT2BPETokenizer(Tokenizer):
     def encode(self, text: str):
         """Encodes text into list of integers.
         
-        Parameters
-        ----------
-        text
-            String to encode.
+        Args:
+            text (str): String to encode.
             
-        Returns
-        -------
-        indices
-            List of integers representing encoded string.
+        Returns:
+            List[int] representing encoded string.
             
         """
         indices = []
@@ -62,16 +58,12 @@ class GPT2BPETokenizer(Tokenizer):
 
     def decode(self, indices: List[int]):
         """The inverse of encode(). Decodes list of integers into text.
+
+        Args:
+            List[int] representing encoded string.
         
-        Parameters
-        ----------
-        indices
-            List of integers representing encoded string.
-            
-        Returns
-        -------
-        text
-            String to encode.
+        Returns:
+            text (str): String to encode.
             
         """
         unicode_repr = ''.join([self.index_to_token[index] for index in indices])

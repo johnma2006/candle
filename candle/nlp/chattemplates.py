@@ -12,20 +12,17 @@ class ChatTemplate(ABC):
                             n_recent_messages: int = None):
         """Applies chat template.
         
-        Parameters
-        ----------
-        messages
-            List of (username, message).
-        add_generation_prompt
-            If True, then adds a prompt at the end indicating the model should begin generation.
-        n_recent_messages
-            If True, then filters to the `n_recent_messages` most recent messages. This is useful for
-            cumulative KV-cached decoding.
-            
-            Concretely, returns `s` such that:
-                apply_chat_template(messages[:-n_recent_messages]) + `s` = apply_chat_template(messages)
-            
-            if n_recent_messages >= len(messages), simply returns apply_chat_template(messages).
+        Args:
+            messages: List of (username, message).
+            add_generation_prompt (bool): If True, then adds a prompt at the end indicating
+                the model should begin generation.
+            n_recent_messages (bool): If True, then filters to the `n_recent_messages` most
+                recent messages. This is useful for cumulative KV-cached decoding.
+                
+                Concretely, returns `s` such that:
+                    apply_chat_template(messages[:-n_recent_messages]) + `s` = apply_chat_template(messages)
+                
+                if n_recent_messages >= len(messages), simply returns apply_chat_template(messages).
 
         """
         pass
@@ -34,29 +31,28 @@ class ChatTemplate(ABC):
 class SimpleConversationTemplate(ChatTemplate):
     """Simple conversation chat template.
 
-    Examples
-    --------
-    >>> messages = [
-    ...     {'role': 'system', 'content': self.system_message},
-    ...     {'role': 'user', 'content': 'Hi, how are you?'},
-    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
-    ...     {'role': 'user', 'content': 'Great thanks!'},
-    ...     {'role': 'assistant', 'content': 'Nice!'},
-    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
-    ... ]
-
-    >>> chat_template = SimpleConversationTemplate(user_name='John', asst_name='Taylor')
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
-
-    Two friends, John and Taylor, are having an online conversation. Taylor is friendly,
-    talkative, and loves to ask John questions.
-
-    John: Hi, how are you?
-    Taylor: I am doing well. How about you?
-    John: Great thanks!
-    Taylor: Nice!
-    John: What is your favourite baseball team?
-    Taylor:
+    Examples:
+        >>> messages = [
+        ...     {'role': 'system', 'content': self.system_message},
+        ...     {'role': 'user', 'content': 'Hi, how are you?'},
+        ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+        ...     {'role': 'user', 'content': 'Great thanks!'},
+        ...     {'role': 'assistant', 'content': 'Nice!'},
+        ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
+        ... ]
+    
+        >>> chat_template = SimpleConversationTemplate(user_name='John', asst_name='Taylor')
+        >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+    
+        Two friends, John and Taylor, are having an online conversation. Taylor is friendly,
+        talkative, and loves to ask John questions.
+    
+        John: Hi, how are you?
+        Taylor: I am doing well. How about you?
+        John: Great thanks!
+        Taylor: Nice!
+        John: What is your favourite baseball team?
+        Taylor:
     
     """
     
@@ -92,33 +88,32 @@ class SimpleConversationTemplate(ChatTemplate):
 class ChatML(ChatTemplate):
     """OpenAI's Chat Markup Language (*I think... I haven't found that much documentation online)
 
-    Examples
-    --------
-    >>> messages = [
-    ...     {'role': 'system', 'content': self.system_message},
-    ...     {'role': 'user', 'content': 'Hi, how are you?'},
-    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
-    ...     {'role': 'user', 'content': 'Great thanks!'},
-    ...     {'role': 'assistant', 'content': 'Nice!'},
-    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
-    ... ]
-
-    >>> chat_template = ChatML(system_message='You are a helpful assistant.')
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
-
-    <|im_start|>system
-    You are a helpful assistant.
-    <|im_start|>user
-    Hi, how are you?
-    <|im_start|>assistant
-    I am doing well. How about you?
-    <|im_start|>user
-    Great thanks!
-    <|im_start|>assistant
-    Nice!
-    <|im_start|>user
-    What is your favourite baseball team?
-    <|im_start|>assistant
+    Examples:
+        >>> messages = [
+        ...     {'role': 'system', 'content': self.system_message},
+        ...     {'role': 'user', 'content': 'Hi, how are you?'},
+        ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+        ...     {'role': 'user', 'content': 'Great thanks!'},
+        ...     {'role': 'assistant', 'content': 'Nice!'},
+        ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
+        ... ]
+    
+        >>> chat_template = ChatML(system_message='You are a helpful assistant.')
+        >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+    
+        <|im_start|>system
+        You are a helpful assistant.
+        <|im_start|>user
+        Hi, how are you?
+        <|im_start|>assistant
+        I am doing well. How about you?
+        <|im_start|>user
+        Great thanks!
+        <|im_start|>assistant
+        Nice!
+        <|im_start|>user
+        What is your favourite baseball team?
+        <|im_start|>assistant
 
     """
     
@@ -147,37 +142,35 @@ class ChatML(ChatTemplate):
 class LlamaChatTemplate(ChatTemplate):
     """The conversation template used in LLaMA's chat fine-tuned models.
 
-    References
-    ----------
+    References:
     [1] https://github.com/facebookresearch/llama/blob/main/llama/generation.py#L284
     
-    Examples
-    --------
-    >>> messages = [
-    ...     {'role': 'system', 'content': self.system_message},
-    ...     {'role': 'user', 'content': 'Hi, how are you?'},
-    ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
-    ...     {'role': 'user', 'content': 'Great thanks!'},
-    ...     {'role': 'assistant', 'content': 'Nice!'},
-    ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
-    ... ]
-
-    >>> chat_template = LlamaChatTemplate()
-    >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
-
-    <s>[/INST] <<SYS>>
-    You are a helpful, respectful and honest assistant. Always answer as helpfully as
-    possible, while being safe. Your answers should not include any harmful, unethical,
-    racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses
-    are socially unbiased and positive in nature.
-
-    If a question does not make any sense, or is not factually coherent, explain why
-    instead of answering something not correct. If you don't know the answer to a question,
-    please don't share false information.
-    <</SYS>>
-
-    Hi, how are you? [/INST] I am doing well. How about you? </s><s>[/INST] Great
-    thanks! [/INST] Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
+    Examples:
+        >>> messages = [
+        ...     {'role': 'system', 'content': self.system_message},
+        ...     {'role': 'user', 'content': 'Hi, how are you?'},
+        ...     {'role': 'assistant', 'content': 'I am doing well. How about you?'},
+        ...     {'role': 'user', 'content': 'Great thanks!'},
+        ...     {'role': 'assistant', 'content': 'Nice!'},
+        ...     {'role': 'user', 'content': 'What is your favourite baseball team?'},
+        ... ]
+    
+        >>> chat_template = LlamaChatTemplate()
+        >>> print(chat_template.apply_chat_template(messages, add_generation_prompt=True))
+    
+        <s>[/INST] <<SYS>>
+        You are a helpful, respectful and honest assistant. Always answer as helpfully as
+        possible, while being safe. Your answers should not include any harmful, unethical,
+        racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses
+        are socially unbiased and positive in nature.
+    
+        If a question does not make any sense, or is not factually coherent, explain why
+        instead of answering something not correct. If you don't know the answer to a question,
+        please don't share false information.
+        <</SYS>>
+    
+        Hi, how are you? [/INST] I am doing well. How about you? </s><s>[/INST] Great
+        thanks! [/INST] Nice! </s><s>[/INST] What is your favourite baseball team? [/INST]
 
     """
     

@@ -334,15 +334,11 @@ class TensorMaskedFill(Operation):
                  fill_value: float):
         """Returns Tensor with masked values replaced with fill_value.
         
-        Parameters
-        ----------
-        inputs
-            Single Tensor.
-        mask
-            Tensor of 1s and 0s, must be broadcastable with inputs[0].
-            1 to fill with fill_value, 0 to leave as-is.
-        fill_value
-            Value to fill.
+        Args:
+            inputs: Length 1 list.
+            mask (Tensor): Tensor of 1s and 0s, must be broadcastable with inputs[0].
+                1 to fill with fill_value, 0 to leave as-is.
+            fill_value (float): Value to fill.
             
         """
         super().__init__(inputs)

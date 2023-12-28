@@ -21,31 +21,25 @@ class ResNet(Module):
                  resnet_blocks: List[Tuple[int, int, int]],
                  use_maxpool: bool = False):
         """
-        Parameters
-        ----------
-        n_classes
-            Num output classes
-        in_channel
-            Num channels in the input image.
-        resnet_blocks
-            List of (in_channels, out_channels, stride) tuples.
-            
-            e.g. for ResNet20m
-                resnet_blocks = [
-                    (16, 16, 1),
-                    (16, 16, 1),
-                    (16, 16, 1),
-
-                    (16, 32, 2),
-                    (32, 32, 1),
-                    (32, 32, 1),
-
-                    (32, 64, 2),
-                    (64, 64, 1),
-                    (64, 64, 1),
-                ]
-        use_maxpool
-            If False, turns the MaxPool layer off.
+        Args:
+            n_classes (int): Num output classes
+            in_channel (int): Num channels in the input image.
+            resnet_blocks: List of (in_channels, out_channels, stride) tuples.
+                e.g. for ResNet20m
+                    resnet_blocks = [
+                        (16, 16, 1),
+                        (16, 16, 1),
+                        (16, 16, 1),
+    
+                        (16, 32, 2),
+                        (32, 32, 1),
+                        (32, 32, 1),
+    
+                        (32, 64, 2),
+                        (64, 64, 1),
+                        (64, 64, 1),
+                    ]
+            use_maxpool (bool): If False, turns the MaxPool layer off.
         
         """
         super().__init__()
@@ -69,6 +63,14 @@ class ResNet(Module):
         
         
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, channels, height, width)
+
+        Returns:
+            Tensor of shape (batch, n_classes)
+            
+        """
         x = self.conv(x)
         x = self.batch_norm(x)
         x = F.relu(x)
@@ -112,6 +114,14 @@ class ResNetBlock(Module):
             
             
     def forward(self, x):
+        """
+        Args:
+            x (Tensor): shape (batch, channels, height, width)
+
+        Returns:
+            Tensor of shape (batch, channels, height, width)
+            
+        """
         x_resid = self.conv1(x)
         x_resid = self.batch_norm1(x_resid)
         x_resid = F.relu(x_resid)

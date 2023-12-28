@@ -1,7 +1,7 @@
 """Meta's LLaMA tokenizer.
 
 References:
-[1] https://github.com/facebookresearch/llama/blob/main/llama/tokenizer.py
+    [1] https://github.com/facebookresearch/llama/blob/main/llama/tokenizer.py
 
 """
 
@@ -17,11 +17,9 @@ class LlamaTokenizer(Tokenizer):
     def __init__(self,
                  tokenizer_model_path: str):
         """
-        Parameters
-        ----------
-        tokenizer_model_path
-            Path to tokenizer model, e.g. /path/to/tokenizer.model.
-            
+        Args:
+            tokenizer_model_path (str): Path to tokenizer model, e.g. /path/to/tokenizer.model.
+                
         """
         self.sp_model = candle.nlp.sentencepiece.Processor(tokenizer_model_path)
         
@@ -29,16 +27,12 @@ class LlamaTokenizer(Tokenizer):
     def encode(self, text: str):
         """Encodes text into list of integers.
         
-        Parameters
-        ----------
-        text
-            String to encode.
-            
-        Returns
-        -------
-        indices
+        Args:
+            text (str): Text to encode.
+                
+        Returns:
             List of integers representing encoded string.
-            
+                
         """
         encoded = []
 
@@ -62,16 +56,12 @@ class LlamaTokenizer(Tokenizer):
     def decode(self, indices: List[int], remove_leading_space: bool = False):
         """The inverse of encode(). Decodes list of integers into text.
         
-        Parameters
-        ----------
-        indices
-            List of integers representing encoded string.
+        Args:
+            indices (List[int]): integers representing encoded string.
             
-        Returns
-        -------
-        text
-            String to encode.
-            
+        Returns:
+            text (str): Text to encode.
+                
         """
         return self.sp_model.decode(indices, remove_dummy_prefix=remove_leading_space)
     

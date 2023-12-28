@@ -1,4 +1,4 @@
-"""Operations in a computation graph."""
+"""Activation function operations."""
 
 from __future__ import annotations
 import numpy as np
@@ -25,9 +25,9 @@ class GeLUActivation(Operation):
     """Gaussian Error Linear Unit activation function.
 
     References:
-    [1] Dan Hendrycks, Kevin Gimpel.
-        Gaussian Error Linear Units (GELUS). arXiv:1606.08415, 2016
-        
+        [1] Dan Hendrycks, Kevin Gimpel.
+            Gaussian Error Linear Units (GELUS). arXiv:1606.08415, 2016
+            
     """
     
     def _forward(self):
@@ -54,9 +54,9 @@ class SiLUActivation(Operation):
     """Sigmoid Linear Units activation function.
 
     References:
-    [1] Stefan Elfwing, Eiji Uchibe, Kenji Doya.
-        Sigmoid-Weighted Linear Units for Neural Network Function Approximation in Reinforcement Learning
-        arXiv:1702.03118v3, 2017.
+        [1] Stefan Elfwing, Eiji Uchibe, Kenji Doya.
+            Sigmoid-Weighted Linear Units for Neural Network Function Approximation in Reinforcement Learning
+            arXiv:1702.03118v3, 2017.
     
     """
     

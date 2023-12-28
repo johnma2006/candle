@@ -13,15 +13,11 @@ class Tokenizer(ABC):
     def encode(self, text: str):
         """Encodes text into list of integers.
         
-        Parameters
-        ----------
-        text
-            String to encode.
+        Args:
+            text (str): String to encode.
             
-        Returns
-        -------
-        indices
-            List of integers representing encoded string.
+        Returns:
+            indices: List of integers representing encoded string.
             
         """
         pass
@@ -31,15 +27,11 @@ class Tokenizer(ABC):
     def decode(self, indices: List[int]):
         """The inverse of encode(). Decodes list of integers into text.
         
-        Parameters
-        ----------
-        indices
-            List of integers representing encoded string.
+        Args:
+            indices: List of integers representing encoded string.
             
-        Returns
-        -------
-        text
-            String to encode.
+        Returns:
+            text: String to encode.
             
         """
         pass
