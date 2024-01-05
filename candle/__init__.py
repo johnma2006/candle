@@ -28,7 +28,7 @@ from .layers import (
     MaxPool2d,
     AvgPool2d,
 )
-from .dataloader import DataLoader
+from .dataloader import DataLoader, TokenDataLoader
 from .tensorboard import Dashboard
 
 from . import optimizer

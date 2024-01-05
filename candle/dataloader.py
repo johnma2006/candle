@@ -93,3 +93,93 @@ class DataLoaderIterator:
             self.index += self.batch_size
             
             return items
+
+
+class TokenDataLoader:
+    """Data loader for loading sequences of tokens."""
+    
+    def __init__(self,
+                 sentences: List[List[int]],
+                 batch_size: int,
+                 pad_token: int,
+                 truncate_len: int,
+                 group_by_len: bool = True,
+                 drop_last: bool = False,):
+        """Initialize token data loader.
+        
+        Args:
+            sentences (List[List[int]]): List of encoded sentences.
+            batch_size (int): Size of batches to return.
+            pad_token (int): Token to pad with.
+            truncate_len (int): Length to truncate tokens at.
+            group_by_len (bool): Group together samples of roughly the same length.
+        
+        """
+        if not group_by_len:
+            raise ValueError('group_by_len = False is not supported.')
+            
+        self.sentences = sentences
+        self.batch_size = batch_size
+        self.pad_token = pad_token
+        self.truncate_len = truncate_len
+        self.group_by_len = group_by_len
+        self.drop_last = drop_last
+        
+        
+    def __len__(self):
+        return int(np.ceil(len(self.sentences) / self.batch_size))
+        
+        
+    def __iter__(self):
+        return TokenDataLoaderIterator(sentences=self.sentences,
+                                       batch_size=self.batch_size, 
+                                       pad_token=self.pad_token,
+                                       truncate_len=self.truncate_len,
+                                       group_by_len=self.group_by_len,
+                                       drop_last=self.drop_last)
+
+    
+class TokenDataLoaderIterator:
+    
+    def __init__(self,
+                 sentences: List[List[int]],
+                 batch_size: int,
+                 pad_token: int,
+                 truncate_len: int,
+                 group_by_len: bool,
+                 drop_last: bool):
+        self.sentences = [i[:truncate_len] for i in sentences]
+        self.batch_size = batch_size
+        self.pad_token = pad_token
+        self.truncate_len = truncate_len
+        self.group_by_len = group_by_len
+        self.drop_last = drop_last
+        
+        
+    def __next__(self):
+        if self.drop_last:
+            num_items_required = self.batch_size
+        else:
+            num_items_required = 1
+            
+        if len(self.sentences) < num_items_required:
+            raise StopIteration
+        
+        # Grab random sentence as the first element of the batch
+        random_sentence_i = np.random.choice(len(self.sentences), 1)[0]
+        random_sentence = self.sentences.pop(random_sentence_i)
+        batch = [random_sentence]
+        batch_size = min(self.batch_size - 1, len(self.sentences))
+        
+        # Get 2*batch_size sentences with closest length, and choose batch_size of them
+        if batch_size > 0:
+            distances = [abs(len(sentence) - len(random_sentence)) for sentence in self.sentences]
+            candidates = np.argsort(distances)[:2 * batch_size]
+            rest_of_batch = sorted(np.random.choice(candidates, batch_size))[::-1]
+            batch += [self.sentences.pop(i) for i in rest_of_batch]
+        
+            # Pad with padding token
+            max_len = max([len(i) for i in batch])
+            batch = [i + [self.pad_token] * (max_len - len(i)) for i in batch]
+        
+        return batch
