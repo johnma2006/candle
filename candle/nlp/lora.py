@@ -5,6 +5,7 @@ References:
     LoRA: Low-Rank Adaptation of Large Language Models. arXiv:2106.09685, 2021
     
 """
+from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 from .. import Module, Parameter, Dropout, Linear, weightinit
@@ -41,12 +42,12 @@ def lora_wrapper(base_model, config):
     """Modifies the base model in-place with linear layers replaced by LoRA linear layers.
 
     Args:
-        base_model: Model module, e.g. GPT or Llama.
+        base_model (Module): e.g. GPT or Llama.
 
     Returns:
         Model. base_model, modified in-place. 
         
-    """ 
+    """
     # Freeze all pre-trained model parameters
     for param in base_model.parameters().values():
         param.requires_grad = False
@@ -65,4 +66,21 @@ def lora_wrapper(base_model, config):
                 module_queue.append(child_modules[name])
     
     return base_model
+
+
+def load_lora_adapter(lora_model, lora_adapter: Dict[str, Parameter]):
+    """Loads LoRA adapter into LoRA model.
+    
+    Args:
+        lora_model (Module). The result of lora_model = lora_wrapper(base_model, config).
+        lora_adapter (Dict[str, Parameter]). The result of calling lora_model.parameters().
+
+    Returns:
+        Module. lora_model with lora_adapter loaded in.
         
+    """
+    params = lora_model.parameters()
+    for name in params:
+        params[name].data[:] = lora_adapter[name].data
+
+    return lora_model
