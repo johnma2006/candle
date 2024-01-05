@@ -1,4 +1,4 @@
-"""Meta's LLaMA tokenizer.
+"""Meta's Llama tokenizer.
 
 References:
     [1] https://github.com/facebookresearch/llama/blob/main/llama/tokenizer.py

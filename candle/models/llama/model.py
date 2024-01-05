@@ -1,7 +1,7 @@
 """Llama implementation.
 
 References:
-    [1] Meta's LLaMA 2: https://github.com/facebookresearch/llama/blob/main/llama/
+    [1] Meta's Llama 2: https://github.com/facebookresearch/llama/blob/main/llama/
 
 """
 
@@ -91,10 +91,10 @@ class Llama(Module):
     @staticmethod
     def from_pretrained(model_name: str,
                         model_dir: str):
-        """Loads a pre-trained LLaMA2 model with Meta's weights.
+        """Loads a pre-trained Llama 2 model with Meta's weights.
     
         Args:
-            model_name (str): Name of the pre-trained LLaMA2 model. Valid options are:
+            model_name (str): Name of the pre-trained Llama 2 model. Valid options are:
                 * '7b'
                 * '7b-chat'
                 * '13b'

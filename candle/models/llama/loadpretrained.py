@@ -1,4 +1,4 @@
-"""Functionality to load LLaMA2 with Meta's LLaMA-2 weights"""
+"""Functionality to load Llama 2 with Meta's pre-trained weights"""
 
 import json
 from pathlib import Path
@@ -13,7 +13,7 @@ LLAMA_CONFIG_BY_SIZE = {
 
 def load_pretrained_llama(model_name: str,
                           model_dir: str):
-    """Loads a pre-trained LLaMA2 model with Meta's weights.
+    """Loads a pre-trained Llama 2 model with Meta's weights.
 
     Args:
         model_name (str): Name of the pre-trained LLaMA2 model. Valid options are:

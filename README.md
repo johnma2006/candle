@@ -4,8 +4,8 @@ Deep learning library, implemented from scratch in numpy for fun.
 * Tensor-based reverse-mode automatic differentiation
 * Object-oriented PyTorch-like API
 * [Layers](candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
-* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/dec, beam search with top-k/nucleus, speculative sampling, chat templates (Llama chat, ChatML)
-* Models: [Mixtral](candle/models/mixtral/model.py), [Mamba](candle/models/mamba/model.py), [LLaMA](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
+* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/dec, LoRA fine-tuning, beam search with top-k/nucleus, speculative sampling, chat templates (Llama chat, ChatML), streaming chat UI
+* Models: [Mixtral](candle/models/mixtral/model.py), [Mamba](candle/models/mamba/model.py), [Llama](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
 
 
@@ -15,8 +15,8 @@ Deep learning library, implemented from scratch in numpy for fun.
 * Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned).ipynb) [(model)](candle/models/mixtral/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
 * Chat with Mamba 🐍 [(notebook)](experiments/nlp_experiments/3.4%20Chat%20with%20Mamba%20(base).ipynb) [(model)](candle/models/mamba/model.py) 
-* Chat with LLaMA 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20LLaMA%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
-  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(LLaMA 13B fine-tuned, video sped up 30x)</sup></p>
+* Chat with Llama 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20Llama%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
+  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(Llama 13B fine-tuned, video sped up 30x)</sup></p>
 * Chat with GPT2 ⚪ [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20GPT2.ipynb) [(model)](candle/models/gpt/model.py) 
 * Universal and Transferable Adversarial Attacks on Aligned Language Models (Zou et al. 2023) reproduction [(notebook)](experiments/nlp_experiments/4.0%20Adversarial%20Prompts%20on%20GPT.ipynb)
 * Speculative Sampling experiments [(notebook)](experiments/nlp_experiments/2.1%20Speculative%20Sampling%20Experiments.ipynb)

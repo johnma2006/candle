@@ -35,7 +35,7 @@ class Module(ABC):
         parameter_dict = {}
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
-            if isinstance(attr, Parameter):
+            if isinstance(attr, Parameter) and attr.requires_grad:
                 parameter_dict[attr_name] = attr
                 
             elif isinstance(attr, Module):
@@ -168,7 +168,7 @@ class Module(ABC):
 
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
-            if isinstance(attr, Parameter):
+            if isinstance(attr, Parameter) and attr.requires_grad:
                 num_parameters = np.prod(attr.shape)
                 model_summary_df.loc[f'{attr_name}', 'Layer Type'] = 'Parameter'
                 model_summary_df.loc[f'{attr_name}', '# Parameters'] = num_parameters
