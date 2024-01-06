@@ -14,6 +14,7 @@ Deep learning library, implemented from scratch in numpy for fun.
 #### Language Modelling
 * Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned).ipynb) [(model)](candle/models/mixtral/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
+* LoRA fine-tuning Llama on my Messenger chats (WIP still training) [(notebook)](experiments/nlp_experiments/5.0%20LoRA%20fine-tuning%20Llama%20on%20my%20Messenger%20chats.ipynb)
 * Chat with Mamba 🐍 [(notebook)](experiments/nlp_experiments/3.4%20Chat%20with%20Mamba%20(base).ipynb) [(model)](candle/models/mamba/model.py) 
 * Chat with Llama 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20Llama%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(Llama 13B fine-tuned, video sped up 30x)</sup></p>

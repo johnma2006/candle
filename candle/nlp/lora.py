@@ -15,7 +15,6 @@ from .. import Module, Parameter, Dropout, Linear, weightinit
 class LoraConfig:
     rank: int
     alpha: float
-    bias: bool = False
     dropout: float = 0.0
     
 

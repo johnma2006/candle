@@ -7,6 +7,7 @@ from .tensor import Tensor
 
 
 class DataLoader:
+    """Data loader for loading Tensors."""
     
     def __init__(self,
                  *tensors: List[Tensor],
@@ -96,7 +97,7 @@ class DataLoaderIterator:
 
 
 class TokenDataLoader:
-    """Data loader for loading sequences of tokens."""
+    """Data loader for loading sequences of integer tokens."""
     
     def __init__(self,
                  sentences: List[List[int]],
@@ -169,17 +170,20 @@ class TokenDataLoaderIterator:
         random_sentence_i = np.random.choice(len(self.sentences), 1)[0]
         random_sentence = self.sentences.pop(random_sentence_i)
         batch = [random_sentence]
-        batch_size = min(self.batch_size - 1, len(self.sentences))
+        remaining_batch_size = min(self.batch_size - 1, len(self.sentences))
         
-        # Get 2*batch_size sentences with closest length, and choose batch_size of them
-        if batch_size > 0:
+        # Get 2*remaining_batch_size candidate sentences with closest length to the random sentence
+        # Then, choose remaining_batch_size of them
+        if remaining_batch_size > 0:
             distances = [abs(len(sentence) - len(random_sentence)) for sentence in self.sentences]
-            candidates = np.argsort(distances)[:2 * batch_size]
-            rest_of_batch = sorted(np.random.choice(candidates, batch_size))[::-1]
-            batch += [self.sentences.pop(i) for i in rest_of_batch]
+            candidates = np.argsort(distances)[:2 * remaining_batch_size]
+            rest_of_batch = np.random.choice(candidates, remaining_batch_size, replace=False)
+            batch += [self.sentences.pop(i) for i in sorted(rest_of_batch)[::-1]]
         
             # Pad with padding token
             max_len = max([len(i) for i in batch])
             batch = [i + [self.pad_token] * (max_len - len(i)) for i in batch]
+
+        batch = Tensor(batch).astype(np.int32)
         
         return batch

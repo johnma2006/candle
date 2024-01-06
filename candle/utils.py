@@ -85,6 +85,14 @@ def conv2d(image: np.array,
     convolved_image = convolved_image[:, :, ::stride[0], ::stride[1]]
     
     return convolved_image
+
+
+def clip_grad_norm_(parameters, max_norm: float, norm_type: float = 2.0):
+    """Clip gradient norm in-place."""
+    EPS = 1e-6
+    norm = (sum([(param.grad ** norm_type).sum() for param in parameters.values()])) ** (1 / norm_type)
+    for name in parameters:
+        parameters[name].grad /= (norm + EPS)
     
     
 def download_and_cache_file(url: str, cache_file_name: str, encoding: str = None):
@@ -116,4 +124,3 @@ def display_sbs(*args, margin: int = 20, max_cols: int = None, max_rows: int = N
         html_str += df_to_html.replace('table', f'table style="display:inline;margin-left:{margin}px"')
         html_str += '</td></th>'
     display_html(html_str, raw=True)
-    
