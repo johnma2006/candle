@@ -201,7 +201,12 @@ class Module(ABC):
         # If at top level, split index into multiple columns and add a "Total" summary row
             
         if _level == 0 and len(model_summary_df) > 0:
-            multi_index = [i.split('.') for i in model_summary_df.index]
+            def parse(x):
+                try:
+                    return int(x)
+                except:
+                    return x
+            multi_index = [[parse(x) for x in i.split('.')] for i in model_summary_df.index]
             max_level = max([len(i) for i in multi_index])
             multi_index = [i + [''] * (max_level - len(i)) for i in multi_index]
             multi_index = pd.DataFrame(multi_index, index=model_summary_df.index)
