@@ -16,6 +16,8 @@ class LoraConfig:
     rank: int
     alpha: float
     dropout: float = 0.0
+    keys: List[str] = None  # If not None, then only wraps linear layers if the name of
+                            # the layer contains any of the strings in `keys`.
     
 
 class LoraLinear(Module):
@@ -37,11 +39,12 @@ class LoraLinear(Module):
         return self.base_linear(x) + x_lora
 
 
-def lora_wrapper(base_model, config):
+def lora_wrapper(base_model, config: LoraConfig):
     """Modifies the base model in-place with linear layers replaced by LoRA linear layers.
 
     Args:
-        base_model (Module): e.g. GPT or Llama.
+        base_model (Module). e.g. GPT or Llama.
+        config (LoraConfig). Lora configs.
 
     Returns:
         Model. base_model, modified in-place. 
@@ -50,20 +53,22 @@ def lora_wrapper(base_model, config):
     # Freeze all pre-trained model parameters
     for param in base_model.parameters().values():
         param.requires_grad = False
-
+    
     # Replace linear layers by LoRA linear layers
-    module_queue = [base_model]
+    module_queue = [(None, base_model)]
     while len(module_queue) > 0:
-        module = module_queue.pop()
+        (module_name, module) = module_queue.pop()
         child_modules = module.child_modules()
         
         for name in child_modules:
+            child_name = f'{module_name}.{name}' if module_name is not None else name
             if isinstance(child_modules[name], Linear):
-                lora_linear = LoraLinear(base_linear=getattr(module, name), config=config)
-                setattr(module, name, lora_linear)
+                if config.keys is None or np.any([key in child_name for key in config.keys]):
+                    lora_linear = LoraLinear(base_linear=getattr(module, name), config=config)
+                    setattr(module, name, lora_linear)
             elif isinstance(child_modules[name], Module):
-                module_queue.append(child_modules[name])
-    
+                module_queue.append((child_name, child_modules[name]))
+
     return base_model
 
 
