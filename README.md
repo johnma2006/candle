@@ -15,7 +15,7 @@ Deep learning library, implemented from scratch in numpy for fun.
 * Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned).ipynb) [(model)](candle/models/mixtral/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B-instruct, video sped up 30x)</sup></p>
 * LoRA fine-tuning Llama on my Messenger chats [(notebook)](experiments/nlp_experiments/5.0%20LoRA%20fine-tuning%20Llama%20on%20my%20Messenger%20chats.ipynb)
-  <p align="center"><img src="experiments/nlp_experiments/llama_to_johnma.png" width="500" />
+  <p align="center"><img src="experiments/nlp_experiments/llama_to_johnma.png" width="800" />
 * Chat with Mamba 🐍 [(notebook)](experiments/nlp_experiments/3.4%20Chat%20with%20Mamba%20(base).ipynb) [(model)](candle/models/mamba/model.py) 
 * Chat with Llama 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20Llama%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(Llama 13B-chat, video sped up 30x)</sup></p>
