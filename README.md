@@ -13,13 +13,14 @@ Deep learning library, implemented from scratch in numpy for fun.
 
 #### Language Modelling
 * Chat with Mixtral 8x7B 🌅 [(notebook)](experiments/nlp_experiments/3.3%20Chat%20with%20Mixtral%20(fine-tuned).ipynb) [(model)](candle/models/mixtral/model.py) 
-  <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B fine-tuned, video sped up 30x)</sup></p>
-* LoRA fine-tuning Llama on my Messenger chats (WIP still training) [(notebook)](experiments/nlp_experiments/5.0%20LoRA%20fine-tuning%20Llama%20on%20my%20Messenger%20chats.ipynb)
+  <p align="center"><img src="experiments/nlp_experiments/mixtral_chat_example.gif" width="800" /><br /><sup>(Mixtral 8x7B-instruct, video sped up 30x)</sup></p>
+* LoRA fine-tuning Llama on my Messenger chats [(notebook)](experiments/nlp_experiments/5.0%20LoRA%20fine-tuning%20Llama%20on%20my%20Messenger%20chats.ipynb)
+  <p align="center"><img src="experiments/nlp_experiments/llama_to_johnma.png" width="500" />
 * Chat with Mamba 🐍 [(notebook)](experiments/nlp_experiments/3.4%20Chat%20with%20Mamba%20(base).ipynb) [(model)](candle/models/mamba/model.py) 
 * Chat with Llama 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20Llama%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
-  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(Llama 13B fine-tuned, video sped up 30x)</sup></p>
+  <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="800" /><br /><sup>(Llama 13B-chat, video sped up 30x)</sup></p>
 * Chat with GPT2 ⚪ [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20GPT2.ipynb) [(model)](candle/models/gpt/model.py) 
-* Universal and Transferable Adversarial Attacks on Aligned Language Models (Zou et al. 2023) reproduction [(notebook)](experiments/nlp_experiments/4.0%20Adversarial%20Prompts%20on%20GPT.ipynb)
+* Universal and Transferable Adversarial Attacks on Aligned Language Models (Zou et al. 2023) repro [(notebook)](experiments/nlp_experiments/4.0%20Adversarial%20Prompts%20on%20GPT.ipynb)
 * Speculative Sampling experiments [(notebook)](experiments/nlp_experiments/2.1%20Speculative%20Sampling%20Experiments.ipynb)
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
 * Beam search, top-p, top-k sampling quality [(notebook)](experiments/nlp_experiments/1.0%20Beam%20Search%20vs%20Top%20P%20vs%20Top%20K%20Sampling%20Quality.ipynb)
@@ -186,8 +187,3 @@ print(tokenizer.decode(response_indices))
 # Output:  A lot.  He also loves drinking.  (But it's an odd habit for a cat that loves eating
 # and cuddling.)  This little kitty is not the sort of kitty you would expect to be a
 ```
-
-
-## Run Tests
-
-`python -m unittest`
