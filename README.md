@@ -1,10 +1,10 @@
 Deep learning library, implemented from scratch in numpy for fun.
 
 #### Features:
-* Tensor-based reverse-mode automatic differentiation
+* Tensor-based autograd
 * Object-oriented PyTorch-like API
 * [Layers](candle/layers): multihead/rotary/grouped-query attention with KV caching, batch/layer/RMS norm, conv2d, max/avg pooling, dropout
-* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/dec, LoRA fine-tuning, beam search with top-k/nucleus, speculative sampling, chat templates (Llama chat, ChatML), streaming chat UI
+* [NLP](candle/nlp): byte-pair encoding, SentencePiece enc/dec, LoRA fine-tuning, top-k/nucleus/beam search, speculative sampling, chat templates (Llama chat, ChatML), streaming chat UI
 * Models: [Mixtral](candle/models/mixtral/model.py), [Mamba](candle/models/mamba/model.py), [Llama](candle/models/llama/model.py), [GPT](candle/models/gpt/model.py), [ResNet](candle/models/resnet/model.py)
 * Lightweight Tensorboard-like dashboarding
 
