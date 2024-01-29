@@ -29,6 +29,10 @@ Deep learning library, implemented from scratch in numpy for fun.
 * Training ResNet20 on CIFAR10 [(notebook)](experiments/vision_experiments/2.0%20ResNet20%20on%20CIFAR10.ipynb)
   <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="900" /></p>
 
+#### Optimization
+* Experiments with Neural Tangent Kernels [(notebook)](experiments/optimization_experiments/1.0%20Experiments%20with%20neural%20tangent%20kernels.ipynb)
+  <p align="center"><img src="experiments/optimization_experiments/ntk_describes_nn_training.gif" width="500" />
+
 #### Generalization
 * Grokking: Generalization Beyond Overfitting (Power et al. 2016) reproduction [(notebook)](experiments/generalization_experiments/1.1%20Reproducing%20Grokking%20-%20Generalization%20Beyond%20Overfitting%20-%2031x31%20modular%20division.ipynb)
   <p align="center"><img src="experiments/generalization_experiments/grok_training.gif" width="500" /><br /><sup>(long after overfitting, test accuracy suddenly begins increasing — a fun result that feels surprising at first)</sup></p>
