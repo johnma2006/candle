@@ -30,6 +30,7 @@ Deep learning library, implemented from scratch in numpy for fun.
   <p align="center"><img src="experiments/vision_experiments/resnet_cifar10_dashboard.png" width="900" /></p>
 
 #### Optimization
+* Experiments with μParameterization / μTransfer [(notebook)](experiments/optimization_experiments/2.0%20Experiments%20with%20μParameterization%20and%20μTransfer.ipynb)
 * Experiments with Neural Tangent Kernels [(notebook)](experiments/optimization_experiments/1.0%20Experiments%20with%20neural%20tangent%20kernels.ipynb)
   <p align="center"><img src="experiments/optimization_experiments/ntk_describes_nn_training.gif" width="500" />
 
