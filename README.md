@@ -18,7 +18,7 @@ Deep learning library, implemented from scratch in numpy for fun.
 * Chat with Mamba 🐍 [(notebook)](experiments/nlp_experiments/3.4%20Chat%20with%20Mamba%20(base).ipynb) [(model)](candle/models/mamba/model.py) 
 * Chat with Llama 🦙 [(notebook)](experiments/nlp_experiments/3.2%20Chat%20with%20Llama%20(fine-tuned).ipynb) [(model)](candle/models/llama/model.py) 
   <p align="center"><img src="experiments/nlp_experiments/llama_chat_example.gif" width="700" /><br /><sup>(Llama 13B-chat, video sped up 30x)</sup></p>
-* Chat with GPT2 ⚪ [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20GPT2.ipynb) [(model)](candle/models/gpt/model.py) 
+* Chat with GPT2 [(notebook)](experiments/nlp_experiments/3.0%20Chat%20with%20GPT2.ipynb) [(model)](candle/models/gpt/model.py) 
 * Universal and Transferable Adversarial Attacks on Aligned Language Models (Zou et al. 2023) repro [(notebook)](experiments/nlp_experiments/4.0%20Adversarial%20Prompts%20on%20GPT.ipynb)
 * Speculative sampling experiments [(notebook)](experiments/nlp_experiments/2.1%20Speculative%20Sampling%20Experiments.ipynb)
 * KV-caching speedup and memory [(notebook)](experiments/nlp_experiments/2.0%20KV%20Caching%20Speedup%20and%20Memory%20Consumption.ipynb)
